@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - ANB Rising Stars</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c',
+                            500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12',
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8',
+                            500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <header class="bg-dark-900 shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="flex items-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-primary-400 tracking-wide">ANB Rising Stars</span>
+                </a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="dashboard.html" class="text-primary-400 font-semibold">Panel</a>
+                <a href="upload-video.html" class="text-gray-100 hover:text-primary-400 transition">Subir</a>
+                <a href="public-videos.html" class="text-gray-100 hover:text-primary-400 transition">Videos Públicos</a>
+                <a href="rankings.html" class="text-gray-100 hover:text-primary-400 transition">Clasificación</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 auth-buttons">
+                <div class="user-menu">
+                    <span class="text-gray-100 mr-2">Bienvenido, <span id="username"></span></span>
+                    <button id="logoutBtn" class="btn-secondary">Cerrar Sesión</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-primary-600">Mi panel de control</h2>
+            <a href="upload-video.html" class="btn-primary">
+                <i class="fas fa-plus mr-2"></i>
+                Nuevo video
+            </a>
+        </div>
+
+        <!-- Stats cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card">
+                <div class="stats-icon bg-blue-100 text-blue-600">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div>
+                    <div class="stats-value" id="totalVideos">0</div>
+                    <div class="stats-label">Videos subidos</div>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon bg-green-100 text-green-600">
+                    <i class="fas fa-thumbs-up"></i>
+                </div>
+                <div>
+                    <div class="stats-value" id="totalVotes">0</div>
+                    <div class="stats-label">Votos recibidos</div>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon bg-purple-100 text-purple-600">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div>
+                    <div class="stats-value" id="ranking">-</div>
+                    <div class="stats-label">Clasificación</div>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon bg-orange-100 text-orange-600">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <div class="stats-value" id="avgScore">0.0</div>
+                    <div class="stats-label">Puntuación promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Videos Section -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Mis videos</h3>
+                <div class="flex space-x-2">
+                    <select id="statusFilter" class="form-input text-sm">
+                        <option value="">Todos los estados</option>
+                        <option value="public">Público</option>
+                        <option value="private">Privado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div id="loading" class="flex justify-center items-center py-12">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- Videos table -->
+            <div id="videos-container" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Votes</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="videos-table-body" class="divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="pagination-container" class="mt-6"></div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-state" class="hidden empty-state">
+                <div class="empty-state-icon"><i class="fas fa-video-slash"></i></div>
+                <div class="empty-state-title">Aucune vidéo uploadée</div>
+                <div class="empty-state-description">
+                    Comienza subiendo tu primer vídeo para participar en el concurso.
+                </div>
+                <a href="upload-video.html" class="btn-primary mt-4">
+                    <i class="fas fa-plus mr-2"></i>
+                    Subir un vídeo
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 text-gray-300 py-6 mt-12 shadow-inner">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-2 mb-2 md:mb-0">
+                <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-6 w-6">
+                <span class="font-semibold text-primary-400">ANB Rising Stars Showcase</span>
+            </div>
+            <div class="text-sm">
+                <a href="mailto:contact@anb.com" class="hover:text-primary-400 underline">Contacto</a>
+                <span class="mx-2">|</span>
+                <a href="#" class="hover:text-primary-400 underline">Avisos legales</a>
+            </div>
+            <div class="text-xs mt-2 md:mt-0">&copy; 2025 ANB. Todos los derechos reservados.</div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Delete Confirmation Modal
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmer la suppression</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette vidéo ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-delete" class="btn-danger">Supprimer</button>
+                <button class="btn-secondary modal-close">Annuler</button>
+            </div>
+        </div>
+    </div> -->
+    
+    <!-- Scripts -->
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/utils/auth.js"></script>
+    <script src="../js/utils/toast.js"></script>
+    <script src="../js/utils/modal.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/pages/dashboard.js"></script>
+</body>
+</html>
