@@ -38,7 +38,7 @@ jobs:
     needs: unit-tests
 
     defaults:
-      run:
+      run:  
         working-directory: services/auth-service
 
     services:
@@ -69,14 +69,14 @@ jobs:
         run: go mod tidy
 
       - name: Ejecutar pruebas de integración
-        env: 
-          DB_HOST=postgres
-          DB_PORT=5432
-          DB_USER=testuser
-          DB_PASSWORD=testpsw
-          DB_NAME=anb_test
-          SERVER_PORT=8080
-          JWT_SECRET=Secret_for_tests
-          
+        env:
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_USER: testuser
+          DB_PASSWORD: testpsw
+          DB_NAME: anb_test
+          SERVER_PORT: 8080
+          JWT_SECRET: Secret_for_tests
+
         run: go test ./test/integration... -v -cover -tags=integration
         
