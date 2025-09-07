@@ -12,6 +12,10 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: services/authservice
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
