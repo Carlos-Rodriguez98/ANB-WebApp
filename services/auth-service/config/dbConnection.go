@@ -36,7 +36,7 @@ func ConnectDatabase() (*gorm.DB, error) {
 			return DB, nil
 		}
 		log.Printf("Intento %d: error conectando a la base de datos: %v", i, err)
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 	return nil, fmt.Errorf("no se pudo conectar a la base de datos de varios intentos: %v", err)
 }
