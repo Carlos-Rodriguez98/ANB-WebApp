@@ -63,4 +63,6 @@ func LoadEnv() {
 		ServerPort: serverPort,
 	}
 
+	log.Printf("Config cargado: host=%s user=%s db=%s port=%d",
+		AppConfig.DBHost, AppConfig.DBUser, AppConfig.DBName, AppConfig.DBPort)
 }
