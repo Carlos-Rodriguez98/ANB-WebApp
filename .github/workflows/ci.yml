@@ -14,7 +14,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: services/authservice
+        working-directory: services/auth-service
 
     steps:
       - name: Checkout code
