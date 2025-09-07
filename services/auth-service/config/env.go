@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -22,24 +21,10 @@ type EnvConfig struct {
 var AppConfig EnvConfig
 
 func LoadEnv() {
-	envFile := os.Getenv("ENV_FILE")
-
-	if envFile == "" {
-		if strings.HasSuffix(os.Args[0], ".test") {
-			envFile = ".env.test"
-		} else {
-			envFile = ".env"
-		}
-	}
-	log.Printf("envFile: %s", envFile)
-
 	//Carga del archivo .env si existe
-	if err := godotenv.Load(envFile); err == nil {
-		log.Printf("Variables cargadas desde %s", envFile)
-	} else if err := godotenv.Load("../infra/.env"); err == nil {
-		log.Printf("Variables cargadas desde infra/.env")
-	} else {
-		log.Printf("No se encontró archivo .env, usando variables del sistema")
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No se pudo cargar .env, usando variables de entorno")
 	}
 
 	//Valida variable de entorno de puerto de BD
