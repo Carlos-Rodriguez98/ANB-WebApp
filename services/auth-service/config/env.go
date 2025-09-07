@@ -21,7 +21,7 @@ type EnvConfig struct {
 var AppConfig EnvConfig
 
 func LoadEnv() {
-	prueba, _ := strconv.Atoi(os.Getenv("DB_HOST"))
+	prueba := os.Getenv("DB_HOST")
 	log.Printf("Validación DB_HOST: %v", prueba)
 	//Carga del archivo .env si existe
 	err := godotenv.Load()
