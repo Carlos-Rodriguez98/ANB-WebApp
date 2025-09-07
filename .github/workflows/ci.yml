@@ -48,28 +48,28 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Configurar Go
-          uses: actions/setup-go@v5
-          with:
-            go-version: '1.24.6'
-        
-        - name: Instalar dependencias
-          run: go mod tidy
-          working-directory: ./services/auth-services
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.6'
+      
+      - name: Instalar dependencias
+        run: go mod tidy
+        working-directory: ./services/auth-services
 
-        - name: Ejecutar pruebas de integración
-          env:
-            DB_HOST: localhost
-            DB_PORT: 5433
-            DB_USER: testuser
-            DB_PASSWORD: testpsw
-            DB_NAME: anb_test
-            SERVER_PORT: 8081
-            JWT_SECRET: Secret_for_tests
+      - name: Ejecutar pruebas de integración
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5433
+          DB_USER: testuser
+          DB_PASSWORD: testpsw
+          DB_NAME: anb_test
+          SERVER_PORT: 8081
+          JWT_SECRET: Secret_for_tests
 
-          run: go test ./test/integration/... -v -cover
-          working-directory: ./services/auth-service
+        run: go test ./test/integration/... -v -cover
+        working-directory: ./services/auth-service
