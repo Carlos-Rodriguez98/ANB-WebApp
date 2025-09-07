@@ -1,0 +1,41 @@
+#version: '3.9'
+services:
+  anb-database:
+    image: postgres:15
+    container_name: anbapp-database
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - user_data:/var/lib/postgresql/data
+    networks:
+      - microservices
+
+  auth-service:
+    build: ../services/auth-service
+    container_name: auth-service
+    restart: always
+    environment:
+      DB_HOST: anb-database
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      - anb-database
+    networks:
+      - microservices
+
+volumes:
+  user_data: 
+networks:
+  microservices:
+    driver: bridge
