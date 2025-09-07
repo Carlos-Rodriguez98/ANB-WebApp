@@ -67,7 +67,7 @@ jobs:
 
       - name: Ejecutar pruebas de integración
         env:
-          DB_HOST: localhost
+          DB_HOST: postgres
           DB_PORT: 5433
           DB_USER: testuser
           DB_PASSWORD: testpsw
