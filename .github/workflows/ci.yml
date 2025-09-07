@@ -39,6 +39,7 @@ jobs:
 
     defaults:
       run:
+
         working-directory: services/auth-service
 
     services:
@@ -68,15 +69,24 @@ jobs:
       - name: Instalar dependencias
         run: go mod tidy
 
+      - name: Debug ENV variables
+        run: |
+          echo "DB_HOST=$DB_HOST"
+          echo "DB_PORT=$DB_PORT"
+          echo "DB_USER=$DB_USER"
+          echo "DB_NAME=$DB_NAME"
+          echo "SERVER_PORT=$SERVER_PORT"
+          echo "JWT_SECRET=$JWT_SECRET"
+
       - name: Ejecutar pruebas de integración
-        env:
-          DB_HOST: postgres
-          DB_PORT: 5432
-          DB_USER: testuser
-          DB_PASSWORD: testpsw
-          DB_NAME: anb_test
-          SERVER_PORT: 8080
-          JWT_SECRET: Secret_for_tests
+        run: |
+          export DB_HOST=postgres
+          export DB_PORT=5432
+          export DB_USER=testuser
+          export DB_PASSWORD=testpsw
+          export DB_NAME=anb_test
+          export SERVER_PORT=8080
+          export JWT_SECRET=Secret_for_tests
 
         run: go test ./test/integration... -v -cover -tags=integration
         
