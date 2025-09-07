@@ -1,4 +1,3 @@
 # Archivo de variables de entorno
 .env
-# Incluir el archivo de variables de entorno de test para las pruebas unitarias y de integración
-!.env.test
+.env.*
