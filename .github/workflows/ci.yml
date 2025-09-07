@@ -39,7 +39,6 @@ jobs:
 
     defaults:
       run:
-
         working-directory: services/auth-service
 
     services:
@@ -87,6 +86,6 @@ jobs:
           export DB_NAME=anb_test
           export SERVER_PORT=8080
           export JWT_SECRET=Secret_for_tests
-
-        run: go test ./test/integration... -v -cover -tags=integration
+          
+          go test ./test/integration... -v -cover -tags=integration
         
