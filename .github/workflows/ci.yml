@@ -66,6 +66,20 @@ jobs:
       - name: Instalar dependencias
         run: go mod tidy
 
+      - name: Instalar cliente Postgres
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Verificar conexión a Postgres
+        env:
+          PGPASSWORD: testpsw
+        run: |
+          echo "Intentando conexión a Postgres..."
+          for i in {1..5}; do
+            psql -h postgres -U testuser -d anb_test -c '\l' && break
+            echo "Postgres aún no responde, reintentando en 3s..."
+            sleep 3
+          done
+
       - name: Ejecutar pruebas de integración
         env:
           DB_HOST: postgres
