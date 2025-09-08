@@ -112,4 +112,20 @@ jobs:
         run: docker build -t auth-service:ci .
 
       - name: Test Docker Container
-        run: docker run --rm auth-service:ci ./app --help || true
+        run: docker run --rm auth-service:ci
+
+#----------JOB 4: SonarCloud Scan-----------------------------
+sonarcloud:
+  name: SonarCloud Scan
+  runs-on: ubuntu-latest
+  needs: integration-tests
+
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarqube-scan-actions@v5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
