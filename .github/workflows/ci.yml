@@ -93,4 +93,23 @@ jobs:
           JWT_SECRET: Secret_for_tests
 
         run: go test ./test/integration/... -v -cover -tags=integration
-        
+
+# -----------JOB 3: Build Docker Image-----------------------      
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: integration-test
+
+    defaults:
+      run:
+      working-directory: services/auth-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build docker image
+        run: docker build -t auth-service:ci .
+
+      - name: Test Docker Container
+        run: docker run --rm auth-service:ci go version
