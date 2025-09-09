@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-coverage
-          path: services/auth-service/covergae.out
+          path: services/auth-service/coverage.out
 
 # -----------JOB 2: Integration test-----------------------
   integration-tests:
