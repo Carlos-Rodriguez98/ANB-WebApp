@@ -17,6 +17,9 @@ RUN go build -o main .
 # Etapa final (Genera imagen ligera para producción)
 FROM debian:bookworm-slim
 
+#Crear usuario seguro
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
 # Define app como directorio de trabajo
 WORKDIR /app
 
@@ -26,7 +29,10 @@ COPY --from=builder /app/main .
 #COPY .env .
 
 #Indica que el contenedor escuchará en el puerto definido en el .env
-EXPOSE ${SERVER_PORT}
+EXPOSE 8080
+
+#Cambiar al usuario no-root
+USER appuser
 
 #Indica que al iniciar el contenedor se ejecute el binario main.
 CMD ["./main"]
