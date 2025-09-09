@@ -21,11 +21,11 @@ func TestLoginIncorrectUser(t *testing.T) {
 		"email":    "testIncorrectUser@gmail.com",
 		"password": "dummy_password_for_tests",
 	}
-	body, _ = json.Marshal(loginBody)
+	body, _ := json.Marshal(loginBody)
 
-	request, _ = http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
+	request, _ := http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
 	request.Header.Set("Content-Type", "application/json")
-	response = httptest.NewRecorder()
+	response := httptest.NewRecorder()
 	router.ServeHTTP(response, request)
 
 	assert.Equal(t, 401, response.Code)
