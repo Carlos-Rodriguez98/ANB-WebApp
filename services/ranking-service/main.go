@@ -2,10 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -18,12 +21,30 @@ type PlayerRanking struct {
 var db *sql.DB
 
 func main() {
-	// TODO: Verificar string de conexión al momento de integrar
-	connStr := "user=user dbname=anb_db sslmode=disable"
-	var err error
+	// Cargar variables de entorno desde el archivo .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error cargando .env, continuando con variables de entorno")
+	}
+
+	// Leer las variables de entorno
+	serverPort := os.Getenv("SERVER_PORT")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	// dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	if serverPort == "" {
+		log.Fatal("SERVER_PORT se debe definir, usando puerto por defecto")
+		serverPort = "8081"
+	}
+
+	connStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbName)
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 
@@ -35,7 +56,7 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/api/public/ranking", getRanking)
-	r.Run(":8081")
+	r.Run(":" + serverPort)
 }
 
 // Handler para ranking de jugadores

@@ -49,7 +49,6 @@ INSERT INTO "Videos" (user_id, title, original_path, processed_path, status, upl
 
 -- Insertar votos de ejemplo
 INSERT INTO "Votes" (video_id, user_id) VALUES
-(1, 4), -- Carlos vota por Video Ana 1
 (2, 4), -- Carlos vota por Video Luis 1
 (3, 4), -- Carlos vota por Video Luis 2
 (4, 4); -- Carlos vota por Video Sofia 1
