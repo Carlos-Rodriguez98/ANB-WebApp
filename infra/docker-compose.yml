@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${AUTH_SERVER_PORT}:${AUTH_SERVER_PORT}"
     depends_on:
       - anb-database
     networks:
