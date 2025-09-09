@@ -39,7 +39,7 @@ func TestSingupAndLogin(t *testing.T) {
 	//Login
 	loginBody := map[string]string{
 		"email":    "testSignup@gmail.com",
-		"password": "ContraSegur@123*",
+		"password": "dummy_password_for_tests",
 	}
 	body, _ = json.Marshal(loginBody)
 
