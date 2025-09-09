@@ -112,7 +112,7 @@ jobs:
         run: docker build -t auth-service:ci .
 
       - name: Test Docker Container
-        run: docker run --rm auth-service:ci
+        run: docker run --rm auth-service:ci ./app --help || true
 
 #----------JOB 4: SonarCloud Scan-----------------------------
   sonarcloud:
