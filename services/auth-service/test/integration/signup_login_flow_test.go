@@ -22,8 +22,8 @@ func TestSingupAndLogin(t *testing.T) {
 		"first_name": "Test",
 		"last_name":  "Signup",
 		"email":      "testSignup@gmail.com",
-		"password1":  "ContraSegur@123*",
-		"password2":  "ContraSegur@123*",
+		"password1":  "dummy_password_for_tests",
+		"password2":  "dummy_password_for_tests",
 		"city":       "Bogotá",
 		"country":    "Colombia",
 	}
