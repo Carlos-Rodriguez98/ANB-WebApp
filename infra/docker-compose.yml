@@ -15,14 +15,14 @@ services:
     networks:
       - microservices
 
-  redis:
-    image: redis:7
-    container_name: anbapp-redis
-    restart: always
-    ports:
-      - "6379:6379"
-    networks:
-      - microservices
+#  redis:
+#    image: redis:7
+#    container_name: anbapp-redis
+#    restart: always
+#    ports:
+#      - "6379:6379"
+#    networks:
+#      - microservices
 
   auth-service:
     build: ../services/auth-service
@@ -37,24 +37,25 @@ services:
     networks:
       - microservices
 
-  video-service:
-    build: .../services/video-service
-    container_name: video-service
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
-    volumes:
-      - uploads_data:${STORAGE_BASE_PATH}  # monta /data/uploads en el contenedor
-    depends_on:
-      - anb-database
-      - redis
-    networks:
-      - microservices
+#  video-service:
+#    build: .../services/video-service
+#    container_name: video-service
+#    restart: always
+#    env_file:
+#      - .env
+#    ports:
+#      - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
+#    volumes:
+#      - uploads_data:${STORAGE_BASE_PATH}  # monta /data/uploads en el contenedor
+#    depends_on:
+#      - anb-database
+#      - redis
+#    networks:
+#      - microservices
 
 volumes:
   user_data: 
+  #uploads_data:
 networks:
   microservices:
     driver: bridge
