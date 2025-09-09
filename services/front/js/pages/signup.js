@@ -62,14 +62,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     country: formData.country
                 });
 
-                // Store auth data
-                Auth.login(response.token, response.user);
+                Toast.success('Inscription réussie ! Veuillez vous connecter.');
                 
-                Toast.success('Inscription réussie ! Redirection...');
-                
-                // Redirect to dashboard
+                // Redirect to login page
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'login.html';
                 }, 1500);
 
             } catch (error) {

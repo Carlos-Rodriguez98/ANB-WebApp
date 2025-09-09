@@ -31,8 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await api.login({ email, password });
 
-                // Store auth data
-                Auth.login(response.token, response.user);
+                // Store auth data - gérer les deux formats de réponse
+                const token = response.access_token || response.token;
+                const userData = response.user || { email: email };
+                
+                Auth.login(token, userData);
                 
                 Toast.success('Connexion réussie ! Redirection...');
                 
