@@ -53,5 +53,5 @@ func TestUserAlreadyExists(t *testing.T) {
 	response2 := httptest.NewRecorder()
 	router.ServeHTTP(response2, request2)
 
-	assert.Equal(t, 400, response.Code)
+	assert.Equal(t, 400, response2.Code)
 }
