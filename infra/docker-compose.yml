@@ -1,5 +1,5 @@
+# version: '3.9'
 services:
-
   anb-database:
     image: postgres:15
     container_name: anbapp-database
@@ -12,7 +12,15 @@ services:
       - "${DB_PORT}:5432"   # mapear host:container => host usa DB_PORT, container SIEMPRE 5432
     volumes:
       - user_data:/var/lib/postgresql/data
-      - ../services/database-service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
+
+  redis:
+    image: redis:7
+    container_name: anbapp-redis
+    restart: always
+    ports:
+      - "6379:6379"
     networks:
       - microservices
 
@@ -61,6 +69,7 @@ services:
 
 volumes:
   user_data:
+  uploads_data:
 
 networks:
   microservices:
