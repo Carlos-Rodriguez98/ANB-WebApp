@@ -28,8 +28,14 @@ jobs:
       - name: Instalación de dependencias
         run: go mod tidy
       
-      - name: Ejecución de pruebas unitarias
-        run: go test ./... -v -cover -short
+      - name: Ejecución de pruebas unitarias (coverage)
+        run: go test ./... -v -covermode=atomic -coverprofile=coverage.out
+      
+      - name: upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: services/auth-services/covergae.out
 
 # -----------JOB 2: Integration test-----------------------
   integration-tests:
