@@ -9,13 +9,18 @@ import os
 import sys
 import json
 import time
+import urllib.request
+import urllib.parse
 from urllib.parse import urlparse, parse_qs
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
     Handler personnalisé pour servir l'application SPA
-    Et simuler les endpoints API backend
+    Et rediriger les endpoints auth vers le service auth réel
     """
+    
+    # Configuration du service auth
+    AUTH_SERVICE_URL = "http://localhost:8080"
     
     def end_headers(self):
         # Ajouter l'encodage UTF-8 pour tous les fichiers HTML
@@ -70,49 +75,88 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return json.loads(post_data.decode())
         return {}
     
-    def handle_auth_signup(self):
-        """Simule POST /api/auth/signup"""
-        data = self.get_request_data()
-        # Validation basique
-        if not data.get('email') or not data.get('password'):
-            self.send_json_response({"error": "Email et mot de passe requis"}, 400)
-            return
+    def proxy_to_auth_service(self, endpoint, method='POST', data=None):
+        """Fait une requête vers le service auth réel"""
+        url = f"{self.AUTH_SERVICE_URL}/api/auth/{endpoint}"
         
-        # Créer un nouvel utilisateur
-        new_user = {
-            "id": str(len(self.users) + 1),
-            "firstName": data.get('firstName', ''),
-            "lastName": data.get('lastName', ''),
-            "email": data['email'],
+        try:
+            if method == 'POST' and data:
+                # Préparer la requête POST
+                json_data = json.dumps(data).encode('utf-8')
+                req = urllib.request.Request(
+                    url, 
+                    data=json_data,
+                    headers={'Content-Type': 'application/json'}
+                )
+            else:
+                req = urllib.request.Request(url)
+            
+            # Faire la requête
+            with urllib.request.urlopen(req) as response:
+                response_data = response.read().decode('utf-8')
+                return json.loads(response_data), response.status
+                
+        except urllib.error.HTTPError as e:
+            error_data = e.read().decode('utf-8')
+            try:
+                return json.loads(error_data), e.code
+            except:
+                return {"error": f"Auth service error: {e.reason}"}, e.code
+        except Exception as e:
+            return {"error": f"Connection error: {str(e)}"}, 500
+    
+    def handle_auth_signup(self):
+        """Redirige POST /api/auth/signup vers le service auth réel"""
+        data = self.get_request_data()
+        
+        # Transformer les données du front vers le format attendu par le service auth
+        auth_data = {
+            "first_name": data.get('firstName', ''),
+            "last_name": data.get('lastName', ''),
+            "email": data.get('email', ''),
+            "password1": data.get('password', ''),
+            "password2": data.get('password', ''),  # Même mot de passe pour confirmation
             "city": data.get('city', ''),
             "country": data.get('country', '')
         }
-        self.users.append(new_user)
         
-        # Générer un token simple
-        token = f"fake-jwt-token-{new_user['id']}-{int(time.time())}"
-        self.send_json_response({
-            "token": token,
-            "user": new_user
-        })
+        # Appeler le service auth
+        response_data, status_code = self.proxy_to_auth_service('signup', 'POST', auth_data)
+        
+        if status_code == 200:
+            # Succès - transformer la réponse pour le front
+            self.send_json_response({
+                "message": response_data.get('message', 'Utilisateur créé avec succès'),
+                "success": True
+            })
+        else:
+            # Erreur - renvoyer l'erreur du service auth
+            self.send_json_response(response_data, status_code)
     
     def handle_auth_login(self):
-        """Simule POST /api/auth/login"""
+        """Redirige POST /api/auth/login vers le service auth réel"""
         data = self.get_request_data()
-        email = data.get('email')
         
-        # Trouver l'utilisateur (mot de passe non vérifié pour la démo)
-        user = next((u for u in self.users if u['email'] == email), None)
-        if not user:
-            self.send_json_response({"error": "Utilisateur non trouvé"}, 401)
-            return
+        # Les données sont déjà dans le bon format pour le service auth
+        auth_data = {
+            "email": data.get('email', ''),
+            "password": data.get('password', '')
+        }
         
-        token = f"fake-jwt-token-{user['id']}-{int(time.time())}"
-        self.current_user_id = user['id']
-        self.send_json_response({
-            "token": token,
-            "user": user
-        })
+        # Appeler le service auth
+        response_data, status_code = self.proxy_to_auth_service('login', 'POST', auth_data)
+        
+        if status_code == 200:
+            # Succès - transformer la réponse pour le front
+            token = response_data.get('access_token')
+            self.send_json_response({
+                "access_token": token,
+                "token_type": "Bearer",
+                "message": "Connexion réussie"
+            })
+        else:
+            # Erreur - renvoyer l'erreur du service auth
+            self.send_json_response(response_data, status_code)
     
     def handle_videos_upload(self):
         """Simule POST /api/videos/upload"""
