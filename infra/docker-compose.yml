@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_PORT}:5432"   # mapear host:container => host usa DB_PORT, container SIEMPRE 5432
     volumes:
       - user_data:/var/lib/postgresql/data
       - ../services/database-service/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -25,13 +25,37 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      DB_PORT: ${DB_PORT}
+      DB_PORT: 5432
       SERVER_PORT: ${SERVER_PORT}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       - anb-database
+    networks:
+      - microservices
+
+  video-service:
+    build: ../services/video-service
+    container_name: video-service
+    restart: always
+    environment:
+      DB_HOST: anb-database
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SERVER_PORT: ${VIDEO_SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_ADDR: ${REDIS_ADDR}
+      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH}
+    ports:
+      - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
+    volumes:
+      - uploads_data:${STORAGE_BASE_PATH}  # monta /data/uploads en el contenedor
+    depends_on:
+      - anb-database
+      - redis
     networks:
       - microservices
 
