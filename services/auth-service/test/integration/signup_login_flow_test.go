@@ -22,8 +22,8 @@ func TestSingupAndLogin(t *testing.T) {
 		"first_name": "Test",
 		"last_name":  "Signup",
 		"email":      "testSignup@gmail.com",
-		"password1":  "123456",
-		"password2":  "123456",
+		"password1":  "ContraSegur@123*",
+		"password2":  "ContraSegur@123*",
 		"city":       "Bogotá",
 		"country":    "Colombia",
 	}
@@ -39,7 +39,7 @@ func TestSingupAndLogin(t *testing.T) {
 	//Login
 	loginBody := map[string]string{
 		"email":    "testSignup@gmail.com",
-		"password": "123456",
+		"password": "ContraSegur@123*",
 	}
 	body, _ = json.Marshal(loginBody)
 
