@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"   # mapear host:container => host usa DB_PORT, container SIEMPRE 5432
+      - "${DB_PORT}:5432"   # host:container
     volumes:
       - user_data:/var/lib/postgresql/data
     networks:
@@ -19,8 +19,12 @@ services:
     image: redis:7
     container_name: anbapp-redis
     restart: always
+    # Persistencia (recomendado)
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000", "--loglevel", "warning"]
     ports:
-      - "6379:6379"
+      - "6379:6379"  # opcional; puedes quitarlo si no necesitas acceder desde el host
+    volumes:
+      - redis_data:/data
     networks:
       - microservices
 
@@ -55,12 +59,34 @@ services:
       DB_PORT: 5432
       SERVER_PORT: ${VIDEO_SERVER_PORT}
       JWT_SECRET: ${JWT_SECRET}
-      REDIS_ADDR: ${REDIS_ADDR}
-      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH}
+      REDIS_ADDR: ${REDIS_ADDR}             # p.ej. redis:6379
+      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH}  # p.ej. /data/uploads
     ports:
       - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
     volumes:
-      - uploads_data:${STORAGE_BASE_PATH}  # monta /data/uploads en el contenedor
+      - uploads_data:${STORAGE_BASE_PATH}   # comparte archivos con el worker
+    depends_on:
+      - anb-database
+      - redis
+    networks:
+      - microservices
+
+  # ⬇️ NUEVO: worker de procesamiento (processing-service)
+  processing-service:
+    build: ../services/processing-service
+    container_name: processing-service
+    restart: always
+    environment:
+      DB_HOST: anb-database
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      REDIS_ADDR: ${REDIS_ADDR}               # redis:6379
+      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH} # /data/uploads
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY}
+    volumes:
+      - uploads_data:${STORAGE_BASE_PATH}     # mismo volumen que video-service
     depends_on:
       - anb-database
       - redis
@@ -70,6 +96,7 @@ services:
 volumes:
   user_data:
   uploads_data:
+  redis_data:
 
 networks:
   microservices:
