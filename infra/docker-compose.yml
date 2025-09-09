@@ -4,10 +4,8 @@ services:
     image: postgres:15
     container_name: anbapp-database
     restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+    env_file:
+      - .env
     ports:
       - "${DB_PORT}:${DB_PORT}"
     volumes:
@@ -19,14 +17,8 @@ services:
     build: ../services/auth-service
     container_name: auth-service
     restart: always
-    environment:
-      DB_HOST: anb-database
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_PORT: ${DB_PORT}
-      SERVER_PORT: ${SERVER_PORT}
-      JWT_SECRET: ${JWT_SECRET}
+    env_file:
+      - .env
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
