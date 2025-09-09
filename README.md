@@ -21,4 +21,7 @@ La aplicación cumple con los siguientes requisitos:
 5. Presentación de ranking dinámico para visualizar los jugadores mejor posicionados.
 
 ## Documentación del proyecto
+Este proyecto será llevado a cabo en diferentes fases, por lo cual, se define un folder para almacenar el detalle de cada una de las entregas o cambios realizados en el diseño e implementación de la aplicación:
+
+1. Entrega 1: [Documentación entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/docs/Entrega_1)
 
