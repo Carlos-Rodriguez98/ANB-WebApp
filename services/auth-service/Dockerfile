@@ -8,8 +8,16 @@ COPY go.mod go.sum ./
 # Descargar dependencias
 RUN go mod download
 
-# Copiar todo el código fuente al contenedor
-COPY . . 
+# Copiar todo el código fuente necesario al contenedor
+COPY config ./config
+COPY controllers ./controllers
+COPY dto ./dto
+COPY models ./models
+COPY repository ./repository
+COPY routes ./routes
+COPY services ./services
+COPY utils ./utils
+COPY main.go ./
 
 # Compila el proyecto y generar un ejecutable llamado main
 RUN go build -o main .
