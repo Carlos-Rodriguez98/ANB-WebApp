@@ -341,6 +341,39 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             print(f"Error in delete_video: {e}")
             self.send_json_response({"error": "Erreur lors de la suppression de la vidéo"}, 500)
+
+    def proxy_static_files(self, path):
+        """Proxy pour les fichiers statiques vers le service vidéo"""
+        try:
+            import requests
+            
+            # Construire l'URL vers le service vidéo
+            video_service_url = f"{self.VIDEO_SERVICE_URL}{path}"
+            
+            # Faire la requête vers le service vidéo
+            response = requests.get(video_service_url, stream=True, timeout=30)
+            
+            # Transférer la réponse
+            self.send_response(response.status_code)
+            
+            # Transférer les headers
+            for header, value in response.headers.items():
+                if header.lower() not in ['connection', 'transfer-encoding']:
+                    self.send_header(header, value)
+            
+            self.end_headers()
+            
+            # Transférer le contenu
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    self.wfile.write(chunk)
+                    
+        except Exception as e:
+            print(f"Error proxying static file {path}: {e}")
+            self.send_response(404)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(b'<h1>404 - File Not Found</h1>')
             
         except Exception as e:
             print(f"Error in delete_video: {e}")
@@ -661,6 +694,10 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Si c'est un fichier statique existant, le servir normalement
         if path.startswith('/css/') or path.startswith('/js/') or path.startswith('/assets/') or path.startswith('/pages/') or path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.html')):
             return super().do_GET()
+        
+        # Proxy pour les fichiers statiques vidéo (vers le service vidéo)
+        if path.startswith('/static/'):
+            return self.proxy_static_files(path)
         
         # Redirection vers index.html pour la racine
         if path == '/' or path == '':
