@@ -49,7 +49,7 @@ func main() {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
-	// dbPassword := os.Getenv("DB_PASSWORD")
+	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
 	if jwtSecret == "" {
@@ -61,8 +61,8 @@ func main() {
 	}
 	jwtKey = []byte(jwtSecret)
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbName)
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -141,7 +141,7 @@ func generateToken(c *gin.Context) {
 	}
 
 	var rol string
-	err := db.QueryRow(`SELECT "rol" FROM "User" WHERE user_id = $1`, requestBody.UserID).Scan(&rol)
+	err := db.QueryRow(`SELECT rol FROM app.users WHERE user_id = $1`, requestBody.UserID).Scan(&rol)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -173,9 +173,9 @@ func generateToken(c *gin.Context) {
 // Listar videos públicos disponibles para votación
 func getPublicVideos(c *gin.Context) {
 	rows, err := db.Query(`
-		SELECT v.video_id, v.user_id, v.title, v.published, COUNT(vo.vote_id) as votes
-		FROM "Videos" v
-		LEFT JOIN "Votes" vo ON v.video_id = vo.video_id
+		SELECT v.video_id, v.user_id, v.title, v.published, COUNT(vo.vote_id) AS votes
+		FROM app.videos v
+		LEFT JOIN app.votes vo ON v.video_id = vo.video_id
 		WHERE v.published = TRUE
 		GROUP BY v.video_id
 		ORDER BY votes DESC
@@ -219,7 +219,7 @@ func voteForVideo(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token details"})
 		return
 	}
-    
+
 	// Validar que el usuario tiene el rol correcto para votar
 	if rol != "votante" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "User does not have the right role to vote"})
@@ -228,7 +228,7 @@ func voteForVideo(c *gin.Context) {
 
 	// Verificación de video marcado como público
 	var published bool
-	err = db.QueryRow(`SELECT published FROM "Videos" WHERE video_id = $1`, videoID).Scan(&published)
+	err = db.QueryRow(`SELECT published FROM app.videos WHERE video_id = $1`, videoID).Scan(&published)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado"})
 		return
@@ -244,7 +244,7 @@ func voteForVideo(c *gin.Context) {
 
 	// Verificar si usuario ya votó
 	var voteCount int
-	err = db.QueryRow(`SELECT COUNT(*) FROM "Votes" WHERE video_id = $1 AND user_id = $2`, videoID, userID).Scan(&voteCount)
+	err = db.QueryRow(`SELECT COUNT(*) FROM app.votes WHERE video_id = $1 AND user_id = $2`, videoID, userID).Scan(&voteCount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al verificar voto existente"})
 		return
@@ -255,7 +255,7 @@ func voteForVideo(c *gin.Context) {
 	}
 
 	// Registrar nuevo voto
-	_, err = db.Exec(`INSERT INTO "Votes" (video_id, user_id) VALUES ($1, $2)`, videoID, userID)
+	_, err = db.Exec(`INSERT INTO app.votes (video_id, user_id) VALUES ($1, $2)`, videoID, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al registrar voto"})
 		return
