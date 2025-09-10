@@ -39,7 +39,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
-      SERVER_PORT: ${SERVER_PORT}
+      SERVER_PORT: ${AUTH_SERVER_PORT}
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "${AUTH_SERVER_PORT}:${AUTH_SERVER_PORT}"

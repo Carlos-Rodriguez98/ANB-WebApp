@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Video - ANB Rising Stars</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c',
+                            500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12',
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8',
+                            500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <header class="bg-dark-900 shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="flex items-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-primary-400 tracking-wide">ANB Rising Stars</span>
+                </a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="dashboard.html" class="text-gray-100 hover:text-primary-400 transition">Panel</a>
+                <a href="upload-video.html" class="text-primary-400 font-semibold">Subir</a>
+                <a href="public-videos.html" class="text-gray-100 hover:text-primary-400 transition">Videos Públicos</a>
+                <a href="rankings.html" class="text-gray-100 hover:text-primary-400 transition">Clasificación</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 auth-buttons">
+                <div class="user-menu">
+                    <span class="text-gray-100 mr-2">Bienvenido, <span id="username"></span></span>
+                    <button id="logoutBtn" class="btn-secondary">Cerrar Sesión</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="flex items-center mb-6">
+            <a href="dashboard.html" class="text-primary-500 hover:text-primary-600 mr-4">
+                <i class="fas fa-arrow-left"></i> Volver al panel
+            </a>
+        </div>
+
+        <h2 class="text-2xl font-bold text-primary-600 mb-6">Subir un nuevo video</h2>
+
+        <form id="upload-form" class="bg-white rounded-lg shadow p-6">
+            <!-- File Upload Section -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fichier vidéo *</label>
+                                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                    <div id="drop-zone-content">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Arrastra y suelta tu video aquí</h3>
+                        <p class="text-gray-500 mb-4">o haz clic para seleccionar archivos</p>
+                        <button type="button" class="bg-primary-500 text-white px-6 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+                            Seleccionar video
+                        </button>
+                        <input type="file" id="video-file" accept="video/*" class="hidden">
+                    </div>
+                </div>
+                
+                <!-- File preview -->
+                <div id="file-preview" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-video text-primary-500 mr-3"></i>
+                            <div>
+                                <div id="file-name" class="font-medium text-gray-800"></div>
+                                <div id="file-size" class="text-sm text-gray-600"></div>
+                            </div>
+                        </div>
+                        <button type="button" id="remove-file" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload progress -->
+                <div id="upload-progress" class="hidden mt-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Subida en progreso...</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="bg-primary-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="title" class="form-label">Título del video *</label>
+                    <input type="text" id="title" name="title" class="form-input" placeholder="Ej: Mi mejor mate" required>
+                </div>
+                
+                <div>
+                    <label for="category" class="form-label">Categoría *</label>
+                    <select id="category" name="category" class="form-input" required>
+                        <option value="">Selecciona una categoría</option>
+                        <option value="U18">U18 (Menores de 18 años)</option>
+                        <option value="U21">U21 (Menores de 21 años)</option>
+                        <option value="Senior">Senior (21 años y más)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="position" class="form-label">Posición de juego *</label>
+                    <select id="position" name="position" class="form-input" required>
+                        <option value="">Selecciona tu posición</option>
+                        <option value="Meneur">Base (Point Guard)</option>
+                        <option value="Arrière">Escolta (Shooting Guard)</option>
+                        <option value="Ailier">Alero (Small Forward)</option>
+                        <option value="Ailier fort">Ala-Pivot (Power Forward)</option>
+                        <option value="Pivot">Pivot (Center)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="visibility" class="form-label">Visibilidad *</label>
+                    <select id="visibility" name="visibility" class="form-input" required>
+                        <option value="public">Público (visible para todos)</option>
+                        <option value="private">Privado (visible solo para ti)</option>
+                    </select>
+                </div>
+            </div>
+
+                            <div class="mb-4">
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Título del video *</label>
+                    <input type="text" id="title" name="title" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                           placeholder="Ingresa el título de tu video">
+                </div>
+
+                <div class="mb-4">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea id="description" name="description" rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                              placeholder="Describe tu video (opcional)"></textarea>
+                </div>
+
+            <!-- Tags -->
+            <div class="mb-6">
+                <label for="tags" class="form-label">Etiquetas</label>
+                <input type="text" id="tags" name="tags" class="form-input" 
+                    placeholder="Ej: mate, regate, triple (separados por comas)">
+                <p class="text-sm text-gray-500 mt-1">Agrega palabras clave para ayudar a otros a encontrar tu video</p>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="mb-6">
+                <label class="flex items-start">
+                    <input type="checkbox" id="terms" name="terms" class="mt-1 mr-3" required>
+                    <span class="text-sm text-gray-700">
+                        Acepto los <a href="#" class="text-primary-500 hover:text-primary-600 underline">términos de uso</a> 
+                        y confirmo que este video respeta las reglas del concurso ANB Rising Stars.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Submit buttons -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button type="submit" id="submit-btn" class="btn-primary flex-1">
+                    <i class="fas fa-upload mr-2"></i>
+                    Subir el video
+                </button>
+                <a href="dashboard.html" class="btn-secondary text-center">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 text-gray-300 py-6 mt-12 shadow-inner">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-2 mb-2 md:mb-0">
+                <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-6 w-6">
+                <span class="font-semibold text-primary-400">ANB Rising Stars Showcase</span>
+            </div>
+            <div class="text-sm">
+                <a href="mailto:contact@anb.com" class="hover:text-primary-400 underline">Contacto</a>
+                <span class="mx-2">|</span>
+                <a href="#" class="hover:text-primary-400 underline">Aviso Legal</a>
+            </div>
+            <div class="text-xs mt-2 md:mt-0">&copy; 2025 ANB. Todos los derechos reservados.</div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Scripts -->
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/utils/auth.js"></script>
+    <script src="../js/utils/toast.js"></script>
+    <script src="../js/utils/modal.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/pages/upload-video.js"></script>
+</body>
+</html>

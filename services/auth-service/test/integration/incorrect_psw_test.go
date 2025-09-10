@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSingupAndLogin(t *testing.T) {
+func TestLoginIncorrectPassword(t *testing.T) {
 	router := routes.SetupRouter() //Expone las rutas en gin
 
 	//Signup
 	signupBody := map[string]string{
 		"first_name": "Test",
 		"last_name":  "Signup",
-		"email":      "testSignup@gmail.com",
+		"email":      "testIncorrectPassword@gmail.com",
 		"password1":  "dummy_password_for_tests",
 		"password2":  "dummy_password_for_tests",
 		"city":       "Bogotá",
@@ -39,7 +39,7 @@ func TestSingupAndLogin(t *testing.T) {
 	//Login
 	loginBody := map[string]string{
 		"email":    "testSignup@gmail.com",
-		"password": "dummy_password_for_tests",
+		"password": "incorrect_dummy_password_for_tests",
 	}
 	body, _ = json.Marshal(loginBody)
 
@@ -48,5 +48,5 @@ func TestSingupAndLogin(t *testing.T) {
 	response = httptest.NewRecorder()
 	router.ServeHTTP(response, request)
 
-	assert.Equal(t, 200, response.Code)
+	assert.Equal(t, 401, response.Code)
 }

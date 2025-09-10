@@ -6,7 +6,7 @@ import (
 )
 
 func TestHashAndCheckPassword(t *testing.T) {
-	password := "123456"
+	password := "dummy_password_for_tests"
 
 	//Proceso para validar el funcionamiento del hash de contraseña
 	hash, err := utils.HashPassword(password)

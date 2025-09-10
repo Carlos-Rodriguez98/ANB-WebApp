@@ -44,7 +44,7 @@ func LoadEnv() {
 	}
 
 	//Valida variable de entorno de puerto del servidor
-	serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	serverPort, err := strconv.Atoi(os.Getenv("AUTH_SERVER_PORT"))
 	if err != nil {
 		serverPort = 8080 //Valor por defecto
 	}

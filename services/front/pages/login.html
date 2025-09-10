@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - ANB Rising Stars</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c',
+                            500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12',
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8',
+                            500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <header class="bg-dark-900 shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="flex items-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-primary-400 tracking-wide">ANB Rising Stars</span>
+                </a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="../index.html" class="text-gray-100 hover:text-primary-400 transition">Accueil</a>
+                <a href="public-videos.html" class="text-gray-100 hover:text-primary-400 transition">Vidéos publiques</a>
+                <a href="rankings.html" class="text-gray-100 hover:text-primary-400 transition">Classement</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 auth-buttons">
+                <a href="login.html" class="btn-secondary mr-2">Connexion</a>
+                <a href="signup.html" class="btn-primary">Inscription</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex flex-col items-center justify-center min-h-[80vh] py-8 fade-in">
+                <div class="min-h-[80vh] flex items-center justify-center py-8">
+            <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-12 w-12 mx-auto mb-4">
+                    <h2 class="text-2xl font-bold text-primary-600">Iniciar Sesión</h2>
+                    <p class="text-gray-600 mt-2">Bienvenido de vuelta a ANB Rising Stars</p>
+                </div>
+
+                <form id="login-form">
+                    <div class="mb-6">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="tu@ejemplo.com" required>
+                        <div id="email-error" class="form-error hidden"></div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Tu contraseña" required>
+                        <div id="password-error" class="form-error hidden"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="remember" name="remember" class="mr-2">
+                            <span class="text-sm text-gray-600">Recordarme</span>
+                        </label>
+                        <a href="#" class="text-sm text-primary-500 hover:text-primary-600">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <button type="submit" id="login-btn" class="btn-primary w-full mb-4">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Iniciar Sesión
+                    </button>
+
+                    <div class="text-center">
+                        <p class="text-gray-600">¿No tienes una cuenta?
+                            <a href="signup.html" class="text-primary-500 hover:text-primary-600 font-semibold">Regístrate</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 text-gray-300 py-6 mt-12 shadow-inner">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-2 mb-2 md:mb-0">
+                <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-6 w-6">
+                <span class="font-semibold text-primary-400">ANB Rising Stars Showcase</span>
+            </div>
+            <div class="text-sm">
+                <a href="mailto:contact@anb.com" class="hover:text-primary-400 underline">Contacto</a>
+                <span class="mx-2">|</span>
+                <a href="#" class="hover:text-primary-400 underline">Aviso Legal</a>
+            </div>
+            <div class="text-xs mt-2 md:mt-0">&copy; 2025 ANB. Todos los derechos reservados.</div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Scripts -->
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/utils/auth.js"></script>
+    <script src="../js/utils/toast.js"></script>
+    <script src="../js/utils/modal.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/pages/login.js"></script>
+</body>
+</html>
