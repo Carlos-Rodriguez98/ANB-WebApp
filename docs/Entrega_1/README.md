@@ -106,7 +106,97 @@ La aplicación interactuará directamente con los usuarios que deseen registrars
 * Contratos REST simples, formato JSON, y autenticación **Bearer JWT**.
 
 **Flujo de trabajo**
+La aplicación esta construida siguiendo una arquitectura de microservicios, donde cada servicio es responsable de una función especifíca:
 
+1. **auth-service**:
+    - Gestiona la autenticación (Login) y registro de usuarios.
+    - Maneja token JWT para sesiones seguras.
+
+2. **processing-service**:
+    - Maneja el procesamiento asincrono del video para que cumpla con los requisitos de tamaño, resolucion y duración.
+    - Toma la información de las tareas pendientes de la cola.
+
+3. **ranking-service**:
+    - Permite consultar el ranking con los usuarios más votados.
+
+4. **video-service**:
+    - Permite el cargue del video y notifica que se encuentra en procesamiento.
+    - Entrega la tareas para procesamiento asincrono a la cola.
+
+5. **voting-service**:
+    - Permite a los usuarios votar por sus videos favoritos.
+    - Valida que cada usuario solo pueda emitir un voto por video.
+
+### Vista de Componentes
+![Vista de Despliegue](artifacts/Despliegue-view.png)
+
+* **Host Loca (localhost)** con **Docker Engine**.
+* Contenedores separados:
+
+    * `frontend` (Nginx sirviendo estáticos) **localhost:8084**
+    * `auth-service` (Go) - **localhost:8080**
+    * `video-service` (Go) - **localhost:8081**
+    * `voting-service` (Go) - **localhost:8082**
+    * `ranking-service` (Go) - **localhost:8083**
+    * `redis` - **Usa el puerto 6379**
+    * `anb-database` - **Usa el puerto 5432**
+* **Red de Dcker** compartida para que los serviciso se resuelvan por nombre.
+
+**Conexiones**
+
+* Web App → cada microservicio vía **HTTP/JSON** (puertos publicados al host).
+* Microservicios → **PostgreSQL** vía **SQL/TCP** (con `DATABASE_URL`).
+* Variables de entorno típicas:
+
+  * `DATABASE_URL=postgres://user:pass@postgres:5432/tododb?sslmode=disable`
+  * `JWT_SECRET=...`
+  * `MAX_UPLOAD_SIZE`, `DEFAULT_AVATAR_URL`, etc.
+
+## Modelo Entidad - Relación (ERD)
+```mermaid
+erDiagram
+    USERS {
+        int user_id PK
+        string first_name
+        string last_name
+        string email
+        string password
+        string city
+        string country
+        datetime created_at
+    }
+
+    VIDEOS {
+        int video_id PK
+        int user_id FK
+        string title
+        string original_path
+        string processed_path
+        string status
+        datetime uploaded_at
+        datetime processed_at
+        bool published
+    }
+
+    VOTES {
+        int vote_id PK
+        int video_id FK
+        int user_id FK
+        datetime created_at
+    }
+
+    USERS ||--o{ VIDEOS : "sube"
+    VIDEOS ||--o{ VOTES : "recibe"
+    USERS ||--o{ VOTES : "emite"
+```
+
+---
+📌 Relaciones principales:  
+- **Un usuario puede subir muchos videos** (`Users 1 → N Videos`).  
+- **Un video puede recibir muchos votos** (`Videos 1 → N Votes`).  
+- **Un usuario puede emitir muchos votos** (`Users 1 → N Votes`).  
+
+### Vistas secuenciales
 1. Registro de usuario (Signup)
 ```mermaid
 sequenceDiagram
@@ -224,48 +314,115 @@ sequenceDiagram
     F-->>U: Muestra clasificación
 ```
 
-## Modelo Entidad - Relación (ERD)
-```mermaid
-erDiagram
-    USERS {
-        int user_id PK
-        string first_name
-        string last_name
-        string email
-        string password
-        string city
-        string country
-        datetime created_at
-    }
+## Referencia API(Postman)
+A continuación se relaciona el enlace donde se encuentra la docuemntación de la API en Postman.
+![Link del .json de la colección de Postman](https://github.com/Carlos-Rodriguez98/ANB-WebApp/blob/main/collections)
 
-    VIDEOS {
-        int video_id PK
-        int user_id FK
-        string title
-        string original_path
-        string processed_path
-        string status
-        datetime uploaded_at
-        datetime processed_at
-        bool published
-    }
 
-    VOTES {
-        int vote_id PK
-        int video_id FK
-        int user_id FK
-        datetime created_at
-    }
+##Estructura Repositorio 
 
-    USERS ||--o{ VIDEOS : "sube"
-    VIDEOS ||--o{ VOTES : "recibe"
-    USERS ||--o{ VOTES : "emite"
+## Estructura del Proyecto
+
+```plaintext
+.github/
+└── workflows/               # Configuraciones de CI/CD (GitHub Actions)
+
+capacity-planning/           # Documentación y planificación de pruebas de capacidad
+collections/                 # Contiene documentación de pruebas en POSTMAN
+docs/
+└── Entrega_1/              # Documentación de la primera entrega
+
+infra/                       # Contiene docker-compose, inicialización de tablas y .env
+services/                       
+├── auth-service/               # Servicio de autenticación
+│   ├── config/                 # Configuración de BD y variables de entorno
+│   ├── controllers/            # Controladores de login y registro
+│   ├── models/                 # Definición de entidades (Usuario, Tokens, etc.)
+│   ├── services/               # Lógica de negocio de autenticación
+│   ├── test/                   # Contiene pruebas de integración
+│   ├── utils/                  # Utilidades (hash, JWT, middlewares)
+│   └── Dockerfile              # Imagen Docker del servicio
+│
+├── video-service/              # Servicio de gestión de videos
+│   ├── controllers/            # Endpoints para subir y consultar videos
+│   ├── models/                 # Definición de entidades de video
+│   ├── services/               # Procesamiento y lógica de negocio de videos
+│   └── Dockerfile
+│
+├── processing-service/         # Servicio de procesamiento de datos/videos
+│   ├── workers/                # Procesos asíncronos de procesamiento
+│   ├── services/               # Lógica de negocio de procesamiento
+│   └── Dockerfile
+│
+├── voting-service/             # Servicio de votación y ranking
+│   ├── controllers/            # Endpoints para votar
+│   ├── models/                 # Definición de entidades de voto
+│   ├── services/               # Lógica de negocio de votación y consenso
+│   └── Dockerfile
+│
+frontend/                       # Interfaz de usuario (WebApp)
+├── categories/                 # Componentes de categorías
+├── tasks/                      # Componentes de tareas
+└── Dockerfile                  # Imagen Docker del frontend
+
+README.md
+sonar-project.properties        # Configuración para SonarCloud
+.gitignore
+.gitattributes
 ```
 
----
-📌 Relaciones principales:  
-- **Un usuario puede subir muchos videos** (`Users 1 → N Videos`).  
-- **Un video puede recibir muchos votos** (`Videos 1 → N Votes`).  
-- **Un usuario puede emitir muchos votos** (`Users 1 → N Votes`).  
+## Uso
 
+### Requisitos previos
+- Docker y Docker Compose
+- Espacio en disco para imágenes Docker
+- Puertos 8080-8084 disponibles
 
+### Instrucciones de Ejecución
+
+1. Clonar el repositorio:
+```bash
+git clone https://github.com/Carlos-Rodriguez98/ANB-WebApp.git
+cd ANB-WebApp/infra
+```
+
+2. Definir variables de entorno:
+En la carpeta infra se debe definir un archivo .env con la siguiente estructura:
+```
+# Database
+DB_HOST=anb-database
+DB_PORT=5432
+DB_USER=Admin
+DB_PASSWORD=Admin
+DB_NAME=ANB-WebApp
+
+# Redis
+REDIS_ADDR=redis:6379
+STORAGE_BASE_PATH=/data/uploads
+WORKER_CONCURRENCY=5
+REDIS_PORT=6379
+
+# Services Port
+AUTH_SERVER_PORT=8080
+VIDEO_SERVER_PORT=8081
+VOTING_SERVER_PORT=8082
+RANKING_SERVER_PORT=8083
+FRONT_SERVER_PORT=8084
+
+# Json Web Token
+JWT_SECRET=clavesecreta
+```
+
+3. Definir puertos de acceso:
+    - Frontend: http://localhost:8084
+    - servicios API:
+        - Auth Service: http://localhost:8080
+        - Video Service: http://localhost:8081
+        - Voting service: http://localhost:8082
+        - Ranking service: http://localhost:8083
+
+3. Iniciar los servicios con Docker Compose:
+```bash
+docker-compose up --build
+```
+Los servicios se conectarán automáticamente a la base de datos usando las credenciales configuradas en el docker-compose.yml.
