@@ -52,3 +52,57 @@ Para la defiición de la arquitectura se tuvieron en cuenta múltiples factores 
 - Contenedorización: Docker + docker-compose.
 - CI/CD: GitHub Actions con pruebas unitarias, construcción automática y validación con SonarQube.
 
+### Vista de contexto
+La aplicación interactuará directamente con los usuarios que deseen registrarse en la aplicación para realizar las diferentes funcionalidades disponibles y descritas en el diagrama.
+![Vista de contexto](/artifacts/Contexto-view.jpg)
+
+### Vista de Componentes
+![Vista de Componentes](/artifacts/Components-view.jpg)
+
+**Componentes y responsabilidades**:
+
+* **Frontend (HTML/CSS/JavaScript)**
+
+    * Renderiza la UI (formularios de registro y Login, cargue de videos, consulta de videos, consulta de rankings y registro de voto por un vídeo).
+    * Genera el llamado a los microservicios vía **HTTP/JSON**.
+    * Gestiona el token JWT en el navegador (localStorage o cookies seguras).
+
+* **Auth Service(Go)**
+    * **Controllers**: Expone endpoints `/api/auth/signup` (registro), `/api/auth/login` (login).
+    * **Utils**: Realiza el hashing de la contraseña (bcrypt), emisión de **JWT**.
+    * **Models**: Define los atributos del modelo de usuarios.
+    * **Repository**: Se encarga de los procesos de escritura y lectura en la base de datos.
+    * **Services**: Define la lógica de negocio para registro y login de los usuarios.
+    * Persiste y consulta usuarios en base de datos.
+
+* **Processing Service (Go)**
+    * **Controllers**: Encargado de realizar todo el procesamiento del video para que cumpla con los requisitos.
+
+* **Ranking Service (Go)**
+    * **Controllers**: Expone endpoint `/api/public/ranking`
+    * Se encarga de realizar el proceso de validación continuamente para actualizar el rankig con los usuarios más votados.
+
+* **Video Service (Go)**
+    * **Controllers**: Expone endpoints `/api/videos/upload` (Subir video), `/api/videos` (Lista de videos subidos), `/api/videos/:video_id` (Obtiene detalle del video - GET, Elimina un video propio - DELETE) 
+    * Toma la información de la cola y es el encar
+    * Se encarga de recibir el video cargado y entregarlo a la capa de abstracción para almacenar el archivo y registrar la tarea en la cola.
+
+* **Voting Service (Go)**
+    * **Controllers**: Expone endpoint `api/public/videos` (Consulta videos publicos), `/api/public/videos/{video_id}/vote` (Registra un voto)
+    * Se encarga de registrar los votos de los usuarios.
+
++ **Database Manager**
+    * Almacena los usuarios, información de videos y votos registrados.
+    * Los serviciso acceden mediante consultas parametrizadas (evitando inyección SQL).
+    * Utiliza indices para acelerar las búsquedas.
+
+* **Broker**
+    * 
+
+* **IStorageService**
+    +
+
+**Flujo de trabajo**
+
+
+
