@@ -58,7 +58,7 @@ func (ctl *VideoController) Delete(c *gin.Context) {
 	if err := ctl.Svc.Delete(userID, id); err != nil {
 		switch err.Error() {
 		case "no se puede eliminar un video publicado":
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
 			c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado"})
 		}

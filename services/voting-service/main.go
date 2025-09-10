@@ -176,7 +176,7 @@ func getPublicVideos(c *gin.Context) {
 		SELECT v.video_id, v.user_id, v.title, v.published, COUNT(vo.vote_id) AS votes
 		FROM app.videos v
 		LEFT JOIN app.votes vo ON v.video_id = vo.video_id
-		WHERE v.published = TRUE
+		WHERE v.published = true
 		GROUP BY v.video_id
 		ORDER BY votes DESC
 	`)
