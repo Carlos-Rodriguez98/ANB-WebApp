@@ -95,11 +95,85 @@ La aplicación interactuará directamente con los usuarios que deseen registrars
     * Los serviciso acceden mediante consultas parametrizadas (evitando inyección SQL).
     * Utiliza indices para acelerar las búsquedas.
 
-* **Broker**
-    * 
+# Documentación — Broker de Tareas y Storage
+---
 
-* **IStorageService**
-    +
+* **Broker**
+
+  **Tecnologías**
+  - `Redis`: broker/cola en memoria (rápido, operaciones atómicas).
+  - `Asynq` (Go): jobs con colas, reintentos, timeouts, retención de histórico.
+  - `asynqmon` (opcional): UI para monitorear colas/tareas.
+
+  **Flujo**
+  1. `POST /api/videos/upload` (video-service):
+     - Valida **extensión**: solo `.mp4` (case-insensitive, por nombre).
+     - Valida **duración**: **20–60s** usando `ffprobe`.
+     - Guarda original: `original/u{userID}/{videoID}.mp4`.
+     - Inserta en BD: `status = "uploaded"`.
+     - **Encola** tarea `video:process` en Redis (cola `videos`) con:
+       - `task_id = video_id` (se fuerza con `asynq.TaskID(p.VideoID)`).
+       - `MaxRetry(5)`, `Timeout(30m)`, `Retention(24h)`.
+  2. `processing-service` (worker):
+     - Consume cola `videos` desde Redis.
+     - Ejecuta `ffmpeg` (normaliza a 720p, H.264/AAC, **máx 60s**).
+     - Guarda procesado: `processed/u{userID}/{videoID}.mp4`.
+     - Actualiza BD: `status = "processed"`, `processed_path/processed_at`.
+  3. `POST /api/videos/{id}/publish`:
+     - Marca `published = true` (y opcional `published_at`).
+     - Desde aquí, **DELETE es inválido** (400).
+  4. `DELETE /api/videos/{id}`:
+     - **Permite** cuando **no está publicado**.
+     - Borra archivos (original + processed) y setea `status = "deleted"` (soft delete).
+
+  **Notas de uso**
+  - Si se intenta re-encolar con el **mismo** `task_id` mientras exista histórico, Asynq devuelve error por **ID duplicado**.
+  - Recomendado exponer asynqmon en `http://localhost:8082` para observar colas, reintentos, latencias.
+  - Variables:
+    - `REDIS_ADDR=redis:6379`
+    - `WORKER_CONCURRENCY=5`
+
+  **Endpoints afectados**
+  - `POST /api/videos/upload` → encola procesamiento.
+  - `POST /api/videos/{video_id}/publish` → marca como publicado.
+  - `DELETE /api/videos/{video_id}` → bloquea si `published = true` (400).
+
+---
+
+* **StorageService**    
+
+  **Responsabilidades**
+  - `SaveOriginal(userID, videoID, file)`  
+    Guarda el archivo original en una ruta **relativa** y retorna esa ruta.
+  - `GetPublicURL(relPath)`  
+    Convierte una ruta relativa en URL pública (prefijo `/static/`).
+  - `Delete(relPath)`  
+    Elimina el archivo si existe (idempotente).
+
+  **Implementación (LocalStorage)**
+  - Base configurada por `STORAGE_BASE_PATH` (p. ej. `/data/uploads`).
+  - Estructura de archivos:
+    - Originales: `original/u{userID}/{videoID}.mp4`
+    - Procesados: `processed/u{userID}/{videoID}.mp4`
+  - Mapeo a URL pública:
+    - `/static/original/u{userID}/{videoID}.mp4`
+    - `/static/processed/u{userID}/{videoID}.mp4`
+  - Estandarización del nombre:
+    - Se **fuerza** el guardado como `{videoID}.mp4` (independiente del nombre original del usuario).
+  - Validaciones en upload (previas a persistir en BD):
+    - **Formato**: solo `.mp4` por extensión del nombre (minúsculas para comparar).
+    - **Duración**: `ffprobe` sobre el archivo guardado; si **<20s** o **>60s**, se borra y se retorna error.
+
+  **Reglas de negocio relacionadas**
+  - **Eliminar**: permitido si **no está publicado**. Si `published = true`, retorna **400**.
+  - **Publicar**: solo si `status = "processed"` y existe `processed_path`.
+
+  **Variables**
+  - `STORAGE_BASE_PATH=/data/uploads`
+
+---
+
+    
 
 * Cada servicio tiene su “capa de controladores” (HTTP) y “lógica” (reglas/validaciones).
 * Se comparte una única BD (patrón **DB-shared** entre microservicios); simple en local.
