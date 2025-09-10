@@ -12,7 +12,7 @@ Esta aplicación facilitará el proceso de preselección debido a que los jugado
 
 La aplicación cumple con los siguientes requisitos:
 1. Permite a los jugadores, registrarse, crear un perfil y subir sus vídeos.
-2. Procesamiento automático (Tarea en batch) de los videos cargados para que cumplan los siguiente requisitos:
+2. Procesamiento automático (de manera asíncrona) de los videos cargados para que cumplan los siguiente requisitos:
    1. Duración máxima de 30 segundos.
    2. Relación de aspecto 16:9 y resolución 720p.
    3. Adición de marca de agua de ANB para autenticar contenido.
@@ -26,5 +26,6 @@ Este proyecto será llevado a cabo en diferentes fases, por lo cual, se define u
 1. Entrega 1:
    - [Documentación entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/docs/Entrega_1)
    - [Video entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/docs/sustentacion/Entrega_1)
+
 
 
