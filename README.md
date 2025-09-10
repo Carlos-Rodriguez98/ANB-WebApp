@@ -25,7 +25,8 @@ Este proyecto será llevado a cabo en diferentes fases, por lo cual, se define u
 
 1. Entrega 1:
    - [Documentación entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/docs/Entrega_1)
-   - [Video entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/docs/sustentacion/Entrega_1)
+   - [Video entregable 1](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/main/sustentacion/Entrega_1)
+
 
 
 
