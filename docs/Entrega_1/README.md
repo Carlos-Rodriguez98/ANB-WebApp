@@ -102,6 +102,10 @@ La aplicación interactuará directamente con los usuarios que deseen registrars
 * **IStorageService**
     +
 
+* Cada servicio tiene su “capa de controladores” (HTTP) y “lógica” (reglas/validaciones).
+* Se comparte una única BD (patrón **DB-shared** entre microservicios); simple en local.
+* Contratos REST simples, formato JSON, y autenticación **Bearer JWT**.
+
 **Flujo de trabajo**
 
 1. Registro de usuario (Signup)
