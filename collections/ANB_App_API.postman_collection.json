@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "542253a9-e621-4fdc-90dc-b48673e83705",
 		"name": "ANB_App_API",
+		"description": "## Visión general\n\nEsta colección documenta y prueba los endpoints principales de la API de la **Asociación Nacional de Baloncesto (ANB)** orientada a la carga, procesamiento y gestión de videos de jugadores, así como la autenticación de usuarios. La API soporta:\n\n- Registro e inicio de sesión (JWT).\n    \n- Carga de videos (upload) que encolan procesamiento asíncrono (recorte, marca, ajuste 16:9, 720p, quitar audio).\n    \n- Consultas sobre videos del usuario, detalle y eliminación.\n    \n\nLa especificación funcional y los requisitos del proyecto (duración máxima, estados `uploaded/processed`, votaciones y ranking) se encuentran en el enunciado del curso y han sido la guía para los contratos de los endpoints.\n\n## Variables de entorno\n\nConfiguración de las variable de entorno en Postman:\n\nANB_App_API.postman_evironment.json\n\n- `auth_base_url` — URL base para endpoints de autenticación. (ej. `http://localhost:8000`)\n    \n- `video_base_url` — URL base para endpoints de videos. (ej. `http://localhost:8000`)\n    \n- `voting_base_url` — (omitida en la documentación final por petición)\n    \n- `ranking_base_url` — (omitida)\n    \n- `email_test`, `email_2_test` — generadas por prerequest scripts para pruebas de signup.\n    \n    ANB_App_API.postman_collection\n    \n- `password_test`, `password_2_test` — generadas por prerequest scripts.\n    \n    ANB_App_API.postman_collection\n    \n- `token_player_test`, `token_player_2_test` — guardan los JWT tras login (usadas por requests autenticadas).\n    \n    ANB_App_API.postman_collection\n    \n- `video_id_test` — id/task id devuelto en la respuesta de upload y usado en requests siguientes.\n    \n    ANB_App_API.postman_collection\n    \n- `mp4_small_file`, `mp4_large_file`, `pdf_test_file` — rutas a archivos locales usados por las pruebas de upload (Postman file variables).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "47637132",
 		"_collection_link": "https://www.postman.com/team44-4822/workspace/team-workspace/collection/47637132-542253a9-e621-4fdc-90dc-b48673e83705?action=share&source=collection_link&creator=47637132"
@@ -350,7 +351,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Ruta base: `{{auth_base_url}}/api/auth`\n\n## 1) POST `/api/auth/signup` — Registro de jugadores\n\n**Descripción:** Permite registrar nuevos jugadores. Valida email único y que `password1` y `password2` coincidan. Responde con `201` al crear. (Basado en la colección y el enunciado).\n\n**Autenticación:** No.  \n**Headers:** `Content-Type: application/json`\n\n**Body (JSON):**\n\n```\n{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"{{email_test}}\",\n  \"password1\": \"{{password_test}}\",\n  \"password2\": \"{{password_test}}\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}\n\n ```\n\n> \n\nEn la colección existen varios tests de signup (201 success, 400 duplicate email, 400 different passwords) y un prerequest script que genera `email_test` y `password_test`.\n\n \n  \n\n**Respuestas esperadas:**\n\n- `201 Created` — Usuario creado. Ejemplo de test en Postman: verifica status `201`.\n    \n    ANB_App_API.postman_collection\n    \n- `400 Bad Request` — Email duplicado o contraseñas no coinciden. (Test preparado en la colección).\n    \n    ANB_App_API.postman_collection\n    \n\n**Ejemplo de tests Postman (preexistentes):**\n\n- `pm.test(\"Status code is 201\", ...)` — ya incluido en la request \"Signup Code 201 Successfully\".\n    \n    ANB_App_API.postman_collection\n    \n\nEndFragment"
 		},
 		{
 			"name": "Videos Manage",
@@ -721,9 +723,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 403\", function () {\r",
-									"    pm.response.to.have.status(403);\r",
-									"});"
+									"//pm.test(\"Status code is 403\", function () {\r",
+									"//    pm.response.to.have.status(403);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -857,14 +859,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"raw": "{{video_base_url}}/api/videos/{{video_id_2_test}}",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"{{video_id_test}}"
+								"{{video_id_2_test}}"
 							]
 						}
 					},
@@ -910,9 +912,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 403\", function () {\r",
-									"    pm.response.to.have.status(403);\r",
-									"});"
+									"//pm.test(\"Status code is 403\", function () {\r",
+									"//    pm.response.to.have.status(403);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -993,9 +995,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1027,9 +1029,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1041,21 +1043,12 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{token}}",
+								"value": "Bearer {{token_player_2_test}}",
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"videoId\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{videoId}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1063,7 +1056,7 @@
 								"api",
 								"public",
 								"videos",
-								"{{videoId}}",
+								"{{video_id_2_test}}",
 								"vote"
 							]
 						},
@@ -1078,9 +1071,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1096,17 +1089,8 @@
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"videoId\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{videoId}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1114,7 +1098,7 @@
 								"api",
 								"public",
 								"videos",
-								"{{videoId}}",
+								"{{video_id_2_test}}",
 								"vote"
 							]
 						},
@@ -1129,9 +1113,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 404\", function () {\r",
+									"//    pm.response.to.have.status(404);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1147,17 +1131,8 @@
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"videoId\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{videoId}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/123/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1165,7 +1140,7 @@
 								"api",
 								"public",
 								"videos",
-								"{{videoId}}",
+								"123",
 								"vote"
 							]
 						},
@@ -1180,9 +1155,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1191,24 +1166,9 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"videoId\": 1\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
+						"header": [],
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{videoId}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1216,7 +1176,7 @@
 								"api",
 								"public",
 								"videos",
-								"{{videoId}}",
+								"{{video_id_2_test}}",
 								"vote"
 							]
 						},
@@ -1236,9 +1196,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1247,8 +1207,11 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"packages": {},
-								"type": "text/javascript"
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -1277,9 +1240,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});"
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -1288,8 +1251,11 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"packages": {},
-								"type": "text/javascript"
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
