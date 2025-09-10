@@ -291,7 +291,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await apiClient.postFormData('/videos/upload', formData);
             
             console.log('Upload response:', response);
-            Toast.show('¡Video subido exitosamente!', 'success');
+            
+            // Le service vidéo retourne { message, task_id }
+            if (response.message) {
+                Toast.show(response.message, 'success');
+            } else {
+                Toast.show('¡Video subido exitosamente!', 'success');
+            }
             
             // Redirect to dashboard after short delay
             setTimeout(() => {

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             videosContainer.classList.add('hidden');
             emptyState.classList.add('hidden');
             
-            const response = await apiClient.get('/api/videos/public');
+            const response = await apiClient.get('/public/videos');
             allVideos = response.videos || [];
             filteredVideos = [...allVideos];
             
@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const card = document.createElement('div');
         card.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
         
+        // Utiliser une image par défaut pour les thumbnails
         const thumbnail = video.thumbnail || 'https://via.placeholder.com/400x225/f97316/ffffff?text=Video';
-        const uploadDate = new Date(video.uploadDate).toLocaleDateString('fr-FR');
+        const uploadDate = new Date(video.uploaded_at).toLocaleDateString('fr-FR');
         
         card.innerHTML = `
             <div class="relative">
@@ -82,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-user mr-2"></i>
                     <span>${video.playerName}</span>
                     <span class="mx-2">•</span>
-                    <span>${video.category}</span>
+                    <span>${video.city}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm text-gray-500">
                     <span>${uploadDate}</span>
@@ -92,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${video.votes || 0}
                         </span>
                         <span class="flex items-center">
-                            <i class="fas fa-star mr-1 text-yellow-500"></i>
-                            ${video.averageScore || 0}
+                            <i class="fas fa-eye mr-1 text-blue-500"></i>
+                            Voir
                         </span>
                     </div>
                 </div>

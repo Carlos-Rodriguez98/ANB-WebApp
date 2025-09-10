@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Vidéo - ANB Rising Stars</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c',
+                            500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12',
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8',
+                            500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <header class="bg-dark-900 shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="flex items-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="ANB Logo" class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-primary-400 tracking-wide">ANB Rising Stars</span>
+                </a>
+            </div>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="dashboard.html" class="text-gray-100 hover:text-primary-400 transition">Panel</a>
+                <a href="upload-video.html" class="text-gray-100 hover:text-primary-400 transition">Subir</a>
+                <a href="public-videos.html" class="text-gray-100 hover:text-primary-400 transition">Videos Públicos</a>
+                <a href="rankings.html" class="text-gray-100 hover:text-primary-400 transition">Clasificación</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-2 auth-buttons">
+                <div class="user-menu">
+                    <span class="text-gray-100 mr-2">Bienvenido, <span id="username"></span></span>
+                    <button id="logoutBtn" class="btn-secondary text-sm">Déconnexion</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-8 px-4">
+        <!-- Back button -->
+        <div class="mb-6">
+            <a href="dashboard.html" class="inline-flex items-center text-primary-600 hover:text-primary-700">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Retour au panel
+            </a>
+        </div>
+
+        <!-- Loading state -->
+        <div id="loading" class="flex justify-center items-center py-12">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Video details -->
+        <div id="video-details" class="hidden">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Video player -->
+                        <div>
+                            <div id="video-container" class="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                                <video id="video-player" class="w-full h-full object-cover" controls>
+                                    <source id="video-source" src="" type="video/mp4">
+                                    Votre navigateur ne supporte pas la lecture vidéo.
+                                </video>
+                            </div>
+                        </div>
+
+                        <!-- Video info -->
+                        <div>
+                            <h1 id="video-title" class="text-2xl font-bold text-gray-900 mb-4"></h1>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-500 w-20">Statut:</span>
+                                    <span id="video-status" class="px-2 py-1 text-xs font-semibold rounded-full"></span>
+                                </div>
+
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-500 w-20">Uploadé:</span>
+                                    <span id="video-upload-date" class="text-sm text-gray-900"></span>
+                                </div>
+
+                                <div id="processed-date-container" class="hidden flex items-center">
+                                    <span class="text-sm font-medium text-gray-500 w-20">Traité:</span>
+                                    <span id="video-processed-date" class="text-sm text-gray-900"></span>
+                                </div>
+
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-500 w-20">Votes:</span>
+                                    <span id="video-votes" class="text-sm text-gray-900 flex items-center">
+                                        <i class="fas fa-thumbs-up text-green-500 mr-1"></i>
+                                        <span>0</span>
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-500 w-20">ID:</span>
+                                    <span id="video-id" class="text-sm text-gray-600 font-mono"></span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-6 flex space-x-3">
+                                <button id="publish-btn" class="hidden btn-success text-sm">
+                                    <i class="fas fa-upload mr-1"></i>
+                                    Publier
+                                </button>
+                                <button id="delete-btn" class="btn-danger text-sm">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="error-state" class="hidden text-center py-12">
+            <div class="text-red-500 text-6xl mb-4">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Vidéo non trouvée</h2>
+            <p class="text-gray-600 mb-4">La vidéo que vous cherchez n'existe pas ou a été supprimée.</p>
+            <a href="dashboard.html" class="btn-primary">Retour au panel</a>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-overlay modal-close"></div>
+        <div class="modal-content">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirmer la suppression</h3>
+                <p class="text-gray-600 mb-6">Êtes-vous sûr de vouloir supprimer cette vidéo ? Cette action est irréversible.</p>
+                
+                <div class="flex justify-end space-x-3">
+                    <button class="btn-secondary modal-close">Annuler</button>
+                    <button id="confirm-delete" class="btn-danger">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/utils/toast.js"></script>
+    <script src="../js/utils/auth.js"></script>
+    <script src="../js/utils/api.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/pages/video-detail.js"></script>
+</body>
+</html>

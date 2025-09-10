@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard script loaded and DOM ready'); // Debug log
+    
+    try {
+        
     // Dashboard functionality
     let currentPage = 1;
     const videosPerPage = 10;
@@ -29,27 +33,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize dashboard
     async function init() {
+        console.log('Dashboard init() called'); // Debug log
+        
         // Check authentication
-        const user = getCurrentUser();
+        const user = Auth.getCurrentUser();
+        console.log('Current user:', user); // Debug log
+        
         if (!user) {
+            console.log('No user found, redirecting to login'); // Debug log
             window.location.href = 'login.html';
             return;
         }
 
         // Display username
-        usernameDisplay.textContent = user.firstName || user.email;
+        if (usernameDisplay) {
+            usernameDisplay.textContent = user.firstName || user.email;
+        }
 
+        console.log('About to load data'); // Debug log
+        
         // Load data
-        await Promise.all([
-            loadUserStats(),
-            loadUserVideos()
-        ]);
+        try {
+            await Promise.all([
+                loadUserStats(),
+                loadUserVideos()
+            ]);
+            console.log('Data loading completed'); // Debug log
+        } catch (error) {
+            console.error('Error in init Promise.all:', error); // Debug log
+        }
     }
 
     // Load user statistics
     async function loadUserStats() {
         try {
-            const response = await apiClient.get('/api/user/stats');
+            const response = await apiClient.get('/user/stats');
             userStats = response;
             
             // Update stats display
@@ -65,30 +83,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load user videos
     async function loadUserVideos() {
+        console.log('loadUserVideos() called'); // Debug log
+        
         try {
-            loadingElement.classList.remove('hidden');
-            videosContainer.classList.add('hidden');
-            emptyState.classList.add('hidden');
+            if (loadingElement) {
+                loadingElement.classList.remove('hidden');
+            }
+            if (videosContainer) {
+                videosContainer.classList.add('hidden');
+            }
+            if (emptyState) {
+                emptyState.classList.add('hidden');
+            }
             
-            const response = await apiClient.get('/api/videos');
-            allVideos = response.videos || response || [];
+            console.log('About to call apiClient.get("/videos")'); // Debug log
+            const response = await apiClient.get('/videos');
+            console.log('Response from video service:', response); // Debug log
+            
+            // Le service vidéo retourne directement un tableau de vidéos
+            allVideos = Array.isArray(response) ? response : response.videos || [];
+            console.log('Parsed videos:', allVideos); // Debug log
             
             applyFilters();
             
         } catch (error) {
             console.error('Error loading videos:', error);
-            showToast('Error al cargar los videos', 'error');
+            showToast('Error al cargar los videos: ' + error.message, 'error');
             showEmptyState();
         } finally {
-            loadingElement.classList.add('hidden');
+            if (loadingElement) {
+                loadingElement.classList.add('hidden');
+            }
         }
     }
 
     // Apply filters
     function applyFilters() {
         filteredVideos = allVideos.filter(video => {
-            if (statusFilter.value && video.visibility !== statusFilter.value) {
-                return false;
+            if (statusFilter.value) {
+                // Adapter le filtrage aux nouveaux statuts
+                if (statusFilter.value === 'public' && !video.published) return false;
+                if (statusFilter.value === 'private' && video.published) return false;
+                if (statusFilter.value === 'processing' && video.status !== 'processing') return false;
+                if (statusFilter.value === 'processed' && video.status !== 'processed') return false;
             }
             return true;
         });
@@ -127,15 +164,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         
-        const uploadDate = new Date(video.uploadDate || video.uploadedAt).toLocaleDateString('fr-FR');
-        const statusClass = video.visibility === 'public' ? 'text-green-600 bg-green-100' : 'text-gray-600 bg-gray-100';
-        const statusText = video.visibility === 'public' ? 'Publique' : 'Privée';
+        const uploadDate = new Date(video.uploaded_at).toLocaleDateString('fr-FR');
+        
+        // Adapter les statuts du service vidéo
+        let statusClass = 'text-gray-600 bg-gray-100';
+        let statusText = 'En traitement';
+        
+        if (video.status === 'processed') {
+            statusClass = video.published ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100';
+            statusText = video.published ? 'Publique' : 'Traité';
+        } else if (video.status === 'processing') {
+            statusClass = 'text-yellow-600 bg-yellow-100';
+            statusText = 'En traitement';
+        } else if (video.status === 'error') {
+            statusClass = 'text-red-600 bg-red-100';
+            statusText = 'Erreur';
+        } else if (video.status === 'uploaded') {
+            statusClass = 'text-blue-600 bg-blue-100';
+            statusText = 'Uploadé';
+        }
 
         row.innerHTML = `
             <td class="px-4 py-4">
                 <div class="max-w-xs">
                     <div class="font-medium text-gray-900 truncate">${video.title}</div>
-                    <div class="text-sm text-gray-500">${video.category || 'Non spécifiée'}</div>
+                    <div class="text-sm text-gray-500">ID: ${video.video_id}</div>
                 </div>
             </td>
             <td class="px-4 py-4">
@@ -154,18 +207,31 @@ document.addEventListener('DOMContentLoaded', function() {
             </td>
             <td class="px-4 py-4 text-sm text-gray-900">
                 <div class="flex items-center">
-                    <i class="fas fa-star text-yellow-500 mr-1"></i>
-                    ${(video.averageScore || 0).toFixed(1)}
+                    ${video.processed_url 
+                        ? `<a href="${video.processed_url}" target="_blank" class="text-blue-600 hover:text-blue-900">
+                             <i class="fas fa-play-circle mr-1"></i>Voir
+                           </a>`
+                        : '<span class="text-gray-400">Non disponible</span>'
+                    }
                 </div>
             </td>
             <td class="px-4 py-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-2">
-                    <button class="text-blue-600 hover:text-blue-900" onclick="viewVideo('${video.id}')">
+                    ${video.status === 'processed' && !video.published 
+                        ? `<button class="text-green-600 hover:text-green-900" onclick="publishVideo('${video.video_id}')">
+                             <i class="fas fa-upload"></i>
+                           </button>` 
+                        : ''
+                    }
+                    <button class="text-blue-600 hover:text-blue-900" onclick="viewVideo('${video.video_id}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="confirmDeleteVideo('${video.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${!video.published 
+                        ? `<button class="text-red-600 hover:text-red-900" onclick="confirmDeleteVideo('${video.video_id}')">
+                             <i class="fas fa-trash"></i>
+                           </button>` 
+                        : ''
+                    }
                 </div>
             </td>
         `;
@@ -228,6 +294,16 @@ document.addEventListener('DOMContentLoaded', function() {
         emptyState.classList.remove('hidden');
     }
 
+    // Show toast notification
+    function showToast(message, type = 'info') {
+        if (typeof Toast !== 'undefined') {
+            Toast.show(message, type);
+        } else {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message); // Fallback
+        }
+    }
+
     // Global functions for button actions
     window.viewVideo = function(videoId) {
         window.location.href = `video-detail.html?id=${videoId}`;
@@ -238,14 +314,28 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteModal.classList.add('show');
     };
 
+    window.publishVideo = async function(videoId) {
+        try {
+            await apiClient.post(`/videos/${videoId}/publish`, {});
+            showToast('Video publicado exitosamente', 'success');
+            
+            // Refresh the video list
+            await loadUserVideos();
+            
+        } catch (error) {
+            console.error('Error publishing video:', error);
+            showToast('Error al publicar', 'error');
+        }
+    };
+
     // Delete video
     async function deleteVideo(videoId) {
         try {
-            await apiClient.delete(`/api/videos/${videoId}`);
+            await apiClient.delete(`/videos/${videoId}`);
             showToast('Video eliminado exitosamente', 'success');
             
             // Remove from arrays and refresh
-            allVideos = allVideos.filter(v => v.id !== videoId);
+            allVideos = allVideos.filter(v => v.video_id !== videoId);
             applyFilters();
             
             // Refresh stats
@@ -258,31 +348,54 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners
-    statusFilter.addEventListener('change', applyFilters);
+    if (statusFilter) {
+        statusFilter.addEventListener('change', applyFilters);
+    } else {
+        console.warn('statusFilter element not found');
+    }
 
-    logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        logout();
-        window.location.href = 'login.html';
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Auth.logout(); // Correction: utiliser Auth.logout() au lieu de logout()
+            window.location.href = 'login.html';
+        });
+    } else {
+        console.warn('logoutBtn element not found');
+    }
 
     // Modal event listeners
-    confirmDeleteBtn.addEventListener('click', async () => {
-        if (videoToDelete) {
-            await deleteVideo(videoToDelete);
-            videoToDelete = null;
-            deleteModal.classList.remove('show');
-        }
-    });
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (videoToDelete) {
+                await deleteVideo(videoToDelete);
+                videoToDelete = null;
+                if (deleteModal) {
+                    deleteModal.classList.remove('show');
+                }
+            }
+        });
+    } else {
+        console.warn('confirmDeleteBtn element not found');
+    }
 
     // Close modal handlers
-    deleteModal.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            deleteModal.classList.remove('show');
-            videoToDelete = null;
+    if (deleteModal) {
+        deleteModal.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                deleteModal.classList.remove('show');
+                videoToDelete = null;
+            });
         });
-    });
+    } else {
+        console.warn('deleteModal element not found');
+    }
 
     // Initialize dashboard
+    console.log('About to call init()'); // Debug log
     init();
+    
+    } catch (error) {
+        console.error('Error in dashboard script:', error);
+    }
 });

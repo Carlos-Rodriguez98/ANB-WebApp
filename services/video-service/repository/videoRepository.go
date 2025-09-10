@@ -58,3 +58,20 @@ func (r *VideoRepository) Publish(userID uint, id string) error {
 	}
 	return nil
 }
+
+// GetPublishedVideos obtient tous les vidéos publiées
+func (r *VideoRepository) GetPublishedVideos() ([]models.Video, error) {
+	var videos []models.Video
+	err := r.DB.Where("published = ? AND status = ?", true, "processed").Find(&videos).Error
+	return videos, err
+}
+
+// GetPublishedVideoByID obtient une vidéo publiée par ID
+func (r *VideoRepository) GetPublishedVideoByID(videoID string) (*models.Video, error) {
+	var video models.Video
+	err := r.DB.Where("video_id = ? AND published = ? AND status = ?", videoID, true, "processed").First(&video).Error
+	if err != nil {
+		return nil, err
+	}
+	return &video, nil
+}

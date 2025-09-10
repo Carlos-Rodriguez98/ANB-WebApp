@@ -12,6 +12,9 @@ import time
 import urllib.request
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
+import cgi
+import tempfile
+import requests
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
@@ -107,6 +110,41 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return {"error": f"Auth service error: {e.reason}"}, e.code
         except Exception as e:
             return {"error": f"Connection error: {str(e)}"}, 500
+
+    def proxy_to_video_service(self, endpoint, method='GET', data=None, headers=None, form_data=None):
+        """Fait une requête vers le service vidéo réel"""
+        url = f"{self.VIDEO_SERVICE_URL}/api{endpoint}"
+        
+        try:
+            req_headers = headers or {}
+            req_data = None
+            
+            if form_data:
+                # Pour les uploads de fichiers multipart/form-data
+                req_data = form_data
+            elif method in ['POST', 'PUT'] and data:
+                # Pour les requêtes JSON
+                req_data = json.dumps(data).encode('utf-8')
+                req_headers['Content-Type'] = 'application/json'
+            
+            req = urllib.request.Request(url, data=req_data, headers=req_headers, method=method)
+            
+            # Faire la requête
+            with urllib.request.urlopen(req) as response:
+                response_data = response.read().decode('utf-8')
+                try:
+                    return json.loads(response_data), response.status
+                except:
+                    return {"data": response_data}, response.status
+                
+        except urllib.error.HTTPError as e:
+            error_data = e.read().decode('utf-8')
+            try:
+                return json.loads(error_data), e.code
+            except:
+                return {"error": f"Video service error: {e.reason}"}, e.code
+        except Exception as e:
+            return {"error": f"Connection error: {str(e)}"}, 500
     
     def handle_auth_signup(self):
         """Redirige POST /api/auth/signup vers le service auth réel"""
@@ -161,68 +199,325 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             # Erreur - renvoyer l'erreur du service auth
             self.send_json_response(response_data, status_code)
     
+    def get_auth_token_from_request(self):
+        """Extrait le token d'autorisation de la requête"""
+        auth_header = self.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            return auth_header
+        return None
+
     def handle_videos_upload(self):
-        """Simule POST /api/videos/upload"""
-        # Simuler l'upload (normalement multipart/form-data)
-        new_video = {
-            "id": str(len(self.videos) + 1),
-            "title": "Nouvelle vidéo uploadée",
-            "status": "processing",
-            "uploadedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "processedAt": None,
-            "votes": 0,
-            "userId": self.current_user_id or "1"
-        }
-        self.videos.append(new_video)
-        self.send_json_response({"message": "Vidéo uploadée avec succès", "video": new_video})
-    
-    def handle_get_my_videos(self):
-        """Simule GET /api/videos"""
-        user_videos = [v for v in self.videos if v.get('userId') == (self.current_user_id or "1")]
-        self.send_json_response(user_videos)
-    
-    def handle_get_video_by_id(self, video_id):
-        """Simule GET /api/videos/:id"""
-        video = next((v for v in self.videos if v['id'] == video_id), None)
-        if not video:
-            self.send_json_response({"error": "Vidéo non trouvée"}, 404)
-            return
-        self.send_json_response(video)
-    
-    def handle_delete_video(self, video_id):
-        """Simule DELETE /api/videos/:id"""
-        video = next((v for v in self.videos if v['id'] == video_id), None)
-        if not video:
-            self.send_json_response({"error": "Vidéo non trouvée"}, 404)
+        """Proxy POST /api/videos/upload vers le service vidéo"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
             return
         
-        self.videos.remove(video)
-        self.send_json_response({"message": "Vidéo supprimée"})
+        try:
+            # Parse le multipart/form-data
+            content_type = self.headers.get('Content-Type', '')
+            if not content_type.startswith('multipart/form-data'):
+                self.send_json_response({"error": "Content-Type multipart/form-data requis"}, 400)
+                return
+                
+            # Parse le form data
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD': 'POST'}
+            )
+            
+            # Vérifier que nous avons les champs requis
+            if 'video_file' not in form or 'title' not in form:
+                self.send_json_response({"error": "video_file et title sont requis"}, 400)
+                return
+            
+            video_file = form['video_file']
+            title = form['title'].value
+            
+            if not hasattr(video_file, 'file') or not hasattr(video_file, 'filename'):
+                self.send_json_response({"error": "Fichier vidéo invalide"}, 400)
+                return
+            
+            # Créer une nouvelle requête multipart pour le service vidéo
+            try:
+                import requests
+            except ImportError:
+                # Fallback si requests n'est pas installé
+                self.send_json_response({"error": "Module requests requis pour l'upload. Installez avec: pip install requests"}, 500)
+                return
+            
+            # Préparer les fichiers et données pour le service vidéo
+            files = {
+                'video_file': (
+                    video_file.filename,
+                    video_file.file,
+                    video_file.type if hasattr(video_file, 'type') else 'video/mp4'
+                )
+            }
+            data = {'title': title}
+            headers = {'Authorization': auth_token}
+            
+            # Faire la requête vers le service vidéo
+            video_service_url = f"{self.VIDEO_SERVICE_URL}/api/videos/upload"
+            response = requests.post(
+                video_service_url,
+                files=files,
+                data=data,
+                headers=headers,
+                timeout=300  # 5 minutes timeout pour les gros fichiers
+            )
+            
+            # Retourner la réponse du service vidéo
+            if response.headers.get('Content-Type', '').startswith('application/json'):
+                response_data = response.json()
+            else:
+                response_data = {"message": response.text}
+                
+            self.send_json_response(response_data, response.status_code)
+            
+        except Exception as e:
+            print(f"Error in upload proxy: {e}")
+            import traceback
+            traceback.print_exc()
+            self.send_json_response({"error": f"Erreur lors du proxy upload: {str(e)}"}, 500)
+
+    def handle_get_my_videos(self):
+        """Proxy GET /api/videos vers le service vidéo"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
+            return
+        
+        try:
+            # Faire la requête vers le service vidéo
+            response_data, status_code = self.proxy_to_video_service(
+                '/videos', 
+                'GET', 
+                headers={'Authorization': auth_token}
+            )
+            self.send_json_response(response_data, status_code)
+            
+        except Exception as e:
+            print(f"Error in get_my_videos: {e}")
+            self.send_json_response({"error": "Erreur lors du chargement des vidéos"}, 500)
+
+    def handle_get_video_by_id(self, video_id):
+        """Proxy GET /api/videos/:id vers le service vidéo"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
+            return
+        
+        try:
+            # Faire la requête vers le service vidéo
+            response_data, status_code = self.proxy_to_video_service(
+                f'/videos/{video_id}', 
+                'GET', 
+                headers={'Authorization': auth_token}
+            )
+            self.send_json_response(response_data, status_code)
+            
+        except Exception as e:
+            print(f"Error in get_video_by_id: {e}")
+            self.send_json_response({"error": "Erreur lors du chargement de la vidéo"}, 500)
+
+    def handle_delete_video(self, video_id):
+        """Proxy DELETE /api/videos/:id vers le service vidéo"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
+            return
+        
+        try:
+            # Faire la requête vers le service vidéo
+            response_data, status_code = self.proxy_to_video_service(
+                f'/videos/{video_id}', 
+                'DELETE', 
+                headers={'Authorization': auth_token}
+            )
+            self.send_json_response(response_data, status_code)
+            
+        except Exception as e:
+            print(f"Error in delete_video: {e}")
+            self.send_json_response({"error": "Erreur lors de la suppression de la vidéo"}, 500)
+            
+        except Exception as e:
+            print(f"Error in delete_video: {e}")
+            self.send_json_response({"error": "Erreur lors de la suppression"}, 500)
+
+    def handle_publish_video(self, video_id):
+        """Simule POST /api/videos/:id/publish"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
+            return
+        
+        try:
+            # Simuler la publication d'une vidéo
+            self.send_json_response({
+                "message": "video publicado",
+                "video_id": video_id
+            })
+            
+        except Exception as e:
+            print(f"Error in publish_video: {e}")
+            self.send_json_response({"error": "Erreur lors de la publication"}, 500)
+
+    def handle_get_user_stats(self):
+        """Simule GET /api/user/stats - pour le moment, retourne des statistiques simulées"""
+        auth_token = self.get_auth_token_from_request()
+        if not auth_token:
+            self.send_json_response({"error": "Token d'autorisation requis"}, 401)
+            return
+        
+        # Pour le moment, nous simulons les stats utilisateur
+        # Dans le futur, cela pourrait venir d'un service de statistiques dédié
+        stats = {
+            "totalVideos": 3,
+            "totalVotes": 25,
+            "ranking": 8,
+            "averageScore": 4.2
+        }
+        self.send_json_response(stats)
     
     def handle_get_public_videos(self, query_params):
-        """Simule GET /api/public/videos"""
-        page = int(query_params.get('page', [1])[0])
-        limit = int(query_params.get('limit', [12])[0])
-        
-        processed_videos = [v for v in self.videos if v['status'] == 'processed']
-        total = len(processed_videos)
-        start = (page - 1) * limit
-        end = start + limit
-        
-        self.send_json_response({
-            "videos": processed_videos[start:end],
-            "total": total,
-            "totalPages": (total + limit - 1) // limit,
-            "currentPage": page
-        })
+        """Simule GET /api/public/videos en récupérant toutes les vidéos publiées"""
+        try:
+            # Pour récupérer les vidéos publiques, nous devons simuler en récupérant
+            # toutes les vidéos publiées. En production, cela devrait être un endpoint dédié.
+            page = int(query_params.get('page', [1])[0])
+            limit = int(query_params.get('limit', [12])[0])
+            
+            # Pour le moment, retournons des données simulées
+            # Dans une vraie implémentation, on pourrait avoir un service dédié 
+            # ou un cache des vidéos publiques
+            public_videos = [
+                {
+                    "id": "1",
+                    "video_id": "1", 
+                    "title": "Dribbling Skills Master Class", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-25T10:00:00Z",
+                    "processed_at": "2025-08-25T10:05:00Z",
+                    "votes": 15,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-25T11:00:00Z",
+                    "playerName": "Jean Dupont",
+                    "city": "Paris",
+                    "userId": "1"
+                },
+                {
+                    "id": "2",
+                    "video_id": "2", 
+                    "title": "3-Point Shooting Technique", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-24T14:30:00Z",
+                    "processed_at": "2025-08-24T14:35:00Z",
+                    "votes": 23,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-24T15:00:00Z",
+                    "playerName": "Marie Martin",
+                    "city": "Lyon",
+                    "userId": "2"
+                },
+                {
+                    "id": "3",
+                    "video_id": "3", 
+                    "title": "Defensive Moves Compilation", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-23T16:20:00Z",
+                    "processed_at": "2025-08-23T16:25:00Z",
+                    "votes": 31,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-23T17:00:00Z",
+                    "playerName": "Paul Bernard",
+                    "city": "Marseille",
+                    "userId": "3"
+                }
+            ]
+            
+            total = len(public_videos)
+            start = (page - 1) * limit
+            end = start + limit
+            
+            self.send_json_response({
+                "videos": public_videos[start:end],
+                "total": total,
+                "totalPages": (total + limit - 1) // limit if total > 0 else 1,
+                "currentPage": page
+            })
+            
+        except Exception as e:
+            print(f"Error in get_public_videos: {e}")
+            self.send_json_response({"error": "Erreur lors du chargement des vidéos publiques"}, 500)
     
     def handle_get_public_video_by_id(self, video_id):
         """Simule GET /api/public/videos/:id"""
-        video = next((v for v in self.videos if v['id'] == video_id and v['status'] == 'processed'), None)
-        if not video:
-            self.send_json_response({"error": "Vidéo non trouvée"}, 404)
-            return
-        self.send_json_response(video)
+        try:
+            # Simuler la récupération d'une vidéo publique par ID
+            # En production, cela devrait vérifier que la vidéo est effectivement publique
+            public_videos = {
+                "1": {
+                    "id": "1",
+                    "video_id": "1", 
+                    "title": "Dribbling Skills Master Class", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-25T10:00:00Z",
+                    "processed_at": "2025-08-25T10:05:00Z",
+                    "votes": 15,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-25T11:00:00Z",
+                    "playerName": "Jean Dupont",
+                    "city": "Paris",
+                    "userId": "1"
+                },
+                "2": {
+                    "id": "2",
+                    "video_id": "2", 
+                    "title": "3-Point Shooting Technique", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-24T14:30:00Z",
+                    "processed_at": "2025-08-24T14:35:00Z",
+                    "votes": 23,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-24T15:00:00Z",
+                    "playerName": "Marie Martin",
+                    "city": "Lyon",
+                    "userId": "2"
+                },
+                "3": {
+                    "id": "3",
+                    "video_id": "3", 
+                    "title": "Defensive Moves Compilation", 
+                    "status": "processed", 
+                    "uploaded_at": "2025-08-23T16:20:00Z",
+                    "processed_at": "2025-08-23T16:25:00Z",
+                    "votes": 31,
+                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+                    "published": True,
+                    "published_at": "2025-08-23T17:00:00Z",
+                    "playerName": "Paul Bernard",
+                    "city": "Marseille",
+                    "userId": "3"
+                }
+            }
+            
+            video = public_videos.get(video_id)
+            if not video:
+                self.send_json_response({"error": "Vidéo publique non trouvée"}, 404)
+                return
+                
+            self.send_json_response(video)
+            
+        except Exception as e:
+            print(f"Error in get_public_video_by_id: {e}")
+            self.send_json_response({"error": "Erreur lors du chargement de la vidéo"}, 500)
     
     def handle_vote_for_video(self, video_id):
         """Simule POST /api/public/videos/:id/vote"""
@@ -316,6 +611,9 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return self.handle_auth_login()
         elif path == '/api/videos/upload':
             return self.handle_videos_upload()
+        elif path.startswith('/api/videos/') and path.endswith('/publish'):
+            video_id = path.split('/')[-2]
+            return self.handle_publish_video(video_id)
         elif path.startswith('/api/public/videos/') and path.endswith('/vote'):
             video_id = path.split('/')[-2]
             return self.handle_vote_for_video(video_id)
@@ -344,6 +642,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if path.startswith('/api/'):
             if path == '/api/videos':
                 return self.handle_get_my_videos()
+            elif path == '/api/user/stats':
+                return self.handle_get_user_stats()
             elif path.startswith('/api/videos/') and len(path.split('/')) == 4:
                 video_id = path.split('/')[-1]
                 return self.handle_get_video_by_id(video_id)
