@@ -32,7 +32,7 @@ func main() {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
-	// dbPassword := os.Getenv("DB_PASSWORD")
+	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
 	if serverPort == "" {
@@ -40,8 +40,8 @@ func main() {
 		serverPort = "8081"
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbName)
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -63,8 +63,8 @@ func main() {
 func getRanking(c *gin.Context) {
 	rows, err := db.Query(`
 		SELECT v.user_id, COUNT(vo.vote_id) AS VotosAcumulados
-		FROM "Videos" v
-		JOIN "Votes" vo ON v.video_id = vo.video_id
+		FROM app.videos v
+		JOIN app.votes vo ON v.video_id = vo.video_id
 		WHERE v.published = TRUE
 		GROUP BY v.user_id
 		ORDER BY VotosAcumulados DESC
