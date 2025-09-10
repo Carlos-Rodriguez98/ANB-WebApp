@@ -1,0 +1,1305 @@
+{
+	"info": {
+		"_postman_id": "542253a9-e621-4fdc-90dc-b48673e83705",
+		"name": "ANB_App_API",
+		"description": "## Visión general\n\nEsta colección documenta y prueba los endpoints principales de la API de la **Asociación Nacional de Baloncesto (ANB)** orientada a la carga, procesamiento y gestión de videos de jugadores, así como la autenticación de usuarios. La API soporta:\n\n- Registro e inicio de sesión (JWT).\n    \n- Carga de videos (upload) que encolan procesamiento asíncrono (recorte, marca, ajuste 16:9, 720p, quitar audio).\n    \n- Consultas sobre videos del usuario, detalle y eliminación.\n    \n\nLa especificación funcional y los requisitos del proyecto (duración máxima, estados `uploaded/processed`, votaciones y ranking) se encuentran en el enunciado del curso y han sido la guía para los contratos de los endpoints.\n\n## Variables de entorno\n\nConfiguración de las variable de entorno en Postman:\n\nANB_App_API.postman_evironment.json\n\n- `auth_base_url` — URL base para endpoints de autenticación. (ej. `http://localhost:8000`)\n    \n- `video_base_url` — URL base para endpoints de videos. (ej. `http://localhost:8000`)\n    \n- `voting_base_url` — (omitida en la documentación final por petición)\n    \n- `ranking_base_url` — (omitida)\n    \n- `email_test`, `email_2_test` — generadas por prerequest scripts para pruebas de signup.\n    \n    ANB_App_API.postman_collection\n    \n- `password_test`, `password_2_test` — generadas por prerequest scripts.\n    \n    ANB_App_API.postman_collection\n    \n- `token_player_test`, `token_player_2_test` — guardan los JWT tras login (usadas por requests autenticadas).\n    \n    ANB_App_API.postman_collection\n    \n- `video_id_test` — id/task id devuelto en la respuesta de upload y usado en requests siguientes.\n    \n    ANB_App_API.postman_collection\n    \n- `mp4_small_file`, `mp4_large_file`, `pdf_test_file` — rutas a archivos locales usados por las pruebas de upload (Postman file variables).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47637132",
+		"_collection_link": "https://www.postman.com/team44-4822/workspace/team-workspace/collection/47637132-542253a9-e621-4fdc-90dc-b48673e83705?action=share&source=collection_link&creator=47637132"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Signup Code 201 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar y guardar un email de prueba en la variable de colección email_test\r",
+									"pm.environment.set(\"email_test\", `user_${Date.now()}@test.com`);\r",
+									"\r",
+									"// Generar y guardar una password de prueba en la variable de colección password_test\r",
+									"pm.environment.set(\"password_test\", `password_${Date.now()}`);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"{{email_test}}\",\r\n    \"password1\": \"{{password_test}}\",\r\n    \"password2\": \"{{password_test}}\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/signup",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Signup Code 201 Successfully Second Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generar y guardar un email de prueba en la variable de colección email_test\r",
+									"pm.environment.set(\"email_2_test\", `user_${Date.now()}@test.com`);\r",
+									"\r",
+									"// Generar y guardar una password de prueba en la variable de colección password_test\r",
+									"pm.environment.set(\"password_2_test\", `password_${Date.now()}`);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"{{email_2_test}}\",\r\n    \"password1\": \"{{password_2_test}}\",\r\n    \"password2\": \"{{password_2_test}}\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/signup",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Signup Code 400 Duplicate Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"{{email_test}}\",\r\n    \"password1\": \"StrongPass123\",\r\n    \"password2\": \"StrongPass123\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/signup",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Signup Code 400 Different Passwords",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"john@example.com\",\r\n    \"password1\": \"StrongPass123\",\r\n    \"password2\": \"StrongPass321\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/signup",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Code 200 Auth Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 200.\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Save the token in a collection variable for later use.\r",
+									"pm.environment.set(\"token_player_test\", pm.response.json().access_token || \"\");\r",
+									"\r",
+									"// Check if the token is saved correctly.\r",
+									"pm.test(\"Token saved\", function () {\r",
+									"    pm.expect(pm.environment.get(\"token_player_test\")).to.have.length.above(10);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"{{email_test}}\",\r\n    \"password\":\"{{password_test}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/login",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Code 200 Auth Successfully Second Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 200.\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Save the token in a collection variable for later use.\r",
+									"pm.environment.set(\"token_player_2_test\", pm.response.json().access_token || \"\");\r",
+									"\r",
+									"// Check if the token is saved correctly.\r",
+									"pm.test(\"Token saved\", function () {\r",
+									"    pm.expect(pm.environment.get(\"token_player_2_test\")).to.have.length.above(10);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"{{email_2_test}}\",\r\n    \"password\":\"{{password_2_test}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/login",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Code 401 Invalid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"{{email_test}}\",\r\n    \"password\":\"StrongPass123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/login",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Ruta base: `{{auth_base_url}}/api/auth`\n\n## 1) POST `/api/auth/signup` — Registro de jugadores\n\n**Descripción:** Permite registrar nuevos jugadores. Valida email único y que `password1` y `password2` coincidan. Responde con `201` al crear. (Basado en la colección y el enunciado).\n\n**Autenticación:** No.  \n**Headers:** `Content-Type: application/json`\n\n**Body (JSON):**\n\n```\n{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"{{email_test}}\",\n  \"password1\": \"{{password_test}}\",\n  \"password2\": \"{{password_test}}\",\n  \"city\": \"Bogotá\",\n  \"country\": \"Colombia\"\n}\n\n ```\n\n> \n\nEn la colección existen varios tests de signup (201 success, 400 duplicate email, 400 different passwords) y un prerequest script que genera `email_test` y `password_test`.\n\n \n  \n\n**Respuestas esperadas:**\n\n- `201 Created` — Usuario creado. Ejemplo de test en Postman: verifica status `201`.\n    \n    ANB_App_API.postman_collection\n    \n- `400 Bad Request` — Email duplicado o contraseñas no coinciden. (Test preparado en la colección).\n    \n    ANB_App_API.postman_collection\n    \n\n**Ejemplo de tests Postman (preexistentes):**\n\n- `pm.test(\"Status code is 201\", ...)` — ya incluido en la request \"Signup Code 201 Successfully\".\n    \n    ANB_App_API.postman_collection\n    \n\nEndFragment"
+		},
+		{
+			"name": "Videos Manage",
+			"item": [
+				{
+					"name": "Video Upload Code 201 Queued Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 201.\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"// Save the task id from the response to a collection variable for later use.\r",
+									"pm.environment.set(\"video_id_test\", pm.response.json().task_id || \"\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video_file",
+									"type": "file",
+									"src": "{{mp4_small_file}}"
+								},
+								{
+									"key": "title",
+									"value": "Título descriptivo del video.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/upload",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Upload Code 400 Invalid Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 400.\r",
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video_file",
+									"type": "file",
+									"src": "{{pdf_test_file}}"
+								},
+								{
+									"key": "title",
+									"value": "Título descriptivo del archivo.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/upload",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Upload Code 400 Invalid Size",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 400.\r",
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video_file",
+									"type": "file",
+									"src": "{{mp4_large_file}}"
+								},
+								{
+									"key": "title",
+									"value": "Título descriptivo del archivo.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/upload",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Upload Code 401 Invalid Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the response status code is 401.\r",
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video_file",
+									"type": "file",
+									"src": "{{mp4_small_file}}"
+								},
+								{
+									"key": "title",
+									"value": "Título descriptivo del video.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/upload",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Videos Listed Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Videos Listed Code 401 Invalid Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Detail Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Detail Code 401 Invalid Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Detail Code 403 Not Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 403\", function () {\r",
+									"//    pm.response.to.have.status(403);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_2_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Detail Code 404 Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/123",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"123"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Delete Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Delete Code 400 Invalid Conditions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_2_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_2_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Delete Code 401 Invalid Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Delete Code 403 Not Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 403\", function () {\r",
+									"//    pm.response.to.have.status(403);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_2_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"{{video_id_test}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video Delete Code 404 Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{video_base_url}}/api/videos/123",
+							"host": [
+								"{{video_base_url}}"
+							],
+							"path": [
+								"api",
+								"videos",
+								"123"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Voting Manage",
+			"item": [
+				{
+					"name": "Get Videos Public Listed Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{voting_base_url}}/api/public/videos",
+							"host": [
+								"{{voting_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"videos"
+							]
+						},
+						"description": "Lista los videos públicos disponibles para votación."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote for Videos Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_player_2_test}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"host": [
+								"{{voting_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"videos",
+								"{{video_id_2_test}}",
+								"vote"
+							]
+						},
+						"description": "Emite un voto por un video público."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote for Videos Code 400 Invalid Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"host": [
+								"{{voting_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"videos",
+								"{{video_id_2_test}}",
+								"vote"
+							]
+						},
+						"description": "Emite un voto por un video público."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote for Videos Code 404 Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 404\", function () {\r",
+									"//    pm.response.to.have.status(404);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{voting_base_url}}/api/public/videos/123/vote",
+							"host": [
+								"{{voting_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"videos",
+								"123",
+								"vote"
+							]
+						},
+						"description": "Emite un voto por un video público."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote for Videos Code 401 Invalid Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"host": [
+								"{{voting_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"videos",
+								"{{video_id_2_test}}",
+								"vote"
+							]
+						},
+						"description": "Emite un voto por un video público."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ranking Manage",
+			"item": [
+				{
+					"name": "Get Rankings Code 200 Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ranking_base_url}}/api/public/rankings",
+							"host": [
+								"{{ranking_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"rankings"
+							]
+						},
+						"description": "Muestra el ranking actual de los jugadores por votos acumulados."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rankings Code 400 Invalid Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//pm.test(\"Status code is 200\", function () {\r",
+									"//    pm.response.to.have.status(200);\r",
+									"//});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ranking_base_url}}/api/public/rankings",
+							"host": [
+								"{{ranking_base_url}}"
+							],
+							"path": [
+								"api",
+								"public",
+								"rankings"
+							]
+						},
+						"description": "Muestra el ranking actual de los jugadores por votos acumulados."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
