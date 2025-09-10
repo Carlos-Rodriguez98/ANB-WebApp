@@ -135,6 +135,12 @@ func (s *VideoService) GetDetail(userID uint, videoID string) (*dto.VideoDetail,
 		processedAt = &t
 	}
 
+	var publishedAt *string
+	if v.PublishedAt != nil {
+		pt := v.PublishedAt.UTC().Format(timeLayout)
+		publishedAt = &pt
+	}
+
 	return &dto.VideoDetail{
 		VideoID:      v.ID,
 		Title:        v.Title,
@@ -143,7 +149,9 @@ func (s *VideoService) GetDetail(userID uint, videoID string) (*dto.VideoDetail,
 		ProcessedAt:  processedAt,
 		OriginalURL:  origURL,
 		ProcessedURL: procURL,
-		Votes:        0, // se integrará con el módulo de votos
+		Published:    v.Published, // <-- NUEVO
+		PublishedAt:  publishedAt, // <-- Opcional
+		Votes:        0,           // se integrará con el módulo de votos
 	}, nil
 }
 
@@ -163,4 +171,19 @@ func (s *VideoService) Delete(userID uint, videoID string) error {
 	}
 
 	return s.Repo.SoftDelete(v)
+}
+
+func (s *VideoService) Publish(userID uint, videoID string) error {
+	v, err := s.Repo.FindByIDForUser(videoID, userID)
+	if err != nil {
+		return err
+	}
+	if v.Published {
+		return errors.New("el video ya está publicado")
+	}
+	// Debe estar procesado y tener archivo procesado
+	if v.Status != models.StatusProcessed || v.ProcessedPath == nil {
+		return errors.New("el video debe estar procesado para publicarse")
+	}
+	return s.Repo.Publish(userID, videoID)
 }

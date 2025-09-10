@@ -41,3 +41,20 @@ func (r *VideoRepository) MarkProcessed(id string, processedPath string) error {
 func (r *VideoRepository) SoftDelete(v *models.Video) error {
 	return r.DB.Model(v).Updates(map[string]any{"status": models.StatusDeleted}).Error
 }
+
+func (r *VideoRepository) Publish(userID uint, id string) error {
+	res := r.DB.Model(&models.Video{}).
+		// solo si es del usuario, no está borrado, está procesado y aún no está publicado
+		Where("id = ? AND user_id = ? AND status = ? AND published = FALSE", id, userID, models.StatusProcessed).
+		Updates(map[string]any{
+			"published":    true,
+			"published_at": gorm.Expr("NOW()"),
+		})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
