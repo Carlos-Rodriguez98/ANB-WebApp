@@ -13,6 +13,8 @@ import (
 	"mime/multipart"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/google/uuid"
 )
 
@@ -36,6 +38,10 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 	}
 	if fh.Size > 100*1024*1024 {
 		return dto.UploadResponse{}, errors.New("máximo 100MB")
+	}
+	name := strings.ToLower(fh.Filename)
+	if !strings.HasSuffix(name, ".mp4") {
+		return dto.UploadResponse{}, errors.New("solo se permite formato .mp4")
 	}
 	// Validación mimetype ligera (se recomienda reforzar)
 	// ...
