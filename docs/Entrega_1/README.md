@@ -54,10 +54,10 @@ Para la defiición de la arquitectura se tuvieron en cuenta múltiples factores 
 
 ### Vista de contexto
 La aplicación interactuará directamente con los usuarios que deseen registrarse en la aplicación para realizar las diferentes funcionalidades disponibles y descritas en el diagrama.
-![Vista de contexto](docs/Entrega_1/artifacts/Context-view.png)
+![Vista de contexto](artifacts/Context-view.png)
 
 ### Vista de Componentes
-![Vista de Componentes](docs/Entrega_1/artifacts/Componentes-view.png)
+![Vista de Componentes](artifacts/Componentes-view.png)
 
 **Componentes y responsabilidades**:
 
