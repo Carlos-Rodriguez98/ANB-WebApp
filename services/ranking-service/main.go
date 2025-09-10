@@ -63,8 +63,8 @@ func main() {
 func getRanking(c *gin.Context) {
 	rows, err := db.Query(`
 		SELECT v.user_id, COUNT(vo.vote_id) AS VotosAcumulados
-		FROM "Videos" v
-		JOIN "Votes" vo ON v.video_id = vo.video_id
+		FROM app.videos v
+		JOIN app.votes vo ON v.video_id = vo.video_id
 		WHERE v.published = TRUE
 		GROUP BY v.user_id
 		ORDER BY VotosAcumulados DESC
