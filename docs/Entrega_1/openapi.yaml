@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: ANB Rising Stars Showcase API
+  version: "1.0.0"
+  description: >
+    API REST escalable para gestión de usuarios, carga y procesamiento de videos,
+    votación y ranking de jugadores.
+
+servers:
+  - url: http://localhost:8000/api
+    description: Servidor local de desarrollo
+
+paths:
+  /auth/signup:
+    post:
+      summary: Registro de jugadores
+      description: Registra un nuevo usuario en la plataforma.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [first_name, last_name, email, password1, password2, city, country]
+              properties:
+                first_name: { type: string }
+                last_name: { type: string }
+                email: { type: string, format: email }
+                password1: { type: string, format: password }
+                password2: { type: string, format: password }
+                city: { type: string }
+                country: { type: string }
+      responses:
+        "201": { description: Usuario creado exitosamente }
+        "400": { description: Error de validación (email duplicado o contraseñas no coinciden) }
+
+  /auth/login:
+    post:
+      summary: Inicio de sesión
+      description: Autenticación de usuario y generación de token JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  token_type: { type: string, example: Bearer }
+                  expires_in: { type: integer }
+        "401": { description: Credenciales inválidas }
+
+  /videos/upload:
+    post:
+      summary: Subir video
+      description: Permite a un jugador subir un video y encolar su procesamiento asíncrono.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [video_file, title]
+              properties:
+                video_file: { type: string, format: binary, description: "Archivo MP4, máx 100MB" }
+                title: { type: string }
+      responses:
+        "201": { description: Video subido exitosamente, tarea creada }
+        "400": { description: Error en archivo (tipo/tamaño inválido) }
+        "401": { description: Falta de autenticación }
+
+  /videos:
+    get:
+      summary: Consultar mis videos
+      description: Devuelve la lista de videos del usuario autenticado.
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Lista de videos obtenida }
+        "401": { description: Falta de autenticación }
+
+  /videos/{video_id}:
+    get:
+      summary: Consultar detalle de video
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: video_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Detalle del video encontrado }
+        "401": { description: Token inválido o expirado }
+        "403": { description: Usuario sin permisos para acceder al video }
+        "404": { description: Video no encontrado }
+
+    delete:
+      summary: Eliminar video
+      description: Elimina un video si no ha sido publicado para votación o procesado.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: video_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Video eliminado correctamente }
+        "400": { description: No puede eliminarse (ej. ya publicado) }
+        "401": { description: Token inválido o expirado }
+        "403": { description: Sin permisos para eliminar }
+        "404": { description: Video no encontrado }
+
+  /public/videos:
+    get:
+      summary: Listar videos públicos
+      description: Lista todos los videos habilitados para votación.
+      responses:
+        "200": { description: Lista de videos públicos }
+
+  /public/videos/{video_id}/vote:
+    post:
+      summary: Emitir voto
+      description: Permite a un usuario votar por un video (máx. 1 voto por video).
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: video_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Voto registrado exitosamente }
+        "400": { description: Ya has votado por este video }
+        "401": { description: Falta de autenticación }
+        "404": { description: Video no encontrado }
+
+  /public/rankings:
+    get:
+      summary: Consultar ranking de jugadores
+      description: Devuelve ranking actualizado por número de votos.
+      parameters:
+        - in: query
+          name: city
+          schema: { type: string }
+          description: Filtrar ranking por ciudad
+      responses:
+        "200": { description: Lista de ranking obtenida }
+        "400": { description: Parámetros inválidos }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
