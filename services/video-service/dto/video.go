@@ -22,5 +22,7 @@ type VideoDetail struct {
 	ProcessedAt  *string `json:"processed_at,omitempty"`
 	OriginalURL  string  `json:"original_url"`
 	ProcessedURL *string `json:"processed_url,omitempty"`
+	Published    bool    `json:"published"`              // <-- NUEVO
+	PublishedAt  *string `json:"published_at,omitempty"` // <-- Opcional (si quieres)
 	Votes        int     `json:"votes"`
 }

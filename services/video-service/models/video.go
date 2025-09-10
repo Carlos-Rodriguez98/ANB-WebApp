@@ -20,4 +20,5 @@ type Video struct {
 	UploadedAt    time.Time   `gorm:"autoCreateTime" json:"uploaded_at"`
 	ProcessedAt   *time.Time  `json:"processed_at"`
 	Published     bool        `gorm:"default:false" json:"-"` // para gobernar borrado
+	PublishedAt   *time.Time  `json:"-"`
 }
