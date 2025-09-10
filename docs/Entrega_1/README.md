@@ -4,7 +4,7 @@ A continuación se relacionada el detalle de las funcionalidades de la aplicaci�
 ## Características Principales
 - Sistema de autenticación y registro de usuarios.
 - Sistema para cargue de videos.
-- Sistema de procesamiento en batch del video para que cumpla con los requerimiento de tamaño, Resolución y duración.
+- Sistema de procesamiento asíncrono del video para que cumpla con los requerimiento de tamaño, Resolución y duración.
 - Sistema de actualización de ranking.
 - Interfaz de usaurio moderna y responsiva.
 - Arquitectura de microservicios.
@@ -27,8 +27,8 @@ Para la defiición de la arquitectura se tuvieron en cuenta múltiples factores 
 
 - Gestión de usuarios: registro, autenticación con JWT, control de sesiones y roles.
 - Carga y procesamiento de videos:
-- Recorte automático a 30s.
-- Ajuste a 720p, relación 16:9.
+- Revisión rango de video entre 20 y 60 segundos.
+- Relación 16:9.
 - Inclusión de marca de agua y cortinillas institucionales.
 - Procesamiento asíncrono (workers + broker de mensajería).
 - Gestión de estados de archivos: uploaded → processed.
@@ -46,8 +46,7 @@ Para la defiición de la arquitectura se tuvieron en cuenta múltiples factores 
 - Lenguaje backend: Go (Golang).
 - Framework: Gin o Echo.
 - Base de datos: PostgreSQL.
-- Gestión de tareas: Asynq/Machinery con Redis o RabbitMQ.
-- Alternativa: Apache Kafka para mayor escalabilidad y tolerancia a fallos.
+- Gestión de tareas: Asynq/Machinery con Redis.
 - Servidor web: Nginx como proxy inverso.
 - Contenedorización: Docker + docker-compose.
 - CI/CD: GitHub Actions con pruebas unitarias, construcción automática y validación con SonarQube.
