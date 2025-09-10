@@ -1,56 +1,50 @@
--- test_db.sql: Script para crear y poblar la base de datos de prueba para ANB-WebApp
+CREATE SCHEMA IF NOT EXISTS app;
+SET search_path = app, public;
 
--- Crear tablas
-CREATE TABLE "User" (
-    user_id SERIAL PRIMARY KEY,
-    firs_name VARCHAR(50),
-    last_name VARCHAR(50),
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(100),
-    city VARCHAR(50),
-    country VARCHAR(50),
-    Rol VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 1) Tipo enumerado para el rol del usaurio y estado del video
+CREATE TYPE user_role AS ENUM ('visitor', 'player');
+CREATE TYPE video_status AS ENUM ('pending', 'processing', 'ready', 'failed');
+
+-- 2) Tabla de usuarios
+CREATE TABLE IF NOT EXISTS users (
+    user_id    BIGSERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name  VARCHAR(100) NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    city       VARCHAR(100) NOT NULL,
+    country    VARCHAR(100) NOT NULL,
+    role       user_role DEFAULT 'visitor',
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE "Videos" (
-    video_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES "User"(user_id),
-    title VARCHAR(100),
-    original_path VARCHAR(255),
-    processed_path VARCHAR(255),
-    status VARCHAR(20),
-    uploaded_at TIMESTAMP,
-    processed_at TIMESTAMP,
-    published BOOLEAN DEFAULT FALSE
+-- 3) Tabla de videos
+CREATE TABLE IF NOT EXISTS videos (
+    video_id       BIGSERIAL PRIMARY KEY,
+    user_id        BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    title          VARCHAR(255) NOT NULL,
+    original_path  TEXT NOT NULL,
+    processed_path TEXT,
+    status         video_status DEFAULT 'pending',
+    uploaded_at    TIMESTAMPTZ DEFAULT now(),
+    processed_at   TIMESTAMPTZ,
+    published      BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE "Votes" (
-    vote_id SERIAL PRIMARY KEY,
-    video_id INT REFERENCES "Videos"(video_id),
-    user_id INT REFERENCES "User"(user_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 4) Tabla de votos
+CREATE TABLE IF NOT EXISTS votes (
+    vote_id    BIGSERIAL PRIMARY KEY,
+    video_id   BIGINT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    -- Evita que un mismo usuario vote varias veces el mismo video
+    UNIQUE(video_id, user_id)
 );
 
--- Insertar usuarios de ejemplo
-INSERT INTO "User" (firs_name, last_name, email, password, city, country, Rol) VALUES
-('Ana', 'Gomez', 'ana@example.com', 'pass123', 'Bogotá', 'Colombia', 'jugador'),
-('Luis', 'Martinez', 'luis@example.com', 'pass123', 'Medellín', 'Colombia', 'jugador'),
-('Sofia', 'Lopez', 'sofia@example.com', 'pass123', 'Cali', 'Colombia', 'jugador'),
-('Carlos', 'Perez', 'carlos@example.com', 'pass123', 'Barranquilla', 'Colombia', 'votante');
 
--- Insertar videos públicos de ejemplo
-INSERT INTO "Videos" (user_id, title, original_path, processed_path, status, uploaded_at, processed_at, published) VALUES
-(1, 'Video Ana 1', '/videos/ana1.mp4', '/videos/ana1_proc.mp4', 'aprobado', NOW(), NOW(), TRUE),
-(2, 'Video Luis 1', '/videos/luis1.mp4', '/videos/luis1_proc.mp4', 'aprobado', NOW(), NOW(), TRUE),
-(2, 'Video Luis 2', '/videos/luis2.mp4', '/videos/luis2_proc.mp4', 'aprobado', NOW(), NOW(), TRUE),
-(3, 'Video Sofia 1', '/videos/sofia1.mp4', '/videos/sofia1_proc.mp4', 'aprobado', NOW(), NOW(), TRUE),
-(1, 'Video Ana 2', '/videos/ana2.mp4', '/videos/ana2_proc.mp4', 'pendiente', NOW(), NULL, FALSE);
-
--- Insertar votos de ejemplo
-INSERT INTO "Votes" (video_id, user_id) VALUES
-(2, 4), -- Carlos vota por Video Luis 1
-(3, 4), -- Carlos vota por Video Luis 2
-(4, 4); -- Carlos vota por Video Sofia 1
-
--- Puedes agregar más datos de prueba según sea necesario
+INSERT INTO app.users (first_name, last_name, email, password, city, country, role) VALUES
+('Carlos', 'Ramírez', 'carlos.ramirez@example.com', 'password123', 'Bogotá', 'Colombia', 'visitor'),
+('Ana', 'Martínez', 'ana.martinez@example.com', 'password123', 'Medellín', 'Colombia', 'player'),
+('John', 'Doe', 'john.doe@example.com', 'password123', 'New York', 'USA', 'visitor'),
+('Laura', 'Smith', 'laura.smith@example.com', 'password123', 'Los Angeles', 'USA', 'player'),
+('Pedro', 'Gómez', 'pedro.gomez@example.com', 'password123', 'Madrid', 'España', 'visitor');
