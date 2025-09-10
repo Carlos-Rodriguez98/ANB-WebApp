@@ -67,3 +67,23 @@ func (ctl *VideoController) Delete(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "El video ha sido eliminado exitosamente.", "video_id": id})
 }
+
+// POST /api/videos/:video_id/publish
+func (ctl *VideoController) Publish(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	id := c.Param("video_id")
+
+	if err := ctl.Svc.Publish(userID, id); err != nil {
+		switch err.Error() {
+		case "el video ya está publicado":
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		case "el video debe estar procesado para publicarse":
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			// incluye gorm.ErrRecordNotFound u otros
+			c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado o no apto para publicar"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "video publicado", "video_id": id})
+}
