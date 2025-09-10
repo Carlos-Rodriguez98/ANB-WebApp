@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "d1602f92-8b75-4391-836d-00d5ba3aa1bd",
+		"_postman_id": "3da20bbf-163d-476c-865c-e1eace1d582d",
 		"name": "ANB_App_API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "47637132",
-		"_collection_link": "https://www.postman.com/team44-4822/workspace/team-workspace/collection/47637132-d1602f92-8b75-4391-836d-00d5ba3aa1bd?action=share&source=collection_link&creator=47637132"
+		"_collection_link": "https://www.postman.com/team44-4822/workspace/team-workspace/collection/47637132-3da20bbf-163d-476c-865c-e1eace1d582d?action=share&source=collection_link&creator=47637132"
 	},
 	"item": [
 		{
@@ -390,7 +390,7 @@
 								{
 									"key": "video_file",
 									"type": "file",
-									"src": "postman-cloud:///1f08d870-78d5-4690-921d-9d8b95ea66cd"
+									"src": "{{mp4_small_file}}"
 								},
 								{
 									"key": "title",
@@ -445,7 +445,7 @@
 								{
 									"key": "video_file",
 									"type": "file",
-									"src": "postman-cloud:///1f08d85e-8274-45a0-a076-f547dcf6ae72"
+									"src": "{{pdf_test_file}}"
 								},
 								{
 									"key": "title",
@@ -500,7 +500,7 @@
 								{
 									"key": "video_file",
 									"type": "file",
-									"src": "/C:/Users/carlo/Desktop/mp4_165mb_test.mp4"
+									"src": "{{mp4_large_file}}"
 								},
 								{
 									"key": "title",
@@ -521,66 +521,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "Video Upload Code 400 Invalid Size",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{token_player_test}}",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "formdata",
-									"formdata": [
-										{
-											"key": "video_file",
-											"type": "file",
-											"src": "/C:/Users/carlo/Desktop/mp4_165mb_test.mp4"
-										},
-										{
-											"key": "title",
-											"value": "Título descriptivo del archivo.",
-											"type": "text"
-										}
-									]
-								},
-								"url": {
-									"raw": "{{video_base_url}}/api/videos/upload",
-									"host": [
-										"{{video_base_url}}"
-									],
-									"path": [
-										"api",
-										"videos",
-										"upload"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": null,
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Date",
-									"value": "Tue, 09 Sep 2025 14:34:22 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "25"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"máximo 100MB\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "Video Upload Code 401 Invalid Auth",
@@ -608,7 +549,7 @@
 								{
 									"key": "video_file",
 									"type": "file",
-									"src": "postman-cloud:///1f08d870-78d5-4690-921d-9d8b95ea66cd"
+									"src": "{{mp4_small_file}}"
 								},
 								{
 									"key": "title",
