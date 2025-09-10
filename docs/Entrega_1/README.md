@@ -53,10 +53,10 @@ Para la defiición de la arquitectura se tuvieron en cuenta múltiples factores 
 
 ### Vista de contexto
 La aplicación interactuará directamente con los usuarios que deseen registrarse en la aplicación para realizar las diferentes funcionalidades disponibles y descritas en el diagrama.
-![Vista de contexto](https://github.com/Carlos-Rodriguez98/ANB-WebApp/tree/feature/carlos/docs/Entrega_1/artifacts/Contexto-view.jpg)
+![Vista de contexto](artifacts/Context-view.png)
 
 ### Vista de Componentes
-![Vista de Componentes](/artifacts/Components-view.jpg)
+![Vista de Componentes](artifacts/Componentes-view.png)
 
 **Componentes y responsabilidades**:
 
@@ -101,7 +101,170 @@ La aplicación interactuará directamente con los usuarios que deseen registrars
 * **IStorageService**
     +
 
+* Cada servicio tiene su “capa de controladores” (HTTP) y “lógica” (reglas/validaciones).
+* Se comparte una única BD (patrón **DB-shared** entre microservicios); simple en local.
+* Contratos REST simples, formato JSON, y autenticación **Bearer JWT**.
+
 **Flujo de trabajo**
 
+1. Registro de usuario (Signup)
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant N as Nginx (Reverse Proxy)
+    participant A as AuthService
+    participant DB as Database Manager
 
+    U->>F: Completa formulario de registro
+    F->>N: POST /api/auth/signup
+    N->>A: Redirige petición
+    A->>DB: Guarda usuario (con hashing de contraseña)
+    DB-->>A: Confirmación
+    A-->>N: Usuario creado (201)
+    N-->>F: Respuesta exitosa
+    F-->>U: Usuario registrado
+```
+
+2. Login y generación de JWT
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant N as Nginx
+    participant A as AuthService
+    participant DB as Database Manager
+
+    U->>F: Ingresa email y contraseña
+    F->>N: POST /api/auth/login
+    N->>A: Redirige petición
+    A->>DB: Verifica credenciales
+    DB-->>A: Credenciales válidas
+    A-->>N: Retorna JWT
+    N-->>F: Respuesta (token)
+    F-->>U: Usuario autenticado
+
+```
+
+3. Carga de vídeo
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant N as Nginx
+    participant V as VideoService
+    participant S as IStorageService
+    participant FS as File Storage
+    participant DB as Database Manager
+    participant B as Broker
+    participant P as Processing Service
+
+    U->>F: Sube video
+    F->>N: POST /api/videos
+    N->>V: Redirige petición
+    V->>S: Guardar archivo
+    S->>FS: Almacena video original
+    FS-->>S: Confirmación
+    S-->>V: OK
+    V->>DB: Registro en estado "uploaded"
+    DB-->>V: Confirmación
+    V->>B: Publica tarea de procesamiento
+    B-->>P: Worker recibe tarea
+    P->>FS: Procesa y guarda versión final
+    P->>DB: Actualiza estado a "processed"
+    V-->>N: Respuesta (tarea creada)
+    N-->>F: Video en procesamiento
+    F-->>U: Notificación de carga exitosa
+```
+
+4. Votación
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant N as Nginx
+    participant Vt as VotingService
+    participant DB as Database Manager
+
+    U->>F: Emite voto por un video
+    F->>N: POST /api/videos/{id}/vote
+    N->>Vt: Redirige petición
+    Vt->>DB: Verifica si el usuario ya votó
+    DB-->>Vt: Resultado
+    Vt->>DB: Registra voto (si válido)
+    DB-->>Vt: Confirmación
+    Vt-->>N: Respuesta (éxito o error)
+    N-->>F: Notificación de voto
+    F-->>U: Mensaje de confirmación
+```
+
+5. Ranking
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant N as Nginx
+    participant R as RankingService
+    participant DB as Database Manager
+    participant C as Cache (Redis)
+
+    U->>F: Consulta ranking
+    F->>N: GET /api/ranking
+    N->>R: Redirige petición
+    R->>C: Consulta ranking en cache
+    alt Cache hit
+        C-->>R: Retorna ranking
+    else Cache miss
+        R->>DB: Consulta votos y genera ranking
+        DB-->>R: Datos
+        R->>C: Actualiza cache
+    end
+    R-->>N: Respuesta con ranking
+    N-->>F: Datos de ranking
+    F-->>U: Muestra clasificación
+```
+
+## Modelo Entidad - Relación (ERD)
+```mermaid
+erDiagram
+    USERS {
+        int user_id PK
+        string first_name
+        string last_name
+        string email
+        string password
+        string city
+        string country
+        datetime created_at
+    }
+
+    VIDEOS {
+        int video_id PK
+        int user_id FK
+        string title
+        string original_path
+        string processed_path
+        string status
+        datetime uploaded_at
+        datetime processed_at
+        bool published
+    }
+
+    VOTES {
+        int vote_id PK
+        int video_id FK
+        int user_id FK
+        datetime created_at
+    }
+
+    USERS ||--o{ VIDEOS : "sube"
+    VIDEOS ||--o{ VOTES : "recibe"
+    USERS ||--o{ VOTES : "emite"
+```
+
+---
+📌 Relaciones principales:  
+- **Un usuario puede subir muchos videos** (`Users 1 → N Videos`).  
+- **Un video puede recibir muchos votos** (`Videos 1 → N Votes`).  
+- **Un usuario puede emitir muchos votos** (`Users 1 → N Votes`).  
 
