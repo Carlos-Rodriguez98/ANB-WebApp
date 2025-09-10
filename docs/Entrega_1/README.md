@@ -104,5 +104,54 @@ La aplicación interactuará directamente con los usuarios que deseen registrars
 
 **Flujo de trabajo**
 
+1. Registro de usuario (Signup)
+    1. Cliente envía POST /api/auth/signup con {email, password}.
+    2. Router (Gin) → Controller Register.
+    3. Service valida formato y normaliza email (lowercase).
+    4. Repository (GORM) consulta users por lower(email).
+    5. Si existe → 400 (UserAlreadyExists).
+    6. Si no existe → hashea contraseña, inserta en PostgreSQL → 201.
 
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Client
+  participant API as Auth API (Gin)
+  participant S as Service
+  participant R as Repository (GORM)
+  participant DB as PostgreSQL
+  C->>API: POST /api/auth/signup {email, password}
+  API->>S: validar/normalizar
+  S->>R: findByEmail(lower(email))
+  R->>DB: SELECT ... WHERE lower(email)=?
+  DB-->>R: not found
+  S->>R: save(user{emailLower, passwordHash})
+  R->>DB: INSERT user
+  DB-->>R: ok
+  API-->>C: 201 Created
+```
+
+2. Login y generación de JWT
+    1. Cliente envía POST /api/auth/login con {email, password}.
+    2. Router → Controller Login.
+    3. Service busca usuario (lower(email)), compara hash.
+    4. Si no existe o mismatch → 401.
+    5. Si ok → firma JWT con JWT_SECRET y retorna 200 + token.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as Client
+  participant API as Auth API (Gin)
+  participant S as Service
+  participant R as Repository
+  participant DB as PostgreSQL
+  C->>API: POST /api/auth/login {email, password}
+  API->>S: autenticar
+  S->>R: findByEmail(lower(email))
+  R->>DB: SELECT ...
+  DB-->>R: user(row)
+  S-->>API: ok/mismatch
+  API-->>C: 200 {jwt} | 401 Unauthorized
+```
 
