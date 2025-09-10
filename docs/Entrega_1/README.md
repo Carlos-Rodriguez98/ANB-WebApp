@@ -268,3 +268,4 @@ erDiagram
 - **Un video puede recibir muchos votos** (`Videos 1 → N Votes`).  
 - **Un usuario puede emitir muchos votos** (`Users 1 → N Votes`).  
 
+
