@@ -19,8 +19,11 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     Et rediriger les endpoints auth vers le service auth réel
     """
     
-    # Configuration du service auth
-    AUTH_SERVICE_URL = "http://localhost:8080"
+    # Configuration des services via variables d'environnement
+    AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8080")
+    VIDEO_SERVICE_URL = os.getenv("VIDEO_SERVICE_URL", "http://localhost:8081")
+    VOTING_SERVICE_URL = os.getenv("VOTING_SERVICE_URL", "http://localhost:8082")
+    RANKING_SERVICE_URL = os.getenv("RANKING_SERVICE_URL", "http://localhost:8083")
     
     def end_headers(self):
         # Ajouter l'encodage UTF-8 pour tous les fichiers HTML
@@ -382,9 +385,10 @@ def run_server(port=8000):
     handler = CustomHTTPRequestHandler
     
     try:
-        with socketserver.TCPServer(("", port), handler) as httpd:
+        # Écouter sur toutes les interfaces (0.0.0.0) pour Docker
+        with socketserver.TCPServer(("0.0.0.0", port), handler) as httpd:
             print(f"\n🚀 Serveur ANB Rising Stars démarré!")
-            print(f"📍 URL: http://localhost:{port}")
+            print(f"📍 URL: http://0.0.0.0:{port}")
             print(f"📁 Répertoire: {os.getcwd()}")
             print("🛑 Appuyez sur Ctrl+C pour arrêter\n")
             
@@ -402,12 +406,12 @@ def run_server(port=8000):
         sys.exit(1)
 
 if __name__ == "__main__":
-    # Permettre de spécifier le port en argument
-    port = 8000
+    # Permettre de spécifier le port en argument ou via variable d'environnement
+    port = int(os.getenv("SERVER_PORT", 8000))
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])
         except ValueError:
-            print("❌ Port invalide. Utilisation du port par défaut 8000")
+            print(f"❌ Port invalide. Utilisation du port par défaut {port}")
     
     run_server(port)
