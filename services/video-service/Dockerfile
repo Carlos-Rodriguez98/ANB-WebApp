@@ -16,7 +16,8 @@ RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o video-service .
 
 # Runtime
-FROM gcr.io/distroless/base-debian12
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/video-service .
 ENV SERVER_PORT=8081

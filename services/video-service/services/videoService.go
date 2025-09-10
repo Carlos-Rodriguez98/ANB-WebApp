@@ -1,16 +1,24 @@
 package services
 
 import (
+	"ANB-WebApp/services/video-service/config"
 	"ANB-WebApp/services/video-service/dto"
 	"ANB-WebApp/services/video-service/models"
 	"ANB-WebApp/services/video-service/repository"
 	"ANB-WebApp/services/video-service/storage"
 	"ANB-WebApp/services/video-service/tasks"
+	"ANB-WebApp/services/video-service/utils"
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"path/filepath"
 
 	"github.com/google/uuid"
+)
+
+const (
+	minVideoSeconds = 20.0
+	maxVideoSeconds = 60.0
 )
 
 type VideoService struct {
@@ -37,6 +45,22 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 	if err != nil {
 		return dto.UploadResponse{}, err
 	}
+
+	// 2) Validar duración con ffprobe (sobre el archivo guardado)
+	abs := filepath.Join(config.AppConfig.StorageBasePath, origPath)
+	dur, err := utils.ProbeDurationSeconds(abs)
+	if err != nil {
+		_ = s.Storage.Delete(origPath)
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo leer la duración del video")
+	}
+	if dur < minVideoSeconds || dur > maxVideoSeconds {
+		_ = s.Storage.Delete(origPath)
+		return dto.UploadResponse{}, fmt.Errorf(
+			"la duración del video debe estar entre %.0fs y %.0fs (actual: %.1fs)",
+			minVideoSeconds, maxVideoSeconds, dur,
+		)
+	}
+
 	v := models.Video{
 		ID:           videoID,
 		UserID:       userID,
@@ -129,8 +153,8 @@ func (s *VideoService) Delete(userID uint, videoID string) error {
 		return err
 	}
 
-	if v.Published || v.Status == models.StatusProcessed {
-		return errors.New("el video no puede ser eliminado (ya publicado o procesado)")
+	if v.Published {
+		return errors.New("no se puede eliminar un video publicado")
 	}
 
 	_ = s.Storage.Delete(v.OriginalPath)
