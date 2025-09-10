@@ -390,10 +390,8 @@ sequenceDiagram
 
 ## Referencia API(Postman)
 A continuación se relaciona el enlace donde se encuentra la docuemntación de la API en Postman.
-![Link del .json de la colección de Postman](https://github.com/Carlos-Rodriguez98/ANB-WebApp/blob/main/collections)
+[Link del .json de la colección de Postman](https://github.com/Carlos-Rodriguez98/ANB-WebApp/blob/main/collections)
 
-
-##Estructura Repositorio 
 
 ## Estructura del Proyecto
 
