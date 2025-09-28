@@ -43,13 +43,15 @@ variable "db_name" {
 variable "db_username" {
   description = "Master username for RDS postgres"
   type        = string
-  default     = "Admin"
+  default     = "master"
+  sensitive = true
 }
 
 variable "db_password" {
-  description = "Master password for RDS postgres (REPLACE before apply)"
+  description = "Master password for RDS postgres"
   type        = string
-  default     = "Admin" 
+  default     = "ANB-WebApp1234!"
+  sensitive = true
 }
 
 variable "db_instance_class" {

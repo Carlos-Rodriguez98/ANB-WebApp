@@ -4,6 +4,8 @@ resource "aws_instance" "web" {
   instance_type = var.ec2_instance_type
   key_name      = var.key_name != "" ? var.key_name : null
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  subnet_id = aws_subnet.public.id
+  associate_public_ip_address = true
 
   tags = {
     Name = local.web_instance_name
@@ -25,6 +27,26 @@ resource "aws_instance" "web" {
   provisioner "file" {
 	source = "../.env"
 	destination = "/home/ec2-user/.env"
+  }
+
+  provisioner "file" {
+	source = "../../services/auth-service"
+	destination = "/home/ec2-user/auth-service"
+  }
+
+  provisioner "file" {
+	source = "../../services/front"
+	destination = "/home/ec2-user/front"
+  }
+
+  provisioner "file" {
+	source = "../../services/ranking-service"
+	destination = "/home/ec2-user/ranking-service"
+  }
+
+  provisioner "file" {
+	source = "../../services/voting-service"
+	destination = "/home/ec2-user/voting-service"
   }
 
   provisioner "remote-exec" {
@@ -73,6 +95,8 @@ resource "aws_instance" "worker" {
   instance_type = var.ec2_instance_type
   key_name      = var.key_name != "" ? var.key_name : null
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  subnet_id = aws_subnet.public.id
+  associate_public_ip_address = true
 
   tags = {
     Name = local.worker_instance_name
@@ -94,6 +118,16 @@ resource "aws_instance" "worker" {
   provisioner "file" {
 	source = "../.env"
 	destination = "/home/ec2-user/.env"
+  }
+
+  provisioner "file" {
+	source = "../../services/processing-service"
+	destination = "/home/ec2-user/processing-service"
+  }
+
+  provisioner "file" {
+	source = "../../services/video-service"
+	destination = "/home/ec2-user/video-service"
   }
 
   provisioner "remote-exec" {
@@ -141,6 +175,8 @@ resource "aws_instance" "fileserver" {
   instance_type = var.ec2_instance_type
   key_name      = var.key_name != "" ? var.key_name : null
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  subnet_id = aws_subnet.public.id
+  associate_public_ip_address = true
 
   tags = {
     Name = local.fileserver_instance_name

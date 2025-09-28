@@ -2,7 +2,7 @@
 resource "aws_security_group" "ec2_sg" {
   name        = "${local.name_prefix}-ec2-sg"
   description = "Security group for EC2 instances (web/worker/fileserver) - default VPC"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "SSH"
@@ -44,7 +44,7 @@ resource "aws_security_group" "ec2_sg" {
 resource "aws_security_group" "rds_sg" {
   name        = "${local.name_prefix}-rds-sg"
   description = "Security group for RDS postgres"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "Postgres from EC2 SG"

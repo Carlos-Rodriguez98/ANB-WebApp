@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   video-service:
-    build: ../services/video-service
+    build: ./video-service
     environment:
       DB_HOST: <RDS_ENDPOINT>
       DB_USER: ${DB_USER}
@@ -20,7 +20,7 @@ services:
       - microservices
 
   processing-service:
-    build: ../services/processing-service
+    build: ./processing-service
     environment:
       DB_HOST: <RDS_ENDPOINT>
       DB_USER: ${DB_USER}

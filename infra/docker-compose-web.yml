@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   front-service:
-    build: ../services/front
+    build: ./front
     environment:
       AUTH_SERVICE_URL: http://auth-service:${AUTH_SERVER_PORT}
       VIDEO_SERVICE_URL: http://video-service:${VIDEO_SERVER_PORT}
@@ -18,7 +18,7 @@ services:
       - microservices
 
   auth-service:
-    build: ../services/auth-service
+    build: ./auth-service
     environment:
       DB_HOST: <RDS_ENDPOINT>
       DB_USER: ${DB_USER}
@@ -33,7 +33,7 @@ services:
       - microservices
 
   ranking-service:
-    build: ../services/ranking-service
+    build: ./ranking-service
     environment:
       DB_HOST: <RDS_ENDPOINT>
       DB_USER: ${DB_USER}
@@ -47,7 +47,7 @@ services:
       - microservices
 
   voting-service:
-    build: ../services/voting-service
+    build: ./voting-service
     environment:
       DB_HOST: <RDS_ENDPOINT>
       DB_USER: ${DB_USER}
