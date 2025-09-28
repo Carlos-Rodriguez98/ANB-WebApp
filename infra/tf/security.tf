@@ -9,7 +9,8 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.allow_ssh_from]
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+	self = false
   }
 
   ingress {
@@ -17,7 +18,17 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+	self = false
+  }
+
+  ingress {
+	description = "HTTPS"
+	from_port   = 443
+	to_port     = 443
+	protocol    = "tcp"
+	cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+	self = false
   }
 
   ingress {
@@ -26,6 +37,42 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 2049
     protocol    = "tcp"
     self        = true
+  }
+
+  ingress {
+    description = "Auth Service"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+    self = false
+  }
+
+  ingress {
+    description = "Voting Service"
+    from_port   = 8082
+    to_port     = 8082
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+    self = false
+  }
+
+  ingress {
+    description = "Ranking Service"
+    from_port   = 8083
+    to_port     = 8083
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+    self = false
+  }
+
+  ingress {
+    description = "Front Service"
+    from_port   = 8084
+    to_port     = 8084
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0", aws_vpc.main.cidr_block]
+    self = false
   }
 
   egress {

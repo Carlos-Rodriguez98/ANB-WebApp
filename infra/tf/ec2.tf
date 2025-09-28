@@ -63,7 +63,12 @@ resource "aws_instance" "web" {
 		"sudo mkdir -p /mnt/fileserver",
 		"sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver",
 		"echo '${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0' | sudo tee -a /etc/fstab",
-		"sudo docker-compose -f /home/ec2-user/docker-compose.yml up -d"
+		"sudo docker-compose -f /home/ec2-user/docker-compose.yml up -d",
+		"sudo yum install -y nginx",
+		"sudo systemctl enable nginx",
+		"sudo systemctl start nginx",
+		"echo 'server {\n    listen 80;\n    server_name _;\n    location / {\n        proxy_pass http://localhost:8084;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}' | sudo tee /etc/nginx/conf.d/app.conf",
+		"sudo systemctl restart nginx"
 	]
   }
 
