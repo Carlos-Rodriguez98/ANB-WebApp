@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  video-service:
+    build: ../services/video-service
+    environment:
+      DB_HOST: <RDS_ENDPOINT>
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SERVER_PORT: ${VIDEO_SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_ADDR: ${REDIS_ADDR}
+      STORAGE_BASE_PATH: /mnt/fileserver
+    ports:
+      - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
+    volumes:
+      - /mnt/fileserver:/app/shared
+    networks:
+      - microservices
+
+  processing-service:
+    build: ../services/processing-service
+    environment:
+      DB_HOST: <RDS_ENDPOINT>
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      REDIS_ADDR: ${REDIS_ADDR}
+      STORAGE_BASE_PATH: /mnt/fileserver
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY}
+    volumes:
+      - /mnt/fileserver:/app/shared
+    networks:
+      - microservices
+
+networks:
+  microservices:
+    driver: bridge

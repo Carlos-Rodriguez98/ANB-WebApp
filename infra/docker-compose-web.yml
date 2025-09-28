@@ -1,0 +1,66 @@
+version: '3.9'
+services:
+  front-service:
+    build: ../services/front
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:${AUTH_SERVER_PORT}
+      VIDEO_SERVICE_URL: http://video-service:${VIDEO_SERVER_PORT}
+      VOTING_SERVICE_URL: http://voting-service:${VOTING_SERVER_PORT}
+      RANKING_SERVICE_URL: http://ranking-service:${RANKING_SERVER_PORT}
+      SERVER_PORT: ${FRONT_SERVER_PORT}
+    ports:
+      - "${FRONT_SERVER_PORT}:${FRONT_SERVER_PORT}"
+    depends_on:
+      - auth-service
+      - voting-service
+      - ranking-service
+    networks:
+      - microservices
+
+  auth-service:
+    build: ../services/auth-service
+    environment:
+      DB_HOST: <RDS_ENDPOINT>
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SERVER_PORT: ${AUTH_SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${AUTH_SERVER_PORT}:${AUTH_SERVER_PORT}"
+    networks:
+      - microservices
+
+  ranking-service:
+    build: ../services/ranking-service
+    environment:
+      DB_HOST: <RDS_ENDPOINT>
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SERVER_PORT: ${RANKING_SERVER_PORT}
+    ports:
+      - "${RANKING_SERVER_PORT}:${RANKING_SERVER_PORT}"
+    networks:
+      - microservices
+
+  voting-service:
+    build: ../services/voting-service
+    environment:
+      DB_HOST: <RDS_ENDPOINT>
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      SERVER_PORT: ${VOTING_SERVER_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${VOTING_SERVER_PORT}:${VOTING_SERVER_PORT}"
+    networks:
+      - microservices
+
+networks:
+  microservices:
+    driver: bridge
