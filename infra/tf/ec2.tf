@@ -9,26 +9,62 @@ resource "aws_instance" "web" {
     Name = local.web_instance_name
     Role = "web"
   }
-  # Uso de block user_data para instalar un servidor simple (ejemplo)
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo yum update -y
-              sudo yum install -y docker
-              sudo systemctl enable docker
-              sudo systemctl start docker
-              sudo usermod -a -G docker ec2-user
 
-              # Install Docker Compose
-              sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-              docker-compose version
+  connection {
+	type        = "ssh"
+	user        = "ec2-user"
+	private_key = file(var.ssh_private_key_path)
+	host        = self.public_ip
+  }
 
-              # Configurar montaje NFS desde el file server
-              sudo yum install -y nfs-utils
-              sudo mkdir -p /mnt/fileserver
-              sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver
-              echo "${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0" | sudo tee -a /etc/fstab
-              EOF
+  provisioner "file" {
+	source = "../docker-compose-web.yml"
+	destination = "/home/ec2-user/docker-compose.yml"
+  }
+
+  provisioner "file" {
+	source = "../.env"
+	destination = "/home/ec2-user/.env"
+  }
+
+  provisioner "remote-exec" {
+	inline = [
+		"sudo yum update -y",
+		"sudo yum install -y docker",
+		"sudo systemctl enable docker",
+		"sudo systemctl start docker",
+		"sudo usermod -a -G docker ec2-user",
+		"sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose",
+		"sudo chmod +x /usr/local/bin/docker-compose",
+		"docker-compose version",
+		"sudo yum install -y nfs-utils",
+		"sudo mkdir -p /mnt/fileserver",
+		"sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver",
+		"echo '${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0' | sudo tee -a /etc/fstab",
+		"sudo docker-compose -f /home/ec2-user/docker-compose.yml up -d"
+	]
+  }
+
+  # Uso de block user_data para instalar un servidor
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               sudo yum update -y
+#               sudo yum install -y docker
+#               sudo systemctl enable docker
+#               sudo systemctl start docker
+#               sudo usermod -a -G docker ec2-user
+
+#               # Install Docker Compose
+#               sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+#               sudo chmod +x /usr/local/bin/docker-compose
+#               docker-compose version
+
+#               # Configurar montaje NFS desde el file server
+#               sudo yum install -y nfs-utils
+#               sudo mkdir -p /mnt/fileserver
+#               sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver
+#               echo "${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0" | sudo tee -a /etc/fstab
+#               EOF
 }
 
 # Worker server
@@ -43,25 +79,60 @@ resource "aws_instance" "worker" {
     Role = "worker"
   }
 
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo yum update -y
-              sudo yum install -y docker
-              sudo systemctl enable docker
-              sudo systemctl start docker
-              sudo usermod -a -G docker ec2-user
+  connection {
+	type        = "ssh"
+	user        = "ec2-user"
+	private_key = file(var.ssh_private_key_path)
+	host        = self.public_ip
+  }
 
-              # Install Docker Compose
-              sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-              docker-compose version
+  provisioner "file" {
+	source = "../docker-compose-worker.yml"
+	destination = "/home/ec2-user/docker-compose.yml"
+  }
 
-              # Configurar montaje NFS desde el file server
-              sudo yum install -y nfs-utils
-              sudo mkdir -p /mnt/fileserver
-              sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver
-              echo "${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0" | sudo tee -a /etc/fstab
-              EOF
+  provisioner "file" {
+	source = "../.env"
+	destination = "/home/ec2-user/.env"
+  }
+
+  provisioner "remote-exec" {
+	inline = [
+		"sudo yum update -y",
+		"sudo yum install -y docker",
+		"sudo systemctl enable docker",
+		"sudo systemctl start docker",
+		"sudo usermod -a -G docker ec2-user",
+		"sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose",
+		"sudo chmod +x /usr/local/bin/docker-compose",
+		"docker-compose version",
+		"sudo yum install -y nfs-utils",
+		"sudo mkdir -p /mnt/fileserver",
+		"sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver",
+		"echo '${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0' | sudo tee -a /etc/fstab",
+		"sudo docker-compose -f /home/ec2-user/docker-compose.yml up -d"
+	]
+  }
+
+#   user_data = <<-EOF
+#               #!/bin/bash
+#               sudo yum update -y
+#               sudo yum install -y docker
+#               sudo systemctl enable docker
+#               sudo systemctl start docker
+#               sudo usermod -a -G docker ec2-user
+
+#               # Install Docker Compose
+#               sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+#               sudo chmod +x /usr/local/bin/docker-compose
+#               docker-compose version
+
+#               # Configurar montaje NFS desde el file server
+#               sudo yum install -y nfs-utils
+#               sudo mkdir -p /mnt/fileserver
+#               sudo mount -t nfs ${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver
+#               echo "${aws_instance.fileserver.private_ip}:/srv/nfs /mnt/fileserver nfs defaults 0 0" | sudo tee -a /etc/fstab
+#               EOF
 }
 
 # File server (NFS) - se requiere configurar NFS en la instancia

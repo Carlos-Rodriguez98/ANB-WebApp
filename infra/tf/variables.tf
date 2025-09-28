@@ -1,13 +1,3 @@
-terraform {
-  required_version = ">= 1.0.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-  }
-}
-
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -23,13 +13,13 @@ variable "ec2_instance_type" {
 variable "ec2_ami_filter_name" {
   description = "AMI name filter for selecting Amazon Linux 2"
   type        = string
-  default     = "amzn2-ami-hvm-*-x86_64-gp2"
+  default     = "al2023-ami-*-kernel-6.1-x86_64"
 }
 
 variable "key_name" {
   description = "Optional: key pair name for SSH access (create/import in AWS console). Leave empty to skip."
   type        = string
-  default     = ""
+  default     = "vockey"
 }
 
 variable "project_name" {
@@ -41,13 +31,13 @@ variable "project_name" {
 variable "db_identifier" {
   description = "RDS DB identifier"
   type        = string
-  default     = "ANB-WebApp"
+  default     = "anb-web-app-db"
 }
 
 variable "db_name" {
   description = "Postgres DB name"
   type        = string
-  default     = "ANB-WebApp"
+  default     = "anb-web-app-db"
 }
 
 variable "db_username" {
@@ -78,4 +68,10 @@ variable "allow_ssh_from" {
   description = "CIDR allowed to SSH into EC2 instances"
   type        = string
   default     = "0.0.0.0/0"
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to the SSH private key file for EC2 provisioners"
+  type        = string
+  default     = "./id_ed25519.pub"
 }
