@@ -36,3 +36,18 @@ go.work.sum
 .env
 .env.*
 
+#Ignora estado local de Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+*.auto.tfvars
+.terraform.lock.hcl
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
