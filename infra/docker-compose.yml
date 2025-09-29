@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_EXTERNT_CONNECTION}:${DB_PORT}"
+      - "${DB_EXTERNAL_CONNECTION}:${DB_PORT}"
     volumes:
       - user_data:/var/lib/postgresql/data
       - ../services/database-service/init.sql:/docker-entrypoint-initdb.d/init.sql
