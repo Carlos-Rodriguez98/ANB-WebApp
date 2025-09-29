@@ -1,7 +1,6 @@
 package config
 
 import (
-	"ANB-WebApp/services/auth-service/models"
 	"fmt"
 	"log"
 	"time"
@@ -16,7 +15,7 @@ var DB *gorm.DB
 func ConnectDatabase() (*gorm.DB, error) {
 	//Construcción de URL de BD
 	DSN := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota",
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota search_path=app",
 		AppConfig.DBHost, AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBName, AppConfig.DBPort,
 	)
 
@@ -27,16 +26,19 @@ func ConnectDatabase() (*gorm.DB, error) {
 		if err == nil {
 			log.Print("Conexión exitosa a la base de datos")
 
-			//Ejecución de automigración
-			if err := DB.AutoMigrate(&models.User{}); err != nil {
-				log.Fatal("Error en la migración: ", err)
-				return nil, err
-			}
-			log.Println("Migración completada")
+			/*
+				//Ejecución de automigración
+				if err := DB.AutoMigrate(&models.User{}); err != nil {
+					log.Fatal("Error en la migración: ", err)
+					return nil, err
+				}
+				log.Println("Migración completada")
+			*/
 			return DB, nil
 		}
 		log.Printf("Intento %d: error conectando a la base de datos: %v", i, err)
 		time.Sleep(3 * time.Second)
 	}
+
 	return nil, fmt.Errorf("no se pudo conectar a la base de datos de varios intentos: %v", err)
 }

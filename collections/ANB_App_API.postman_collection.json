@@ -23,7 +23,8 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						},
 						{
@@ -37,7 +38,8 @@
 									"pm.environment.set(\"password_test\", `password_${Date.now()}`);"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -47,62 +49,6 @@
 						"body": {
 							"mode": "raw",
 							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"{{email_test}}\",\r\n    \"password1\": \"{{password_test}}\",\r\n    \"password2\": \"{{password_test}}\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{auth_base_url}}/api/auth/signup",
-							"host": [
-								"{{auth_base_url}}"
-							],
-							"path": [
-								"api",
-								"auth",
-								"signup"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Signup Code 201 Successfully Second Player",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 201\", function () {\r",
-									"    pm.response.to.have.status(201);\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"// Generar y guardar un email de prueba en la variable de colección email_test\r",
-									"pm.environment.set(\"email_2_test\", `user_${Date.now()}@test.com`);\r",
-									"\r",
-									"// Generar y guardar una password de prueba en la variable de colección password_test\r",
-									"pm.environment.set(\"password_2_test\", `password_${Date.now()}`);"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"first_name\": \"John\",\r\n    \"last_name\": \"Doe\",\r\n    \"email\": \"{{email_2_test}}\",\r\n    \"password1\": \"{{password_2_test}}\",\r\n    \"password2\": \"{{password_2_test}}\",\r\n    \"city\": \"Bogotá\",\r\n    \"country\": \"Colombia\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -279,7 +225,19 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -288,7 +246,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"email\":\"{{email_2_test}}\",\r\n    \"password\":\"{{password_2_test}}\"\r\n}",
+							"raw": "{\r\n    \"email\":\"{{email_2_test}}\",\r\n    \"password\": \"{{password_2_test}}\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -310,7 +268,50 @@
 					"response": []
 				},
 				{
-					"name": "Login Code 401 Invalid Credentials",
+					"name": "Login Code 401 Invalid Credentials Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"testNoEmailExits@test.com\",\r\n    \"password\":\"StrongPass123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{auth_base_url}}/api/auth/login",
+							"host": [
+								"{{auth_base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Code 401 Invalid Credentials Password",
 					"event": [
 						{
 							"listen": "test",
@@ -358,25 +359,344 @@
 			"name": "Videos Manage",
 			"item": [
 				{
-					"name": "Video Upload Code 201 Queued Successfully",
-					"event": [
+					"name": "Video Upload Request Newman",
+					"item": [
 						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Check if the response status code is 201.\r",
-									"pm.test(\"Status code is 201\", function () {\r",
-									"    pm.response.to.have.status(201);\r",
-									"});\r",
-									"\r",
-									"// Save the task id from the response to a collection variable for later use.\r",
-									"pm.environment.set(\"video_id_test\", pm.response.json().task_id || \"\");"
+							"name": "Video Upload Code 201 Queued Successfully",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 201.\r",
+											"pm.test(\"Status code is 201\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"});\r",
+											"\r",
+											"// Save the task id from the response to a collection variable for later use.\r",
+											"pm.environment.set(\"video_id_test\", pm.response.json().task_id || \"\");"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_player_test}}",
+										"type": "text"
+									}
 								],
-								"type": "text/javascript",
-								"packages": {}
-							}
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{mp4_small_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del video. (1)",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Video Upload Code 201 Queued Successfully Second Video",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 201.\r",
+											"pm.test(\"Status code is 201\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"});\r",
+											"\r",
+											"// Save the task id from the response to a collection variable for later use.\r",
+											"pm.environment.set(\"video_id_2_test\", pm.response.json().task_id || \"\");"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_player_test}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{mp4_small_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del video. (2)",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Video Upload Code 400 Invalid Type",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 400.\r",
+											"pm.test(\"Status code is 400\", function () {\r",
+											"    pm.response.to.have.status(400);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_player_test}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{pdf_test_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del archivo.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Video Upload Code 400 Invalid Size",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 400.\r",
+											"pm.test(\"Status code is 400\", function () {\r",
+											"    pm.response.to.have.status(400);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_player_test}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{mp4_large_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del archivo.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Video Upload Code 400 Invalid Duration",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 400.\r",
+											"pm.test(\"Status code is 400\", function () {\r",
+											"    pm.response.to.have.status(400);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_player_test}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{mp4_large_duration_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del archivo.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Video Upload Code 401 Invalid Auth",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Check if the response status code is 401.\r",
+											"pm.test(\"Status code is 401\", function () {\r",
+											"    pm.response.to.have.status(401);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "video_file",
+											"type": "file",
+											"src": "{{mp4_small_file}}"
+										},
+										{
+											"key": "title",
+											"value": "Título descriptivo del video.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{video_base_url}}/api/videos/upload",
+									"host": [
+										"{{video_base_url}}"
+									],
+									"path": [
+										"api",
+										"videos",
+										"upload"
+									]
+								}
+							},
+							"response": []
 						}
-					],
+					]
+				},
+				{
+					"name": "Second Video to Public",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -386,189 +706,16 @@
 								"type": "text"
 							}
 						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "video_file",
-									"type": "file",
-									"src": "{{mp4_small_file}}"
-								},
-								{
-									"key": "title",
-									"value": "Título descriptivo del video.",
-									"type": "text"
-								}
-							]
-						},
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/upload",
+							"raw": "{{video_base_url}}/api/videos/{{video_id_2_test}}/publish",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"upload"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Video Upload Code 400 Invalid Type",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Check if the response status code is 400.\r",
-									"pm.test(\"Status code is 400\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token_player_test}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "video_file",
-									"type": "file",
-									"src": "{{pdf_test_file}}"
-								},
-								{
-									"key": "title",
-									"value": "Título descriptivo del archivo.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{video_base_url}}/api/videos/upload",
-							"host": [
-								"{{video_base_url}}"
-							],
-							"path": [
-								"api",
-								"videos",
-								"upload"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Video Upload Code 400 Invalid Size",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Check if the response status code is 400.\r",
-									"pm.test(\"Status code is 400\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token_player_test}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "video_file",
-									"type": "file",
-									"src": "{{mp4_large_file}}"
-								},
-								{
-									"key": "title",
-									"value": "Título descriptivo del archivo.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{video_base_url}}/api/videos/upload",
-							"host": [
-								"{{video_base_url}}"
-							],
-							"path": [
-								"api",
-								"videos",
-								"upload"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Video Upload Code 401 Invalid Auth",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Check if the response status code is 401.\r",
-									"pm.test(\"Status code is 401\", function () {\r",
-									"    pm.response.to.have.status(401);\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "video_file",
-									"type": "file",
-									"src": "{{mp4_small_file}}"
-								},
-								{
-									"key": "title",
-									"value": "Título descriptivo del video.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{video_base_url}}/api/videos/upload",
-							"host": [
-								"{{video_base_url}}"
-							],
-							"path": [
-								"api",
-								"videos",
-								"upload"
+								"{{video_id_2_test}}",
+								"publish"
 							]
 						}
 					},
@@ -656,7 +803,8 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -723,12 +871,13 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 403\", function () {\r",
-									"//    pm.response.to.have.status(403);\r",
-									"//});"
+									"pm.test(\"Status code is 403\", function () {\r",
+									"    pm.response.to.have.status(403);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -767,7 +916,8 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -781,14 +931,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/123",
+							"raw": "{{video_base_url}}/api/videos/99999",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"123"
+								"99999"
 							]
 						}
 					},
@@ -845,7 +995,8 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -854,19 +1005,19 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{token_player_test}}",
+								"value": "Bearer {{token_player_2_test}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/{{video_id_2_test}}",
+							"raw": "{{video_base_url}}/api/videos/{{video_id_saved_published_test}}",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"{{video_id_2_test}}"
+								"{{video_id_saved_published_test}}"
 							]
 						}
 					},
@@ -912,12 +1063,13 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 403\", function () {\r",
-									"//    pm.response.to.have.status(403);\r",
-									"//});"
+									"pm.test(\"Status code is 403\", function () {\r",
+									"    pm.response.to.have.status(403);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -931,14 +1083,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/{{video_id_test}}",
+							"raw": "{{video_base_url}}/api/videos/{{video_id_2_test}}",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"{{video_id_test}}"
+								"{{video_id_2_test}}"
 							]
 						}
 					},
@@ -956,7 +1108,8 @@
 									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -970,14 +1123,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{video_base_url}}/api/videos/123",
+							"raw": "{{video_base_url}}/api/videos/99999",
 							"host": [
 								"{{video_base_url}}"
 							],
 							"path": [
 								"api",
 								"videos",
-								"123"
+								"99999"
 							]
 						}
 					},
@@ -995,12 +1148,13 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -1023,32 +1177,36 @@
 					"response": []
 				},
 				{
-					"name": "Vote for Videos Code 200 Successfully",
+					"name": "Vote for a Video Code 200 Successfully",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{token_player_2_test}}",
+								"value": "Bearer {{token_player_test}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_saved_published_test}}/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1056,41 +1214,44 @@
 								"api",
 								"public",
 								"videos",
-								"{{video_id_2_test}}",
+								"{{video_id_saved_published_test}}",
 								"vote"
 							]
-						},
-						"description": "Emite un voto por un video público."
+						}
 					},
 					"response": []
 				},
 				{
-					"name": "Vote for Videos Code 400 Invalid Request",
+					"name": "Vote for a Video Code 400 Already Voted",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{token}}",
+								"value": "Bearer {{token_player_test}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_saved_published_test}}/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1098,41 +1259,44 @@
 								"api",
 								"public",
 								"videos",
-								"{{video_id_2_test}}",
+								"{{video_id_saved_published_test}}",
 								"vote"
 							]
-						},
-						"description": "Emite un voto por un video público."
+						}
 					},
 					"response": []
 				},
 				{
-					"name": "Vote for Videos Code 404 Not Found",
+					"name": "Vote for a Video Code 404 Not Found",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 404\", function () {\r",
-									"//    pm.response.to.have.status(404);\r",
-									"//});"
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
 					"request": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{token}}",
+								"value": "Bearer {{token_player_test}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/123/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/99999/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1140,35 +1304,38 @@
 								"api",
 								"public",
 								"videos",
-								"123",
+								"99999",
 								"vote"
 							]
-						},
-						"description": "Emite un voto por un video público."
+						}
 					},
 					"response": []
 				},
 				{
-					"name": "Vote for Videos Code 401 Invalid Auth",
+					"name": "Vote for a Video Code 401 Invalid Auth",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{voting_base_url}}/api/public/videos/{{video_id_2_test}}/vote",
+							"raw": "{{voting_base_url}}/api/public/videos/99999/vote",
 							"host": [
 								"{{voting_base_url}}"
 							],
@@ -1176,11 +1343,10 @@
 								"api",
 								"public",
 								"videos",
-								"{{video_id_2_test}}",
+								"99999",
 								"vote"
 							]
-						},
-						"description": "Emite un voto por un video público."
+						}
 					},
 					"response": []
 				}
@@ -1196,12 +1362,13 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						},
 						{
@@ -1211,13 +1378,21 @@
 									""
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
 						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {}
+						},
 						"url": {
 							"raw": "{{ranking_base_url}}/api/public/rankings",
 							"host": [
@@ -1234,18 +1409,19 @@
 					"response": []
 				},
 				{
-					"name": "Get Rankings Code 400 Invalid Request",
+					"name": "Get Rankings Code 400 Invalid Parameters",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"//pm.test(\"Status code is 200\", function () {\r",
-									"//    pm.response.to.have.status(200);\r",
-									"//});"
+									"pm.test(\"Status code is 400\", function () {\r",
+									"   pm.response.to.have.status(400);\r",
+									"});"
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						},
 						{
@@ -1255,7 +1431,8 @@
 									""
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -1263,7 +1440,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{ranking_base_url}}/api/public/rankings",
+							"raw": "{{ranking_base_url}}/api/public/rankings?from=5&to=3",
 							"host": [
 								"{{ranking_base_url}}"
 							],
@@ -1271,6 +1448,16 @@
 								"api",
 								"public",
 								"rankings"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "5"
+								},
+								{
+									"key": "to",
+									"value": "3"
+								}
 							]
 						},
 						"description": "Muestra el ranking actual de los jugadores por votos acumulados."
@@ -1300,6 +1487,13 @@
 					""
 				]
 			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "{{voting_base_url}}",
+			"type": "default"
 		}
 	]
 }

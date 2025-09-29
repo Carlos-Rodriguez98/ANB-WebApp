@@ -14,8 +14,6 @@ import (
 	"path/filepath"
 
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -34,20 +32,34 @@ func NewVideoService(r *repository.VideoRepository, s storage.IStorageService) *
 
 func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeader) (dto.UploadResponse, error) {
 	if fh == nil || fh.Size == 0 {
-		return dto.UploadResponse{}, errors.New("archivo requerido")
+		return dto.UploadResponse{}, errors.New("el archivo del video es requerido")
 	}
 	if fh.Size > 100*1024*1024 {
-		return dto.UploadResponse{}, errors.New("máximo 100MB")
+		return dto.UploadResponse{}, errors.New("el video debe tener un máximo de 100mb de tamaño")
 	}
 	name := strings.ToLower(fh.Filename)
 	if !strings.HasSuffix(name, ".mp4") {
-		return dto.UploadResponse{}, errors.New("solo se permite formato .mp4")
+		return dto.UploadResponse{}, errors.New("solo se permite un video en formato .mp4")
 	}
-	// Validación mimetype ligera (se recomienda reforzar)
-	// ...
 
-	videoID := uuid.NewString()
+	if fh.Header.Get("Content-Type") != "video/mp4" {
+		return dto.UploadResponse{}, errors.New("solo se permite un video en formato .mp4 (1)")
+	}
+
+	v := models.Video{
+		UserID: userID,
+		Title:  title,
+		Status: models.StatusUploaded,
+	}
+	err := s.Repo.Create(&v)
+	if err != nil {
+		return dto.UploadResponse{}, err
+	}
+
+	videoID := fmt.Sprintf("%d", v.ID)
+
 	origPath, err := s.Storage.SaveOriginal(userID, videoID, fh)
+
 	if err != nil {
 		return dto.UploadResponse{}, err
 	}
@@ -67,18 +79,7 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		)
 	}
 
-	v := models.Video{
-		ID:           videoID,
-		UserID:       userID,
-		Title:        title,
-		OriginalPath: origPath,
-		Status:       models.StatusUploaded,
-	}
-	if err := s.Repo.Create(&v); err != nil {
-		return dto.UploadResponse{}, err
-	}
-
-	taskID, err := tasks.EnqueueProcessVideo(tasks.ProcessVideoPayload{
+	err = tasks.EnqueueProcessVideo(tasks.ProcessVideoPayload{
 		VideoID: videoID, UserID: userID, OriginalPath: origPath, Title: title,
 	})
 	if err != nil {
@@ -87,7 +88,7 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 
 	return dto.UploadResponse{
 		Message: "Video subido correctamente. Procesamiento en curso.",
-		TaskID:  taskID,
+		TaskID:  videoID,
 	}, nil
 }
 
@@ -116,6 +117,7 @@ func (s *VideoService) ListMine(userID uint) ([]dto.VideoItem, error) {
 			UploadedAt:   v.UploadedAt.UTC().Format(timeLayout),
 			ProcessedAt:  processedAt,
 			ProcessedURL: processedURL,
+			Published:    v.Published,
 		})
 	}
 	return out, nil
@@ -124,9 +126,13 @@ func (s *VideoService) ListMine(userID uint) ([]dto.VideoItem, error) {
 const timeLayout = "2006-01-02T15:04:05Z07:00"
 
 func (s *VideoService) GetDetail(userID uint, videoID string) (*dto.VideoDetail, error) {
-	v, err := s.Repo.FindByIDForUser(videoID, userID)
+	v, err := s.Repo.FindByID(videoID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("not_found")
+	}
+
+	if v.UserID != userID {
+		return nil, fmt.Errorf("forbidden")
 	}
 
 	origURL := s.Storage.GetPublicURL(v.OriginalPath)
@@ -155,20 +161,24 @@ func (s *VideoService) GetDetail(userID uint, videoID string) (*dto.VideoDetail,
 		ProcessedAt:  processedAt,
 		OriginalURL:  origURL,
 		ProcessedURL: procURL,
-		Published:    v.Published, // <-- NUEVO
-		PublishedAt:  publishedAt, // <-- Opcional
-		Votes:        0,           // se integrará con el módulo de votos
+		Published:    v.Published,
+		PublishedAt:  publishedAt,
+		Votes:        0,
 	}, nil
 }
 
 func (s *VideoService) Delete(userID uint, videoID string) error {
-	v, err := s.Repo.FindByIDForUser(videoID, userID)
+	v, err := s.Repo.FindByID(videoID)
 	if err != nil {
-		return err
+		return errors.New("not_found")
+	}
+
+	if v.UserID != userID {
+		return errors.New("forbidden")
 	}
 
 	if v.Published {
-		return errors.New("no se puede eliminar un video publicado")
+		return errors.New("already_published")
 	}
 
 	_ = s.Storage.Delete(v.OriginalPath)
