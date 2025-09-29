@@ -27,6 +27,7 @@ go.work.sum
 
 # env file
 .env
+.pub
 
 # Editor/IDE
 # .idea/
@@ -34,7 +35,6 @@ go.work.sum
 =======
 # Archivo de variables de entorno
 .env
-.env.*
 
 # Local .terraform directories
 .terraform/

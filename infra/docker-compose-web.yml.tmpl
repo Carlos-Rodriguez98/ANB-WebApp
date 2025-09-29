@@ -20,7 +20,7 @@ services:
   auth-service:
     build: ./auth-service
     environment:
-      DB_HOST: <RDS_ENDPOINT>
+      DB_HOST: ${rds_endpoint}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -35,7 +35,7 @@ services:
   ranking-service:
     build: ./ranking-service
     environment:
-      DB_HOST: <RDS_ENDPOINT>
+      DB_HOST: ${rds_endpoint}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -49,7 +49,7 @@ services:
   voting-service:
     build: ./voting-service
     environment:
-      DB_HOST: <RDS_ENDPOINT>
+      DB_HOST: ${rds_endpoint}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}

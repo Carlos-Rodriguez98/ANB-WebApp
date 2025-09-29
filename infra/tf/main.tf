@@ -5,75 +5,15 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+	local = {
+	  source  = "hashicorp/local"
+	  version = "~> 2.0"
+  	}
   }
 }
 
 provider "aws" {
   region = var.aws_region
-}
-
-# Definir VPC (usada para security groups y subnets)
-resource "aws_vpc" "main" {
-	cidr_block = "10.0.0.0/16"
-	tags = { Name = "${var.project_name}-vpc" }
-	enable_dns_hostnames = true
-	enable_dns_support   = true
-}
-
-# Subnet de la VPC
-data "aws_availability_zones" "available" {
-	state = "available"
-}
-resource "aws_subnet" "public" {
-	vpc_id = aws_vpc.main.id
-	cidr_block = "10.0.1.0/24"
-	map_public_ip_on_launch = true
-	availability_zone = data.aws_availability_zones.available.names[0]
-	tags = { Name = "${var.project_name}-public-subnet" }
-}
-
-# Subnets privadas para RDS
-resource "aws_subnet" "private_a" {
-	vpc_id = aws_vpc.main.id
-	cidr_block = "10.0.2.0/24"
-	availability_zone = data.aws_availability_zones.available.names[0]
-	tags = { Name = "${var.project_name}-private-subnet-a" }
-}
-resource "aws_subnet" "private_b" {
-	vpc_id = aws_vpc.main.id
-	cidr_block = "10.0.3.0/24"
-	availability_zone = data.aws_availability_zones.available.names[1]
-	tags = { Name = "${var.project_name}-private-subnet-b" }
-}
-
-# Internet Gateway para la VPC
-resource "aws_internet_gateway" "igw" {
-	vpc_id = aws_vpc.main.id
-	tags = { Name = "${var.project_name}-igw" }
-}
-
-# Route table para la subnet pública
-resource "aws_route_table" "public" {
-	vpc_id = aws_vpc.main.id
-	tags = { Name = "${var.project_name}-public-rt" }
-}
-
-resource "aws_route" "internet_access" {
-	route_table_id         = aws_route_table.public.id
-	destination_cidr_block = "0.0.0.0/0"
-	gateway_id             = aws_internet_gateway.igw.id
-}
-
-resource "aws_route_table_association" "public_assoc" {
-	subnet_id      = aws_subnet.public.id
-	route_table_id = aws_route_table.public.id
-}
-
-# Subnet group para RDS
-resource "aws_db_subnet_group" "rds" {
-  name       = "${var.project_name}-rds-subnet-group"
-  subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-  tags = { Name = "${var.project_name}-rds-subnet-group" }
 }
 
 # Buscar AMI Amazon Linux más reciente
@@ -91,3 +31,45 @@ data "aws_ami" "amazon_linux_2" {
     values = ["available"]
   }
 }
+
+# Descomentar esto de aquí pa abajo para el segundo apply
+# data "aws_db_instance" "rds" {
+#   db_instance_identifier = aws_db_instance.postgres.id
+# }
+
+# locals {
+#   rds_endpoint      = data.aws_db_instance.rds.endpoint
+#   AUTH_SERVER_PORT  = "8080"
+#   VIDEO_SERVER_PORT = "8081"
+#   VOTING_SERVER_PORT = "8082"
+#   RANKING_SERVER_PORT = "8083"
+#   FRONT_SERVER_PORT = "8084"
+#   DB_USER           = "Admin"
+#   DB_PASSWORD       = "Admin"
+#   DB_NAME           = "ANB-WebApp"
+#   JWT_SECRET        = "clavesecreta"
+# }
+
+# resource "local_file" "docker_compose_web" {
+#   content  = templatefile(
+#     "${path.module}/../docker-compose-web.yml.tmpl",
+#     {
+#       rds_endpoint      = local.rds_endpoint,
+#       AUTH_SERVER_PORT  = local.AUTH_SERVER_PORT,
+#       VIDEO_SERVER_PORT = local.VIDEO_SERVER_PORT,
+#       VOTING_SERVER_PORT = local.VOTING_SERVER_PORT,
+#       RANKING_SERVER_PORT = local.RANKING_SERVER_PORT,
+#       FRONT_SERVER_PORT = local.FRONT_SERVER_PORT,
+#       DB_USER           = local.DB_USER,
+#       DB_PASSWORD       = local.DB_PASSWORD,
+#       DB_NAME           = local.DB_NAME,
+#       JWT_SECRET        = local.JWT_SECRET
+#     }
+#   )
+#   filename = "${path.module}/../docker-compose-web.yml"
+# }
+
+# resource "local_file" "env_file" {
+#   content  = templatefile("${path.module}/../.env.tmpl", { rds_endpoint = local.rds_endpoint })
+#   filename = "${path.module}/../.env"
+# }
