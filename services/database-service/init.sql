@@ -43,3 +43,10 @@ INSERT INTO app.users (first_name, last_name, email, password, city, country) VA
 ('John', 'Doe', 'john.doe@example.com', 'password123', 'New York', 'USA'),
 ('Laura', 'Smith', 'laura.smith@example.com', 'password123', 'Los Angeles', 'USA'),
 ('Pedro', 'Gómez', 'pedro.gomez@example.com', 'password123', 'Madrid', 'España');
+
+INSERT INTO app.videos (user_id, title, original_path, processed_path, status, uploaded_at, processed_at, published) VALUES
+(1, 'Video Ana 1', '/videos/ana1.mp4', '/videos/ana1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+(2, 'Video Luis 1', '/videos/luis1.mp4', '/videos/luis1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+(2, 'Video Luis 2', '/videos/luis2.mp4', '/videos/luis2_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+(3, 'Video Sofia 1', '/videos/sofia1.mp4', '/videos/sofia1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+(1, 'Video Ana 2', '/videos/ana2.mp4', '/videos/ana2_proc.mp4', 'pending', NOW(), NULL, FALSE);
