@@ -2,10 +2,9 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
+/*
 type User struct {
 	ID        uint           `json:"id" gorm:"primaryKey;autoIncrement"`
 	FirstName string         `json:"first_name" gorm:"size:50;not null"`
@@ -17,4 +16,20 @@ type User struct {
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+*/
+
+type User struct {
+	ID        uint      `gorm:"column:user_id;primaryKey"`
+	FirstName string    `gorm:"column:first_name"`
+	LastName  string    `gorm:"column:last_name"`
+	Email     string    `gorm:"column:email;unique"`
+	Password  string    `gorm:"column:password"`
+	City      string    `gorm:"column:city"`
+	Country   string    `gorm:"column:country"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (User) TableName() string {
+	return "users"
 }

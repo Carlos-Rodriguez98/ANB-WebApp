@@ -6,23 +6,24 @@ type UploadResponse struct {
 }
 
 type VideoItem struct {
-	VideoID      string  `json:"video_id"`
+	VideoID      uint    `json:"video_id"`
 	Title        string  `json:"title"`
 	Status       string  `json:"status"`
 	UploadedAt   string  `json:"uploaded_at"`
 	ProcessedAt  *string `json:"processed_at,omitempty"`
 	ProcessedURL *string `json:"processed_url,omitempty"`
+	Published    bool    `json:"published"`
 }
 
 type VideoDetail struct {
-	VideoID      string  `json:"video_id"`
+	VideoID      uint    `json:"video_id"`
 	Title        string  `json:"title"`
 	Status       string  `json:"status"`
 	UploadedAt   string  `json:"uploaded_at"`
 	ProcessedAt  *string `json:"processed_at,omitempty"`
 	OriginalURL  string  `json:"original_url"`
 	ProcessedURL *string `json:"processed_url,omitempty"`
-	Published    bool    `json:"published"`              // <-- NUEVO
-	PublishedAt  *string `json:"published_at,omitempty"` // <-- Opcional (si quieres)
+	Published    bool    `json:"published"`
+	PublishedAt  *string `json:"published_at,omitempty"`
 	Votes        int     `json:"votes"`
 }

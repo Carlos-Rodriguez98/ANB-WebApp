@@ -43,11 +43,20 @@ func (ctl *VideoController) ListMine(c *gin.Context) {
 func (ctl *VideoController) GetDetail(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	id := c.Param("video_id")
+
 	res, err := ctl.Svc.GetDetail(userID, id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado"})
+		switch err.Error() {
+		case "not_found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado (no existe)"})
+		case "forbidden":
+			c.JSON(http.StatusForbidden, gin.H{"error": "no tienes permiso para acceder a este video"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error interno"})
+		}
 		return
 	}
+
 	c.JSON(http.StatusOK, res)
 }
 
@@ -55,16 +64,22 @@ func (ctl *VideoController) GetDetail(c *gin.Context) {
 func (ctl *VideoController) Delete(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	id := c.Param("video_id")
-	if err := ctl.Svc.Delete(userID, id); err != nil {
-		switch err.Error() {
-		case "no se puede eliminar un video publicado":
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		default:
-			c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado"})
-		}
 
+	err := ctl.Svc.Delete(userID, id)
+	if err != nil {
+		switch err.Error() {
+		case "not_found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "video no encontrado (no existe)"})
+		case "forbidden":
+			c.JSON(http.StatusForbidden, gin.H{"error": "no tienes permiso para eliminar este video"})
+		case "already_published":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "no se puede eliminar un video que ya esta publicado"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error interno del servidor"})
+		}
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "El video ha sido eliminado exitosamente.", "video_id": id})
 }
 

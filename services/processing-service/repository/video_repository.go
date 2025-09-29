@@ -8,14 +8,14 @@ func NewVideoRepository(db *gorm.DB) *VideoRepository {
 	return &VideoRepository{DB: db}
 }
 
-// Actualiza estado y processed_path (NOW() en la BD)
-func (r *VideoRepository) MarkProcessed(videoID, processedRelPath string) error {
+func (r *VideoRepository) MarkProcessed(videoID, originalPath string, processedRelPath string) error {
 	return r.DB.Exec(`
 		UPDATE videos
-		   SET status = 'processed',
-		       processed_path = ?,
-		       processed_at = NOW()
-		 WHERE id = ?`,
-		processedRelPath, videoID,
+		   	SET status = 'processed',
+		   		original_path = ?,
+		       	processed_path = ?,
+		       	processed_at = NOW()
+		 	WHERE video_id = ?`,
+		originalPath, processedRelPath, videoID,
 	).Error
 }

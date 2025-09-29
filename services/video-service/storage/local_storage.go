@@ -44,8 +44,8 @@ func (s *LocalStorage) SaveOriginal(userID uint, videoID string, file *multipart
 }
 
 func (s *LocalStorage) GetPublicURL(path string) string {
-	// path es relativo a base. Ej: "original/u12/uuid.mp4"
-	return "/static/" + filepath.ToSlash(path)
+	// path es relativo a base. Ej: "/static/original/u12/uuid.mp4"
+	return filepath.ToSlash(path)
 }
 
 func (s *LocalStorage) Delete(path string) error {
