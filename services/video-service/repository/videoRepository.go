@@ -21,9 +21,19 @@ func (r *VideoRepository) ListByUser(userID uint) ([]models.Video, error) {
 	return vids, err
 }
 
+func (r *VideoRepository) FindByID(id string) (*models.Video, error) {
+	var v models.Video
+	err := r.DB.Where("video_id = ? AND status <> ?", id, models.StatusDeleted).
+		First(&v).Error
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 func (r *VideoRepository) FindByIDForUser(id string, userID uint) (*models.Video, error) {
 	var v models.Video
-	err := r.DB.Where("id = ? AND user_id = ? AND status <> ?", id, userID, models.StatusDeleted).
+	err := r.DB.Where("video_id = ? AND user_id = ? AND status <> ?", id, userID, models.StatusDeleted).
 		First(&v).Error
 	if err != nil {
 		return nil, err
@@ -33,7 +43,7 @@ func (r *VideoRepository) FindByIDForUser(id string, userID uint) (*models.Video
 
 func (r *VideoRepository) MarkProcessed(id string, processedPath string) error {
 	return r.DB.Model(&models.Video{}).
-		Where("id = ?", id).
+		Where("video_id = ?", id).
 		Updates(map[string]interface{}{"status": models.StatusProcessed, "processed_path": processedPath, "processed_at": gorm.Expr("NOW()")}).
 		Error
 }
@@ -45,7 +55,7 @@ func (r *VideoRepository) SoftDelete(v *models.Video) error {
 func (r *VideoRepository) Publish(userID uint, id string) error {
 	res := r.DB.Model(&models.Video{}).
 		// solo si es del usuario, no está borrado, está procesado y aún no está publicado
-		Where("id = ? AND user_id = ? AND status = ? AND published = FALSE", id, userID, models.StatusProcessed).
+		Where("video_id = ? AND user_id = ? AND status = ? AND published = FALSE", id, userID, models.StatusProcessed).
 		Updates(map[string]any{
 			"published":    true,
 			"published_at": gorm.Expr("NOW()"),

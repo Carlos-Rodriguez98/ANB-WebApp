@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_EXTERNAL_CONNECTION}:${DB_PORT}"
     volumes:
       - user_data:/var/lib/postgresql/data
       - ../services/database-service/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -33,7 +33,7 @@ services:
     container_name: auth-service
     restart: always
     environment:
-      DB_HOST: anb-database
+      DB_HOST: anbapp-database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -52,7 +52,7 @@ services:
     container_name: video-service
     restart: always
     environment:
-      DB_HOST: anb-database
+      DB_HOST: anbapp-database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -76,7 +76,7 @@ services:
     container_name: processing-service
     restart: always
     environment:
-      DB_HOST: anb-database
+      DB_HOST: anbapp-database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -97,7 +97,7 @@ services:
     container_name: ranking-service
     restart: always
     environment:
-      DB_HOST: anb-database
+      DB_HOST: anbapp-database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -115,7 +115,7 @@ services:
     container_name: voting-service
     restart: always
     environment:
-      DB_HOST: anb-database
+      DB_HOST: anbapp-database
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}

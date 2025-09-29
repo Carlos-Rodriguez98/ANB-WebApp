@@ -1,7 +1,6 @@
 package config
 
 import (
-	"ANB-WebApp/services/video-service/models"
 	"fmt"
 	"log"
 	"time"
@@ -14,7 +13,7 @@ var DB *gorm.DB
 
 func ConnectDatabase() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota",
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota search_path=app",
 		AppConfig.DBHost, AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBName, AppConfig.DBPort,
 	)
 
@@ -23,9 +22,11 @@ func ConnectDatabase() (*gorm.DB, error) {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
 			log.Print("[video-service] DB conectado")
-			if err := DB.AutoMigrate(&models.Video{}); err != nil {
-				return nil, err
-			}
+			/*
+				if err := DB.AutoMigrate(&models.Video{}); err != nil {
+					return nil, err
+				}
+			*/
 			return DB, nil
 		}
 		log.Printf("DB intento %d: %v", i, err)
