@@ -25,6 +25,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [aws_security_group.web.id]
   key_name      = aws_key_pair.main.key_name
   associate_public_ip_address = true
+  iam_instance_profile = aws_iam_instance_profile.anbapp_ssm_profile.name
 
   root_block_device {
     volume_size = var.instance_disk_size
@@ -46,6 +47,7 @@ resource "aws_instance" "worker" {
   subnet_id     = aws_subnet.private_a.id
   vpc_security_group_ids = [aws_security_group.worker.id]
   key_name      = aws_key_pair.main.key_name
+  iam_instance_profile = aws_iam_instance_profile.anbapp_ssm_profile.name
 
   root_block_device {
     volume_size = var.instance_disk_size

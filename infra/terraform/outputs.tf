@@ -17,3 +17,5 @@ output "nfs_private_ip"    { value = aws_instance.nfs.private_ip }
 output "rds_endpoint" { value = aws_db_instance.main.address }
 output "rds_port"     { value = aws_db_instance.main.port }
 output "rds_db_name"  { value = aws_db_instance.main.db_name }
+
+output "web_instance_profile" { value = aws_iam_instance_profile.anbapp_ssm_profile.name }

@@ -74,3 +74,19 @@ variable "db_allocated_storage" {
     type = number 
     default = 20 
     }        # GB
+
+# Ruta base en SSM
+variable "ssm_path"          { 
+    type = string 
+    default = "/anbapp" 
+    }
+
+variable "jwt_secret" {
+  type    = string
+  default = "clavesecreta"
+}
+
+variable "storage_base_path" {
+  type    = string
+  default = "/app/files"
+}
