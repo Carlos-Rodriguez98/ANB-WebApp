@@ -49,6 +49,11 @@ resource "aws_instance" "web" {
 	destination = "/home/ec2-user/voting-service"
   }
 
+  provisioner "file" {
+    source = "../init.sql"
+    destination = "/home/ec2-user/init.sql"
+  }
+
   provisioner "remote-exec" {
 	inline = [
 		"sudo yum update -y",
@@ -67,8 +72,11 @@ resource "aws_instance" "web" {
 		"sudo yum install -y nginx",
 		"sudo systemctl enable nginx",
 		"sudo systemctl start nginx",
-		"echo 'server {\n    listen 80;\n    server_name _;\n    location / {\n        proxy_pass http://localhost:8084;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}' | sudo tee /etc/nginx/conf.d/app.conf",
-		"sudo systemctl restart nginx"
+		"echo 'server {\n    listen 80;\n    server_name _;\n    location / {\n        proxy_pass http://localhost:8084;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n    location /auth/ {\n        proxy_pass http://localhost:8080/;\n    }\n    location /ranking/ {\n        proxy_pass http://localhost:8083/;\n    }\n    location /voting/ {\n        proxy_pass http://localhost:8082/;\n    }\n}' | sudo tee /etc/nginx/conf.d/app.conf",
+		"sudo systemctl restart nginx",
+    "sudo yum install -y postgresql",
+    "until PGPASSWORD=${var.db_password} psql -h ${aws_db_instance.postgres.endpoint} -U ${var.db_username} -d ${var.db_name} -c '\\q'; do echo 'Waiting for RDS...'; sleep 5; done",
+    "PGPASSWORD=${var.db_password} psql -h ${aws_db_instance.postgres.endpoint} -U ${var.db_username} -d ${var.db_name} -f /home/ec2-user/init.sql"
 	]
   }
 
