@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 2) Tabla de videos
 CREATE TABLE IF NOT EXISTS videos (
-    video_id       BIGSERIAL PRIMARY KEY,
+    video_id       VARCHAR(36) PRIMARY KEY,
     user_id        BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     title          VARCHAR(255) NOT NULL,
     original_path  TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS videos (
 -- 3) Tabla de votos
 CREATE TABLE IF NOT EXISTS votes (
     vote_id    BIGSERIAL PRIMARY KEY,
-    video_id   BIGINT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    video_id   VARCHAR(36) NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
     user_id    BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT now(),
     -- Evita que un mismo usuario vote varias veces el mismo video
@@ -44,9 +44,9 @@ INSERT INTO app.users (first_name, last_name, email, password, city, country) VA
 ('Laura', 'Smith', 'laura.smith@example.com', 'password123', 'Los Angeles', 'USA'),
 ('Pedro', 'Gómez', 'pedro.gomez@example.com', 'password123', 'Madrid', 'España');
 
-INSERT INTO app.videos (user_id, title, original_path, processed_path, status, uploaded_at, processed_at, published) VALUES
-(1, 'Video Ana 1', '/videos/ana1.mp4', '/videos/ana1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
-(2, 'Video Luis 1', '/videos/luis1.mp4', '/videos/luis1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
-(2, 'Video Luis 2', '/videos/luis2.mp4', '/videos/luis2_proc.mp4', 'ready', NOW(), NOW(), TRUE),
-(3, 'Video Sofia 1', '/videos/sofia1.mp4', '/videos/sofia1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
-(1, 'Video Ana 2', '/videos/ana2.mp4', '/videos/ana2_proc.mp4', 'pending', NOW(), NULL, FALSE);
+INSERT INTO app.videos (video_id, user_id, title, original_path, processed_path, status, uploaded_at, processed_at, published) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 1, 'Video Ana 1', '/videos/ana1.mp4', '/videos/ana1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+('550e8400-e29b-41d4-a716-446655440002', 2, 'Video Luis 1', '/videos/luis1.mp4', '/videos/luis1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+('550e8400-e29b-41d4-a716-446655440003', 2, 'Video Luis 2', '/videos/luis2.mp4', '/videos/luis2_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+('550e8400-e29b-41d4-a716-446655440004', 3, 'Video Sofia 1', '/videos/sofia1.mp4', '/videos/sofia1_proc.mp4', 'ready', NOW(), NOW(), TRUE),
+('550e8400-e29b-41d4-a716-446655440005', 1, 'Video Ana 2', '/videos/ana2.mp4', '/videos/ana2_proc.mp4', 'pending', NOW(), NULL, FALSE);

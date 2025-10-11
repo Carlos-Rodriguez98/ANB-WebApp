@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -15,7 +14,7 @@ import (
 
 // Estructura de Video para respuesta JSON
 type Video struct {
-	VideoID   int64  `json:"id"`
+	VideoID   string `json:"id"`
 	UserID    int64  `json:"jugador_id"`
 	Title     string `json:"titulo"`
 	Votes     int    `json:"votos"`
@@ -100,8 +99,8 @@ func getPublicVideos(c *gin.Context) {
 
 // Emitir voto por video (ruta pública)
 func voteForVideo(c *gin.Context) {
-	videoID, err := strconv.ParseInt(c.Param("video_id"), 10, 64)
-	if err != nil {
+	videoID := c.Param("video_id")
+	if videoID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inválido"})
 		return
 	}
@@ -119,7 +118,7 @@ func voteForVideo(c *gin.Context) {
 
 	// Verificación de video marcado como público
 	var published bool
-	err = db.QueryRow(`SELECT published FROM app.videos WHERE video_id = $1`, videoID).Scan(&published)
+	err := db.QueryRow(`SELECT published FROM app.videos WHERE video_id = $1`, videoID).Scan(&published)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado"})
 		return
@@ -152,5 +151,5 @@ func voteForVideo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Voto del usuario %d registrado con éxito para el video %d", userID, videoID)})
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Voto del usuario %d registrado con éxito para el video %s", userID, videoID)})
 }

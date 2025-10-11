@@ -179,10 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
             await apiClient.post(`/videos/${currentVideo.video_id}/publish`, {});
             Toast.show('Vidéo publiée avec succès', 'success');
             
-            // Update current video data
-            currentVideo.published = true;
-            updateStatusDisplay();
-            updateActionButtons();
+            // Reload video details from API to get updated data
+            await loadVideoDetails(currentVideo.video_id);
             
         } catch (error) {
             console.error('Error publishing video:', error);
