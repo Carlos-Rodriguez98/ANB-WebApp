@@ -566,48 +566,55 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({"error": "Erreur lors du vote"}, 500)
     
     def handle_get_rankings(self, query_params):
-        """Simule GET /api/public/rankings"""
-        city_filter = query_params.get('city', [''])[0]
-        page = int(query_params.get('page', [1])[0])
-        limit = int(query_params.get('limit', [20])[0])
-        
-        # Créer des classements basés sur les votes
-        rankings = []
-        user_votes = {}
-        
-        for video in self.videos:
-            user_id = video.get('userId')
-            if user_id:
-                user = next((u for u in self.users if u['id'] == user_id), None)
-                if user:
-                    key = user['id']
-                    if key not in user_votes:
-                        user_votes[key] = {
-                            "username": f"{user['firstName']} {user['lastName']}",
-                            "city": user['city'],
-                            "votes": 0
-                        }
-                    user_votes[key]['votes'] += video.get('votes', 0)
-        
-        rankings = list(user_votes.values())
-        
-        # Filtrer par ville si spécifié
-        if city_filter:
-            rankings = [r for r in rankings if city_filter.lower() in r['city'].lower()]
-        
-        # Trier par votes décroissants
-        rankings.sort(key=lambda x: x['votes'], reverse=True)
-        
-        total = len(rankings)
-        start = (page - 1) * limit
-        end = start + limit
-        
-        self.send_json_response({
-            "rankings": rankings[start:end],
-            "total": total,
-            "totalPages": (total + limit - 1) // limit if total > 0 else 1,
-            "currentPage": page
-        })
+        """Proxy vers le service ranking réel"""
+        try:
+            # Appel au service ranking réel
+            response = requests.get(f"{self.RANKING_SERVICE_URL}/api/public/ranking", timeout=10)
+            
+            if response.status_code == 200:
+                rankings_data = response.json()
+                
+                # Adapter le format pour le front-end
+                # Le service ranking retourne: [{"jugador": 1, "votos_acumulados": 100}, ...]
+                # Le front-end s'attend à: {"rankings": [...], "total": x, "totalPages": y}
+                
+                adapted_rankings = []
+                for item in rankings_data:
+                    adapted_rankings.append({
+                        "username": f"Jugador {item['jugador']}",  # Nom générique car le service ne retourne que l'ID
+                        "playerName": f"Jugador {item['jugador']}",
+                        "votes": item['votos_acumulados'],
+                        "city": "N/A"  # Information non disponible dans le service ranking
+                    })
+                
+                # Pagination côté front-end
+                page = int(query_params.get('page', [1])[0])
+                limit = int(query_params.get('limit', [20])[0])
+                city_filter = query_params.get('city', [''])[0]
+                
+                # Filtrer par ville si spécifié (même si pas vraiment applicable ici)
+                if city_filter and city_filter.lower() != "n/a":
+                    adapted_rankings = [r for r in adapted_rankings if city_filter.lower() in r['city'].lower()]
+                
+                total = len(adapted_rankings)
+                start = (page - 1) * limit
+                end = start + limit
+                
+                self.send_json_response({
+                    "rankings": adapted_rankings[start:end],
+                    "total": total,
+                    "totalPages": (total + limit - 1) // limit if total > 0 else 1,
+                    "currentPage": page
+                })
+            else:
+                self.send_json_response({"error": "Service ranking indisponible"}, 503)
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion au service ranking: {e}")
+            self.send_json_response({"error": "Service ranking indisponible"}, 503)
+        except Exception as e:
+            print(f"Erreur dans handle_get_rankings: {e}")
+            self.send_json_response({"error": "Erreur lors de la récupération du classement"}, 500)
     
     def end_headers(self):
         # Ajouter les headers CORS pour le développement
