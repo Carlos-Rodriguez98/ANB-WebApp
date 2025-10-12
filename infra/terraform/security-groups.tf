@@ -51,6 +51,16 @@ resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
   description       = "Allow SSH from admin IP"
 }
 
+# Puerto 8084 para la aplicación (Frontend)
+resource "aws_vpc_security_group_ingress_rule" "web_app" {
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 8084
+  to_port           = 8084
+  ip_protocol       = "tcp"
+  description       = "Allow access to frontend application"
+}
+
 # --- WORKER SG (privada): SSH opcional; egress abierto ---
 resource "aws_security_group" "worker" {
   name        = "${var.project_name}-worker-sg"

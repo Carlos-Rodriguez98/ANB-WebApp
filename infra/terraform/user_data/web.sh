@@ -76,7 +76,7 @@ cd /opt/anbapp
 
 # Clone repository
 echo "Clonando repositorio..."
-git clone https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
+git clone -b feature/carlos https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
     echo "Error al clonar repositorio. Verifica la URL y permisos."
     exit 1
 }
@@ -87,7 +87,15 @@ sleep 10
 # Deploy services automatically
 echo "Desplegando servicios web..."
 cd /opt/anbapp/repo/infra
+
+# Copiar .env al directorio de infra para que docker-compose lo encuentre
+cp /opt/anbapp/.env /opt/anbapp/repo/infra/.env
+
+# Export all variables from .env file
+set -a
 source /opt/anbapp/.env
+set +a
+
 docker-compose -f docker-compose.web.yml up -d --build
 
 # Create manual deploy script for future use
@@ -95,7 +103,10 @@ cat > /opt/anbapp/deploy.sh <<'DEPLOY_SCRIPT'
 #!/bin/bash
 set -e
 cd /opt/anbapp/repo/infra
+cp /opt/anbapp/.env /opt/anbapp/repo/infra/.env
+set -a
 source /opt/anbapp/.env
+set +a
 docker-compose -f docker-compose.web.yml up -d --build
 DEPLOY_SCRIPT
 

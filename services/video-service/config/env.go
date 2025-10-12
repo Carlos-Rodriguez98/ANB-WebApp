@@ -14,6 +14,7 @@ type EnvConfig struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	DBSSLMode  string
 
 	RedisAddr  string
 	ServerPort int
@@ -36,6 +37,7 @@ func LoadEnv() {
 		DBUser:          getOrDefault("DB_USER", "postgres"),
 		DBPassword:      getOrDefault("DB_PASSWORD", "postgres"),
 		DBName:          getOrDefault("DB_NAME", "anb"),
+		DBSSLMode:       getOrDefault("DB_SSLMODE", "disable"),
 		RedisAddr:       getOrDefault("REDIS_ADDR", "localhost:6379"),
 		ServerPort:      serverPort,
 		StorageBasePath: getOrDefault("STORAGE_BASE_PATH", "./uploads"),

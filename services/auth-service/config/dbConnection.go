@@ -15,8 +15,8 @@ var DB *gorm.DB
 func ConnectDatabase() (*gorm.DB, error) {
 	//Construcción de URL de BD
 	DSN := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota search_path=app",
-		AppConfig.DBHost, AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBName, AppConfig.DBPort,
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=America/Bogota search_path=app",
+		AppConfig.DBHost, AppConfig.DBUser, AppConfig.DBPassword, AppConfig.DBName, AppConfig.DBPort, AppConfig.DBSSLMode,
 	)
 
 	var err error //Declaro variable para captura de errores
