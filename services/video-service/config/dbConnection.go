@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Carlos-Rodriguez98/ANB-WebApp/services/video-service/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -22,11 +23,13 @@ func ConnectDatabase() (*gorm.DB, error) {
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err == nil {
 			log.Print("[video-service] DB conectado")
-			/*
-				if err := DB.AutoMigrate(&models.Video{}); err != nil {
-					return nil, err
-				}
-			*/
+			
+			if err := DB.AutoMigrate(&models.Video{}); err != nil {
+				log.Printf("Error en migración: %v", err)
+				return nil, err
+			}
+			log.Println("[video-service] Migración completada")
+			
 			return DB, nil
 		}
 		log.Printf("DB intento %d: %v", i, err)

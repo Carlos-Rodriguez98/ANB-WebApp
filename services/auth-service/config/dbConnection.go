@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Carlos-Rodriguez98/ANB-WebApp/services/auth-service/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -26,14 +27,13 @@ func ConnectDatabase() (*gorm.DB, error) {
 		if err == nil {
 			log.Print("Conexión exitosa a la base de datos")
 
-			/*
-				//Ejecución de automigración
-				if err := DB.AutoMigrate(&models.User{}); err != nil {
-					log.Fatal("Error en la migración: ", err)
-					return nil, err
-				}
-				log.Println("Migración completada")
-			*/
+			//Ejecución de automigración
+			if err := DB.AutoMigrate(&models.User{}); err != nil {
+				log.Fatal("Error en la migración: ", err)
+				return nil, err
+			}
+			log.Println("Migración completada")
+			
 			return DB, nil
 		}
 		log.Printf("Intento %d: error conectando a la base de datos: %v", i, err)
