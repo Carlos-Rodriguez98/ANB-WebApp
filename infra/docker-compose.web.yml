@@ -1,0 +1,88 @@
+version: '3.9'
+services:
+  auth-service:
+    build: ../services/auth-service
+    container_name: auth-service
+    restart: always
+    env_file:
+      - /opt/anbapp/.env
+    ports:
+      - "${AUTH_SERVER_PORT}:${AUTH_SERVER_PORT}"
+    networks:
+      - anbapp
+
+  redis:
+    image: redis:7
+    container_name: anbapp-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - anbapp
+
+  video-service:
+    build: ../services/video-service
+    container_name: video-service
+    restart: always
+    env_file:
+      - /opt/anbapp/.env
+    ports:
+      - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
+    volumes:
+      - ${STORAGE_BASE_PATH}:${STORAGE_BASE_PATH}
+    depends_on:
+      - redis
+    networks:
+      - anbapp
+
+  ranking-service:
+    build: ../services/ranking-service
+    container_name: ranking-service
+    restart: always
+    env_file:
+      - /opt/anbapp/.env
+    ports:
+      - "${RANKING_SERVER_PORT}:${RANKING_SERVER_PORT}"
+    networks:
+      - anbapp
+
+  voting-service:
+    build: ../services/voting-service
+    container_name: voting-service
+    restart: always
+    env_file:
+      - /opt/anbapp/.env
+    ports:
+      - "${VOTING_SERVER_PORT}:${VOTING_SERVER_PORT}"
+    networks:
+      - anbapp
+
+  front-service:
+    build: ../services/front
+    container_name: front-service
+    restart: always
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:${AUTH_SERVER_PORT}
+      VIDEO_SERVICE_URL: http://video-service:${VIDEO_SERVER_PORT}
+      VOTING_SERVICE_URL: http://voting-service:${VOTING_SERVER_PORT}
+      RANKING_SERVICE_URL: http://ranking-service:${RANKING_SERVER_PORT}
+      SERVER_PORT: ${FRONT_SERVER_PORT}
+    ports:
+      - "${FRONT_SERVER_PORT}:${FRONT_SERVER_PORT}"
+    depends_on:
+      - auth-service
+      - video-service
+      - voting-service
+      - ranking-service
+    networks:
+      - anbapp
+
+volumes:
+  redis_data:
+
+networks:
+  anbapp:
+    driver: bridge

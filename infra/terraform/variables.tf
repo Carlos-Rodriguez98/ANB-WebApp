@@ -1,7 +1,31 @@
-variable "aws_region"            { 
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type (2 vCPU, 2 GiB RAM)"
+  default     = "t3.small"
+}
+
+variable "aws_region" { 
     type = string 
     default = "us-east-1" 
-    }
+}
+
+variable "aws_access_key_id" {
+    type      = string
+    sensitive = true
+    default   = ""
+}
+
+variable "aws_secret_access_key" {
+    type      = string
+    sensitive = true
+    default   = ""
+}
+
+variable "aws_session_token" {
+    type      = string
+    sensitive = true
+    default   = ""
+}
 variable "project_name"          { 
     type = string 
     default = "anbapp" 
@@ -22,10 +46,6 @@ variable "private_b_subnet_cidr" {
     type = string
     default = "10.0.3.0/24" 
     }
-variable "enable_nat"            { 
-    type = bool   
-    default = false 
-    } 
 
 variable "allowed_ssh_cidr" {
   type        = string
@@ -89,4 +109,16 @@ variable "jwt_secret" {
 variable "storage_base_path" {
   type    = string
   default = "/app/files"
+}
+
+variable "enable_nat" {
+  type        = bool
+  description = "Habilitar NAT Gateway para subnets privadas"
+  default     = true
+}
+
+variable "front_server_port" {
+  type        = number
+  description = "Puerto del servidor front-end"
+  default     = 5000
 }

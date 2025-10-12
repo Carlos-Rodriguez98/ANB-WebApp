@@ -67,7 +67,25 @@ resource "aws_route_table" "private" {
   tags   = merge(local.tags, { Name = "${var.project_name}-rt-private" })
 }
 
-# SIN NAT por defecto -> NO agregamos ruta 0.0.0.0/0 en privadas
+# NAT Gateway para subredes privadas
+resource "aws_eip" "nat" {
+  domain = "vpc"
+  tags   = merge(local.tags, { Name = "${var.project_name}-nat-eip" })
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+  tags          = merge(local.tags, { Name = "${var.project_name}-nat" })
+  depends_on    = [aws_internet_gateway.igw]
+}
+
+# Ruta para subredes privadas hacia NAT
+resource "aws_route" "private_nat" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
 
 resource "aws_route_table_association" "private_assoc_a" {
   subnet_id      = aws_subnet.private_a.id
@@ -77,9 +95,3 @@ resource "aws_route_table_association" "private_assoc_b" {
   subnet_id      = aws_subnet.private_b.id
   route_table_id = aws_route_table.private.id
 }
-
-/* (Opcional futuro) NAT si alguna vez lo necesitas:
-resource "aws_eip" "nat" { ... }
-resource "aws_nat_gateway" "nat" { ... }
-resource "aws_route" "private_nat" { ... }
-*/

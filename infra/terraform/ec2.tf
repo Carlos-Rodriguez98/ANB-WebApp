@@ -1,7 +1,3 @@
-variable "instance_type" {
-  default = "t3.small"  # 2 vCPU, 2 GiB RAM
-}
-
 variable "instance_disk_size" {
   default = 30
 }
@@ -23,16 +19,29 @@ resource "aws_instance" "web" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.web.id]
-  key_name      = aws_key_pair.main.key_name
+  key_name      = data.aws_key_pair.main.key_name
   associate_public_ip_address = true
-  iam_instance_profile = aws_iam_instance_profile.anbapp_ssm_profile.name
+  iam_instance_profile = data.aws_iam_instance_profile.lab_instance_profile.name
 
   root_block_device {
     volume_size = var.instance_disk_size
     volume_type = "gp3"
   }
 
-  user_data = file("${path.module}/user_data/web_worker.sh")
+  user_data = templatefile("${path.module}/user_data/web.sh", {
+    DB_HOST           = aws_db_instance.main.address
+    DB_PORT           = var.db_port
+    DB_USER           = var.db_username
+    DB_PASSWORD       = var.db_password
+    DB_NAME           = var.db_name
+    DB_SSLMODE        = "disable"
+    JWT_SECRET        = var.jwt_secret
+    STORAGE_BASE_PATH = var.storage_base_path
+    NFS_SERVER        = aws_instance.nfs.private_ip
+    REDIS_ADDR        = "anbapp-redis:6379"
+    REDIS_PORT        = "6379"
+    SSM_BASE_PATH     = var.ssm_path
+  })
 
   tags = {
     Name    = "${var.project_name}-web"
@@ -46,15 +55,15 @@ resource "aws_instance" "worker" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.private_a.id
   vpc_security_group_ids = [aws_security_group.worker.id]
-  key_name      = aws_key_pair.main.key_name
-  iam_instance_profile = aws_iam_instance_profile.anbapp_ssm_profile.name
+  key_name      = data.aws_key_pair.main.key_name
+  iam_instance_profile = data.aws_iam_instance_profile.lab_instance_profile.name
 
   root_block_device {
     volume_size = var.instance_disk_size
     volume_type = "gp3"
   }
 
-  user_data = file("${path.module}/user_data/web_worker.sh")
+  user_data = file("${path.module}/user_data/worker.sh")
 
   tags = {
     Name    = "${var.project_name}-worker"
@@ -68,7 +77,8 @@ resource "aws_instance" "nfs" {
   instance_type = var.instance_type
   subnet_id     = aws_subnet.private_b.id
   vpc_security_group_ids = [aws_security_group.nfs.id]
-  key_name      = aws_key_pair.main.key_name
+  key_name      = data.aws_key_pair.main.key_name
+  iam_instance_profile = data.aws_iam_instance_profile.lab_instance_profile.name
 
   root_block_device {
     volume_size = var.instance_disk_size

@@ -93,24 +93,82 @@ resource "aws_security_group" "nfs" {
   }
 }
 
-# NFS 2049 desde WEB SG
-resource "aws_vpc_security_group_ingress_rule" "nfs_from_web" {
+# NFS 2049 TCP desde WEB SG
+resource "aws_vpc_security_group_ingress_rule" "nfs_tcp_from_web" {
   security_group_id            = aws_security_group.nfs.id
   referenced_security_group_id = aws_security_group.web.id
   from_port                    = var.nfs_port
   to_port                      = var.nfs_port
   ip_protocol                  = "tcp"
-  description                  = "Allow NFS from WEB"
+  description                  = "Allow NFS TCP from WEB"
 }
 
-# NFS 2049 desde WORKER SG
-resource "aws_vpc_security_group_ingress_rule" "nfs_from_worker" {
+# NFS 2049 UDP desde WEB SG
+resource "aws_vpc_security_group_ingress_rule" "nfs_udp_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = var.nfs_port
+  to_port                      = var.nfs_port
+  ip_protocol                  = "udp"
+  description                  = "Allow NFS UDP from WEB"
+}
+
+# Permitir todo el tráfico desde WEB (para servicios auxiliares de NFS)
+resource "aws_vpc_security_group_ingress_rule" "nfs_all_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 111
+  to_port                      = 111
+  ip_protocol                  = "tcp"
+  description                  = "Allow RPC from WEB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_rpc_udp_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 111
+  to_port                      = 111
+  ip_protocol                  = "udp"
+  description                  = "Allow RPC UDP from WEB"
+}
+
+# NFS 2049 TCP desde WORKER SG
+resource "aws_vpc_security_group_ingress_rule" "nfs_tcp_from_worker" {
   security_group_id            = aws_security_group.nfs.id
   referenced_security_group_id = aws_security_group.worker.id
   from_port                    = var.nfs_port
   to_port                      = var.nfs_port
   ip_protocol                  = "tcp"
-  description                  = "Allow NFS from WORKER"
+  description                  = "Allow NFS TCP from WORKER"
+}
+
+# NFS 2049 UDP desde WORKER SG
+resource "aws_vpc_security_group_ingress_rule" "nfs_udp_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = var.nfs_port
+  to_port                      = var.nfs_port
+  ip_protocol                  = "udp"
+  description                  = "Allow NFS UDP from WORKER"
+}
+
+# RPC desde WORKER
+resource "aws_vpc_security_group_ingress_rule" "nfs_rpc_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 111
+  to_port                      = 111
+  ip_protocol                  = "tcp"
+  description                  = "Allow RPC from WORKER"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_rpc_udp_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 111
+  to_port                      = 111
+  ip_protocol                  = "udp"
+  description                  = "Allow RPC UDP from WORKER"
 }
 
 # SSH a NFS desde tu IP
@@ -157,4 +215,14 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_worker" {
   to_port                      = var.db_port
   ip_protocol                  = "tcp"
   description                  = "Allow DB from WORKER"
+}
+
+# Permitir Redis (6379) desde WORKER hacia WEB
+resource "aws_vpc_security_group_ingress_rule" "web_redis_from_worker" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 6379
+  to_port                      = 6379
+  ip_protocol                  = "tcp"
+  description                  = "Allow Redis from WORKER"
 }

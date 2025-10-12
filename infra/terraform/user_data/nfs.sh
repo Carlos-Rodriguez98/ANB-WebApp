@@ -1,16 +1,27 @@
 #!/bin/bash
 set -xe
 
+# Actualizar e instalar NFS
 yum update -y
 yum install -y nfs-utils
 
-# carpeta compartida
+# Crear carpeta compartida
 mkdir -p /srv/nfs/appfiles
-chown nfsnobody:nfsnobody /srv/nfs/appfiles
 chmod 777 /srv/nfs/appfiles
 
-# habilita y configura NFS
-echo "/srv/nfs/appfiles *(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
+# Configurar exports
+cat > /etc/exports <<EOF
+/srv/nfs/appfiles *(rw,sync,no_root_squash,no_subtree_check)
+EOF
+
+# Habilitar e iniciar NFS server
 systemctl enable nfs-server
 systemctl start nfs-server
-exportfs -rav
+
+# Aplicar exports
+exportfs -ra
+
+# Verificar que esté corriendo
+systemctl status nfs-server
+
+echo "NFS server configurado y corriendo"

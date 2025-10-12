@@ -10,12 +10,20 @@ output "worker_sg_id" { value = aws_security_group.worker.id }
 output "nfs_sg_id"    { value = aws_security_group.nfs.id }
 output "rds_sg_id"    { value = aws_security_group.rds.id }
 
-output "web_public_ip"  { value = aws_instance.web.public_ip }
+output "web_public_ip"     { value = aws_instance.web.public_ip }
+output "web_instance_id"   { value = aws_instance.web.id }
 output "worker_private_ip" { value = aws_instance.worker.private_ip }
+output "worker_instance_id" { value = aws_instance.worker.id }
 output "nfs_private_ip"    { value = aws_instance.nfs.private_ip }
+output "nfs_instance_id"   { value = aws_instance.nfs.id }
 
 output "rds_endpoint" { value = aws_db_instance.main.address }
 output "rds_port"     { value = aws_db_instance.main.port }
 output "rds_db_name"  { value = aws_db_instance.main.db_name }
 
-output "web_instance_profile" { value = aws_iam_instance_profile.anbapp_ssm_profile.name }
+output "web_instance_profile" { value = data.aws_iam_instance_profile.lab_instance_profile.name }
+
+output "application_url" { 
+  description = "URL de acceso a la aplicación web"
+  value       = "http://${aws_instance.web.public_ip}:8084"
+}

@@ -7,6 +7,9 @@ locals {
     DB_SSLMODE        = "disable"                           # cámbialo a "require" si quieres TLS
     JWT_SECRET        = var.jwt_secret
     STORAGE_BASE_PATH = var.storage_base_path
+    NFS_SERVER        = aws_instance.nfs.private_ip
+    REDIS_ADDR        = "anbapp-redis:6379"                 # Redis en contenedor Docker
+    REDIS_PORT        = "6379"
   }
 }
 
@@ -17,7 +20,7 @@ resource "aws_ssm_parameter" "strings" {
   type      = "String"
   value     = each.value
   overwrite = true
-  depends_on = [aws_db_instance.main] # asegura que ya exista el endpoint
+  depends_on = [aws_db_instance.main, aws_instance.nfs] # asegura que ya exista el endpoint
 }
 
 # SecureString para la contraseña
