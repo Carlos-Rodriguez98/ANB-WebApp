@@ -24,6 +24,13 @@ func ConnectDatabase() (*gorm.DB, error) {
 		if err == nil {
 			log.Print("[video-service] DB conectado")
 			
+			// Crear esquema 'app' si no existe
+			if err := DB.Exec("CREATE SCHEMA IF NOT EXISTS app").Error; err != nil {
+				log.Printf("Error creando esquema: %v", err)
+				return nil, err
+			}
+			log.Println("[video-service] Esquema 'app' verificado/creado")
+			
 			if err := DB.AutoMigrate(&models.Video{}); err != nil {
 				log.Printf("Error en migración: %v", err)
 				return nil, err

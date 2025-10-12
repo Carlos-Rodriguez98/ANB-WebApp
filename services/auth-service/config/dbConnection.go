@@ -27,6 +27,13 @@ func ConnectDatabase() (*gorm.DB, error) {
 		if err == nil {
 			log.Print("Conexión exitosa a la base de datos")
 
+			// Crear esquema 'app' si no existe
+			if err := DB.Exec("CREATE SCHEMA IF NOT EXISTS app").Error; err != nil {
+				log.Printf("Error creando esquema: %v", err)
+				return nil, err
+			}
+			log.Println("Esquema 'app' verificado/creado")
+
 			//Ejecución de automigración
 			if err := DB.AutoMigrate(&models.User{}); err != nil {
 				log.Fatal("Error en la migración: ", err)
