@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Carlos-Rodriguez98/ANB-WebApp/services/video-service/models"
+	"ANB-WebApp/services/video-service/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
