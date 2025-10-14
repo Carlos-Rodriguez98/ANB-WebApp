@@ -63,15 +63,30 @@ $env:AWS_SECRET_ACCESS_KEY = $AWS_SECRET_ACCESS_KEY
 $env:AWS_SESSION_TOKEN = $AWS_SESSION_TOKEN
 $env:AWS_DEFAULT_REGION = "us-east-1"
 
+# Configurar el formato de salida a texto
+$env:AWS_DEFAULT_OUTPUT = "text"
+
 try {
-    $identity = aws sts get-caller-identity 2>&1
+    # Primero intentamos con el comando más simple
+    $identity = aws sts get-caller-identity --output text 2>&1
+    
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "Conexion exitosa!" -ForegroundColor Green
-        Write-Host $identity
+        # Si el comando simple funciona, intentamos obtener más detalles
+        $jsonIdentity = aws sts get-caller-identity --output json 2>&1 | ConvertFrom-Json -ErrorAction SilentlyContinue
+        
         Write-Host ""
         Write-Host "========================================" -ForegroundColor Green
         Write-Host "CREDENCIALES CONFIGURADAS CORRECTAMENTE" -ForegroundColor Green
         Write-Host "========================================" -ForegroundColor Green
+        
+        if ($jsonIdentity) {
+            Write-Host "Usuario: $($jsonIdentity.Arn)" -ForegroundColor White
+            Write-Host "Cuenta:  $($jsonIdentity.Account)" -ForegroundColor White
+            Write-Host "User ID: $($jsonIdentity.UserId)" -ForegroundColor White
+        } else {
+            Write-Host $identity -ForegroundColor White
+        }
+        
         Write-Host ""
         Write-Host "Ahora puedes ejecutar:" -ForegroundColor Cyan
         Write-Host "  .\2-plan.ps1   - Para ver que se va a crear" -ForegroundColor White
@@ -87,18 +102,29 @@ try {
         Write-Host $identity
         Write-Host ""
         Write-Host "Posibles causas:" -ForegroundColor Yellow
-        Write-Host "- Credenciales copiadas incorrectamente" -ForegroundColor White
-        Write-Host "- Lab no esta iniciado (debe estar en verde)" -ForegroundColor White
-        Write-Host "- AWS CLI no esta instalado" -ForegroundColor White
+        Write-Host "1. Credenciales copiadas incorrectamente" -ForegroundColor White
+        Write-Host "2. Lab no esta iniciado (debe estar en verde en AWS Academy)" -ForegroundColor White
+        Write-Host "3. AWS CLI no esta configurado correctamente" -ForegroundColor White
+        Write-Host ""
+        
+        # Verificar versión de AWS CLI
+        $awsVersion = aws --version 2>&1
+        Write-Host "AWS CLI Version: $awsVersion" -ForegroundColor Cyan
+        
         Remove-Item $credFile -ErrorAction SilentlyContinue
         exit 1
     }
 }
 catch {
-    Write-Host "Error al ejecutar AWS CLI" -ForegroundColor Red
+    Write-Host "Error inesperado al verificar credenciales" -ForegroundColor Red
+    Write-Host "Detalles del error:" -ForegroundColor Yellow
     Write-Host $_.Exception.Message
     Write-Host ""
-    Write-Host "Verifica que AWS CLI este instalado: aws --version" -ForegroundColor Yellow
+    Write-Host "Por favor, verifica:" -ForegroundColor Yellow
+    Write-Host "1. Que hayas iniciado el lab en AWS Academy" -ForegroundColor White
+    Write-Host "2. Que hayas copiado las credenciales completas" -ForegroundColor White
+    Write-Host "3. Que no haya espacios al inicio o final de las credenciales" -ForegroundColor White
+    
     Remove-Item $credFile -ErrorAction SilentlyContinue
     exit 1
 }

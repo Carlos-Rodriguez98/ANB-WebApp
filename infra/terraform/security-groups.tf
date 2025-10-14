@@ -80,11 +80,11 @@ resource "aws_security_group" "worker" {
 # SSH solo desde tu IP (puedes eliminarlo si administras por SSM)
 resource "aws_vpc_security_group_ingress_rule" "worker_ssh" {
   security_group_id = aws_security_group.worker.id
-  cidr_ipv4         = var.allowed_ssh_cidr
+  referenced_security_group_id = aws_security_group.web.id 
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
-  description       = "Allow SSH from admin IP (optional)"
+  description       = "Allow SSH from Web Server"
 }
 
 # --- NFS SG (privada): NFS 2049 desde WEB y WORKER, SSH desde tu IP ---

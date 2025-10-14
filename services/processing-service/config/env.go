@@ -10,11 +10,12 @@ import (
 
 type EnvConfig struct {
 	// DB
-	DBHost string
-	DBPort int
-	DBUser string
-	DBPass string
-	DBName string
+	DBHost    string
+	DBPort    int
+	DBUser    string
+	DBPass    string
+	DBName    string
+	DBSSLMode string
 
 	// Infra
 	RedisAddr       string // ej: redis:6379
@@ -32,12 +33,18 @@ func LoadEnv() {
 	dbPort := atoiDefault(os.Getenv("DB_PORT"), 5432)
 	concurrency := atoiDefault(os.Getenv("WORKER_CONCURRENCY"), 5)
 
+	dbSSLMode := os.Getenv("DB_SSLMODE")
+	if dbSSLMode == "" {
+		dbSSLMode = "disable" // Valor por defecto
+	}
+
 	App = EnvConfig{
-		DBHost: os.Getenv("DB_HOST"),
-		DBPort: dbPort,
-		DBUser: os.Getenv("DB_USER"),
-		DBPass: os.Getenv("DB_PASSWORD"),
-		DBName: os.Getenv("DB_NAME"),
+		DBHost:    os.Getenv("DB_HOST"),
+		DBPort:    dbPort,
+		DBUser:    os.Getenv("DB_USER"),
+		DBPass:    os.Getenv("DB_PASSWORD"),
+		DBName:    os.Getenv("DB_NAME"),
+		DBSSLMode: dbSSLMode,
 
 		RedisAddr:       getenv("REDIS_ADDR", "redis:6379"),
 		StorageBasePath: getenv("STORAGE_BASE_PATH", "/data/uploads"),
