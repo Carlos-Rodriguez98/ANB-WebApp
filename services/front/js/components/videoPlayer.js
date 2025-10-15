@@ -9,7 +9,7 @@ function VideoPlayer({ src, poster = '', controls = true, className = '' }) {
             preload="metadata"
             class="w-full h-full rounded-lg"
         >
-            Votre navigateur ne supporte pas la lecture vidéo.
+            Su navegador no soporta la reproducción de video.
         </video>
     </div>
     `;

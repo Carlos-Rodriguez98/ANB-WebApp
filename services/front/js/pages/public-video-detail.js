@@ -67,15 +67,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayVideoDetails() {
         if (!currentVideo) return;
 
-        // Basic info - adapter aux vrais champs retournés par le service voting
-        videoTitle.textContent = currentVideo.titulo || currentVideo.title || 'Titre non disponible';
-        videoPlayerName.textContent = currentVideo.playerName || `Joueur ${currentVideo.jugador_id}` || 'Joueur inconnu';
-        videoCity.textContent = currentVideo.city || 'Ville inconnue';
+        // Basic info - adaptar a los campos reales devueltos por el servicio de votación
+        videoTitle.textContent = currentVideo.titulo || currentVideo.title || 'Título no disponible';
+        videoPlayerName.textContent = currentVideo.playerName || `Jugador ${currentVideo.jugador_id}` || 'Jugador desconocido';
+        videoCity.textContent = currentVideo.city || 'Ciudad desconocida';
 
         // Published date
         if (currentVideo.published_at) {
             const publishedDate = new Date(currentVideo.published_at);
-            videoPublishedDate.textContent = publishedDate.toLocaleDateString('fr-FR', {
+            videoPublishedDate.textContent = publishedDate.toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -83,10 +83,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 minute: '2-digit'
             });
         } else {
-            videoPublishedDate.textContent = 'Date inconnue';
+            videoPublishedDate.textContent = 'Fecha desconocida';
         }
 
-        // Votes - adapter au vrai champ
+        // Votes - adaptar al campo real
         videoVotes.textContent = currentVideo.votos || currentVideo.votes || 0;
 
         // Video player - construire l'URL en utilisant le pattern du service vidéo
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!videoUrl) {
             // URL de vidéo de test en fallback
             videoUrl = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
-            console.warn('Aucune URL de vidéo trouvée, utilisation d\'une vidéo de test');
+            console.warn('No se encontró URL de video, usando un video de prueba');
         }
         
         videoSource.src = videoUrl;
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 user_id: parseInt(userId)
             });
             
-            // Update vote count - adapter aux vrais champs
+            // Update vote count - adaptar a los campos reales
             if (currentVideo.votos !== undefined) {
                 currentVideo.votos = (currentVideo.votos || 0) + 1;
                 videoVotes.textContent = currentVideo.votos;
@@ -173,18 +173,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Disable vote button
             voteBtn.disabled = true;
-            voteBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Voté !';
+            voteBtn.innerHTML = '<i class="fas fa-check mr-2"></i>¡Votado!';
             voteBtn.classList.remove('btn-success');
             voteBtn.classList.add('btn-secondary');
             
-            showToast('Vote enregistré avec succès !', 'success');
+            showToast('¡Voto registrado con éxito!', 'success');
             
         } catch (error) {
             console.error('Error voting:', error);
             
-            let errorMessage = 'Erreur lors du vote';
+            let errorMessage = 'Error al votar';
             if (error.message && error.message.includes('déjà voté')) {
-                errorMessage = 'Vous avez déjà voté pour cette vidéo';
+                errorMessage = 'Ya has votado por este video';
             } else if (error.message.includes('Session expired') || error.message.includes('401')) {
                 showToast('Sesión expirada. Redirigiendo al login...', 'warning');
                 setTimeout(() => {

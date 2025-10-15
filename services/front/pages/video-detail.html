@@ -48,7 +48,7 @@
             <div class="hidden md:flex items-center space-x-2 auth-buttons">
                 <div class="user-menu">
                     <span class="text-gray-100 mr-2">Bienvenido, <span id="username"></span></span>
-                    <button id="logoutBtn" class="btn-secondary text-sm">Déconnexion</button>
+                    <button id="logoutBtn" class="btn-secondary text-sm">Cerrar Sesión</button>
                 </div>
             </div>
         </nav>
@@ -60,7 +60,7 @@
         <div class="mb-6">
             <a href="dashboard.html" class="inline-flex items-center text-primary-600 hover:text-primary-700">
                 <i class="fas fa-arrow-left mr-2"></i>
-                Retour au panel
+                Volver al panel
             </a>
         </div>
 
@@ -79,7 +79,7 @@
                             <div id="video-container" class="aspect-video bg-gray-900 rounded-lg overflow-hidden">
                                 <video id="video-player" class="w-full h-full object-cover" controls>
                                     <source id="video-source" src="" type="video/mp4">
-                                    Votre navigateur ne supporte pas la lecture vidéo.
+                                    Su navegador no soporta la reproducción de video.
                                 </video>
                             </div>
                         </div>
@@ -90,22 +90,22 @@
                             
                             <div class="space-y-4">
                                 <div class="flex items-center">
-                                    <span class="text-sm font-medium text-gray-500 w-20">Statut:</span>
+                                    <span class="text-sm font-medium text-gray-500 w-20">Estatus:</span>
                                     <span id="video-status" class="px-2 py-1 text-xs font-semibold rounded-full"></span>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <span class="text-sm font-medium text-gray-500 w-20">Uploadé:</span>
+                                    <span class="text-sm font-medium text-gray-500 w-20">Subido:</span>
                                     <span id="video-upload-date" class="text-sm text-gray-900"></span>
                                 </div>
 
                                 <div id="processed-date-container" class="hidden flex items-center">
-                                    <span class="text-sm font-medium text-gray-500 w-20">Traité:</span>
+                                    <span class="text-sm font-medium text-gray-500 w-20">Tratado:</span>
                                     <span id="video-processed-date" class="text-sm text-gray-900"></span>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <span class="text-sm font-medium text-gray-500 w-20">Votes:</span>
+                                    <span class="text-sm font-medium text-gray-500 w-20">Votos:</span>
                                     <span id="video-votes" class="text-sm text-gray-900 flex items-center">
                                         <i class="fas fa-thumbs-up text-green-500 mr-1"></i>
                                         <span>0</span>
@@ -122,11 +122,11 @@
                             <div class="mt-6 flex space-x-3">
                                 <button id="publish-btn" class="hidden btn-success text-sm">
                                     <i class="fas fa-upload mr-1"></i>
-                                    Publier
+                                    Publicar
                                 </button>
                                 <button id="delete-btn" class="btn-danger text-sm">
                                     <i class="fas fa-trash mr-1"></i>
-                                    Supprimer
+                                    Borrar
                                 </button>
                             </div>
                         </div>
@@ -140,9 +140,9 @@
             <div class="text-red-500 text-6xl mb-4">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">Vidéo non trouvée</h2>
-            <p class="text-gray-600 mb-4">La vidéo que vous cherchez n'existe pas ou a été supprimée.</p>
-            <a href="dashboard.html" class="btn-primary">Retour au panel</a>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Vídeo no encontrado</h2>
+            <p class="text-gray-600 mb-4">El video que busca no existe o ha sido eliminado.</p>
+            <a href="dashboard.html" class="btn-primary">Volver al panel</a>
         </div>
     </main>
 
@@ -151,12 +151,12 @@
         <div class="modal-overlay modal-close"></div>
         <div class="modal-content">
             <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirmer la suppression</h3>
-                <p class="text-gray-600 mb-6">Êtes-vous sûr de vouloir supprimer cette vidéo ? Cette action est irréversible.</p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirmar eliminación</h3>
+                <p class="text-gray-600 mb-6">¿Está seguro de que desea eliminar este video? Esta acción es irreversible.</p>
                 
                 <div class="flex justify-end space-x-3">
-                    <button class="btn-secondary modal-close">Annuler</button>
-                    <button id="confirm-delete" class="btn-danger">Supprimer</button>
+                    <button class="btn-secondary modal-close">Cancelar</button>
+                    <button id="confirm-delete" class="btn-danger">Borrar</button>
                 </div>
             </div>
         </div>

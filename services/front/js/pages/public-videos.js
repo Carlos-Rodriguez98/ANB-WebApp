@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyState.classList.add('hidden');
             
             const response = await apiClient.get('/public/videos');
-            // La réponse est directement un tableau de vidéos
+            // La respuesta es directamente un array de videos
             allVideos = Array.isArray(response) ? response : [];
             filteredVideos = [...allVideos];
             

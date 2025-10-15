@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         } catch (error) {
-            console.error('Erreur lors du chargement des rankings:', error);
-            showEmptyState('Erreur lors du chargement des classifications');
+            console.error('Error al cargar las clasificaciones:', error);
+            showEmptyState('Error al cargar las clasificaciones');
         }
     }
 
@@ -122,9 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return medals[position] || position;
     }
 
-    // Calculer le score basé sur les votes
+    // Calcular el puntaje basado en los votos
     function calculateScore(votes) {
-        return (votes || 0) * 10; // Score simplifié
+        return (votes || 0) * 10; // Puntaje simplificado
     }
 
     // Obtenir la tendance (simulée)
