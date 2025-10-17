@@ -11,24 +11,32 @@ type VideoController struct{ Svc *services.VideoService }
 
 func NewVideoController(s *services.VideoService) *VideoController { return &VideoController{Svc: s} }
 
-// 3) POST /api/videos/upload  (multipart form-data: video_file, title)
-func (ctl *VideoController) Upload(c *gin.Context) {
-	userID := c.GetUint("user_id")
-	title := c.PostForm("title")
-	file, err := c.FormFile("video_file")
-	if err != nil || title == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "title y video_file son requeridos"})
+// POST /api/videos/upload  (multipart form-data: video_file, title)
+func (ctl *VideoController) Upload(context *gin.Context) {
+
+	if context.Request.ContentLength > 100<<20 {
+		context.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "video demasiado grande (max 100MB)"})
 		return
 	}
+
+	userID := context.GetUint("user_id")
+	title := context.PostForm("title")
+	file, err := context.FormFile("video_file")
+
+	if err != nil || title == "" {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "title y video_file son requeridos"})
+		return
+	}
+
 	res, err := ctl.Svc.Upload(userID, title, file)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, res)
+	context.JSON(http.StatusCreated, res)
 }
 
-// 4) GET /api/videos
+// GET /api/videos
 func (ctl *VideoController) ListMine(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	items, err := ctl.Svc.ListMine(userID)
@@ -39,7 +47,7 @@ func (ctl *VideoController) ListMine(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
-// 5) GET /api/videos/{video_id}
+// GET /api/videos/{video_id}
 func (ctl *VideoController) GetDetail(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	id := c.Param("video_id")
@@ -60,7 +68,7 @@ func (ctl *VideoController) GetDetail(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// 6) DELETE /api/videos/{video_id}
+// DELETE /api/videos/{video_id}
 func (ctl *VideoController) Delete(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	id := c.Param("video_id")

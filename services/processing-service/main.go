@@ -1,84 +1,142 @@
 package main
 
 import (
-	"ANB-WebApp/services/processing-service/config"
 	"ANB-WebApp/services/processing-service/repository"
-	"ANB-WebApp/services/processing-service/tasks"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
-	"strings"
+	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/hibiken/asynq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
+type ProcessVideoPayload struct {
+	VideoID      string `json:"video_id"`
+	UserID       uint   `json:"user_id"`
+	OriginalPath string `json:"original_path"`
+	Title        string `json:"title"`
+}
+
 func main() {
-	config.LoadEnv()
-
-	db, err := config.ConnectDatabase()
-	if err != nil {
-		log.Fatal(err)
+	// Llama a la función que arranca y bloquea hasta shutdown
+	if err := RunWorker(); err != nil {
+		log.Fatalf("worker exited with error: %v", err)
 	}
+	log.Println("worker exited normally")
+}
 
+func RunWorker() error {
+	// DB
+	db, err := ConnectDatabase()
+	if err != nil {
+		return fmt.Errorf("connect db: %w", err)
+	}
 	repo := repository.NewVideoRepository(db)
 
+	// concurrency (fallback)
+	workers := 10
+	if s := os.Getenv("WORKER_CONCURRENCY"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			workers = n
+		} else {
+			log.Printf("invalid WORKER_CONCURRENCY=%q, using default %d", s, workers)
+		}
+	}
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		return fmt.Errorf("REDIS_ADDR required")
+	}
+
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: config.App.RedisAddr},
+		asynq.RedisClientOpt{Addr: redisAddr},
 		asynq.Config{
-			Queues: map[string]int{"videos": config.App.WorkerConcurrency},
+			Concurrency:     workers,
+			Queues:          map[string]int{"videos": 1},
+			ShutdownTimeout: 30 * time.Second, // <--- tiempo que asynq esperará tareas activas
 		},
 	)
 
 	mux := asynq.NewServeMux()
-	mux.HandleFunc(tasks.TaskProcessVideo, handleProcessVideo(repo))
+	mux.HandleFunc("video:process", handleProcessVideo(repo))
 
-	log.Printf("[processing-service] iniciado | redis=%s | base=%s",
-		config.App.RedisAddr, config.App.StorageBasePath)
+	// Run server in goroutine
+	errCh := make(chan error, 1)
+	go func() {
+		log.Println("asynq server starting")
+		if err := srv.Run(mux); err != nil {
+			// srv.Run returns error only if server stops unexpectedly
+			errCh <- err
+		}
+		close(errCh)
+	}()
 
-	if err := srv.Run(mux); err != nil {
-		log.Fatal(err)
+	// esperar señal o error
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case s := <-sig:
+		log.Printf("signal received: %v. shutting down...", s)
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("asynq server error: %w", err)
+		}
+		log.Println("asynq server stopped without error")
 	}
+
+	srv.Shutdown()
+	log.Println("asynq server shutdown complete")
+	return nil
+}
+
+func ConnectDatabase() (*gorm.DB, error) {
+	DSN := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=America/Bogota search_path=app",
+		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"),
+	)
+
+	var database *gorm.DB
+	var err error
+
+	for i := 1; i <= 5; i++ {
+		database, err = gorm.Open(postgres.Open(DSN), &gorm.Config{})
+		if err == nil {
+			return database, nil
+		}
+		time.Sleep(3 * time.Second)
+	}
+
+	return nil, fmt.Errorf("no se pudo conectar a la base de datos: %v", err)
 }
 
 func handleProcessVideo(repo *repository.VideoRepository) asynq.HandlerFunc {
 	return func(ctx context.Context, t *asynq.Task) error {
 
-		var p tasks.ProcessVideoPayload
+		var p ProcessVideoPayload
 		if err := json.Unmarshal(t.Payload(), &p); err != nil {
 			return fmt.Errorf("decode payload: %w", err)
 		}
 
-		base := config.App.StorageBasePath
+		base := os.Getenv("STORAGE_BASE_PATH")
 		inAbs := filepath.Join(base, p.OriginalPath)
 
-		outRelDir := filepath.Join("/static/processed", fmt.Sprintf("u%d", p.UserID))
-		if err := os.MkdirAll(filepath.Join(base, outRelDir), 0755); err != nil {
+		outRelDir := filepath.Join("processed", fmt.Sprintf("user_%d", p.UserID))
+		err := os.MkdirAll(filepath.Join(base, outRelDir), 0755)
+		if err != nil {
 			return err
 		}
 		outRel := filepath.Join(outRelDir, p.VideoID+".mp4")
 		outAbs := filepath.Join(base, outRel)
-
-		origRel := p.OriginalPath
-
-		// 1) Si ya contiene "/static/" usamos la subruta desde ahí
-		if idx := strings.Index(p.OriginalPath, "/static/"); idx != -1 {
-			origRel = p.OriginalPath[idx:]
-		} else if strings.HasPrefix(p.OriginalPath, base) {
-			// 2) Si p.OriginalPath es absoluta y base es prefijo, recortamos el base
-			origRel = strings.TrimPrefix(p.OriginalPath, base)
-			if !strings.HasPrefix(origRel, "/") {
-				origRel = "/" + origRel
-			}
-		} else {
-			// 3) Fallback: asumimos ubicación bajo /static/original/u{userID}/{videoID}.mp4
-			origRel = filepath.Join("/static/original", fmt.Sprintf("u%d", p.UserID), p.VideoID+".mp4")
-		}
-
-		log.Printf("[worker] ffmpeg %s -> %s", inAbs, outAbs)
 
 		inLogo := "/app/logo_anb.png"
 
@@ -122,10 +180,9 @@ func handleProcessVideo(repo *repository.VideoRepository) asynq.HandlerFunc {
 			return err
 		}
 
-		if err := repo.MarkProcessed(p.VideoID, origRel, outRel); err != nil {
+		if err := repo.MarkProcessed(p.VideoID, p.OriginalPath, outRel); err != nil {
 			return err
 		}
-		log.Printf("[worker] procesado OK video_id=%s", p.VideoID)
 		return nil
 	}
 }

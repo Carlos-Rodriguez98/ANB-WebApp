@@ -6,9 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type VideoRepository struct{ DB *gorm.DB }
+type VideoRepository struct {
+	DB *gorm.DB
+}
 
-func NewVideoRepository(db *gorm.DB) *VideoRepository { return &VideoRepository{DB: db} }
+func NewVideoRepository(db *gorm.DB) *VideoRepository {
+	return &VideoRepository{DB: db}
+}
 
 func (r *VideoRepository) Create(v *models.Video) error {
 	return r.DB.Create(v).Error

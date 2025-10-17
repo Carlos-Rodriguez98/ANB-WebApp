@@ -39,12 +39,6 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	// Si no hay puerto definido, usar 8081 por defecto
-	if serverPort == "" {
-		log.Println("SERVER_PORT no definido, usando puerto por defecto 8081")
-		serverPort = "8081"
-	}
-
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=America/Bogota search_path=app",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err = sql.Open("postgres", connStr)
