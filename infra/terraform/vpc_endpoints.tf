@@ -28,7 +28,7 @@ resource "aws_vpc_endpoint" "ssm" {
   security_group_ids  = [aws_security_group.vpce.id]
   subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
   private_dns_enabled = true
-  tags = { Project = var.project_name }
+  tags                = { Project = var.project_name }
 }
 
 resource "aws_vpc_endpoint" "ssmmessages" {
@@ -38,7 +38,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   security_group_ids  = [aws_security_group.vpce.id]
   subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
   private_dns_enabled = true
-  tags = { Project = var.project_name }
+  tags                = { Project = var.project_name }
 }
 
 resource "aws_vpc_endpoint" "ec2messages" {
@@ -48,7 +48,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   security_group_ids  = [aws_security_group.vpce.id]
   subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
   private_dns_enabled = true
-  tags = { Project = var.project_name }
+  tags                = { Project = var.project_name }
 }
 
 resource "aws_vpc_endpoint" "kms" {
@@ -58,5 +58,5 @@ resource "aws_vpc_endpoint" "kms" {
   security_group_ids  = [aws_security_group.vpce.id]
   subnet_ids          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
   private_dns_enabled = true
-  tags = { Project = var.project_name }
+  tags                = { Project = var.project_name }
 }

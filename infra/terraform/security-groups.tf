@@ -1,8 +1,8 @@
 locals {
-    sg_tags = {
-        Project = var.project_name
-        Env = "dev"
-    }
+  sg_tags = {
+    Project = var.project_name
+    Env     = "dev"
+  }
 }
 
 # --- WEB SG (pública): HTTP/HTTPS desde Internet, SSH solo desde tu IP ---
@@ -22,13 +22,22 @@ resource "aws_security_group" "web" {
 }
 
 # HTTP 80 desde Internet
-resource "aws_vpc_security_group_ingress_rule" "web_http" {
-  security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 80
-  to_port           = 80
-  ip_protocol       = "tcp"
-  description       = "Allow HTTP from Internet"
+# resource "aws_vpc_security_group_ingress_rule" "web_http" {
+#   security_group_id = aws_security_group.web.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port         = 80
+#   to_port           = 80
+#   ip_protocol       = "tcp"
+#   description       = "Allow HTTP from Internet"
+# }
+
+resource "aws_vpc_security_group_ingress_rule" "web_http_from_alb" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  description                  = "Allow HTTP from ALB"
 }
 
 # HTTPS 443 desde Internet (si vas a usar TLS)
@@ -52,13 +61,23 @@ resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
 }
 
 # Puerto 8084 para la aplicación (Frontend)
-resource "aws_vpc_security_group_ingress_rule" "web_app" {
-  security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 8084
-  to_port           = 8084
-  ip_protocol       = "tcp"
-  description       = "Allow access to frontend application"
+# resource "aws_vpc_security_group_ingress_rule" "web_app" {
+#   security_group_id = aws_security_group.web.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port         = 8084
+#   to_port           = 8084
+#   ip_protocol       = "tcp"
+#   description       = "Allow access to frontend application"
+# }
+
+# Allow HTTP (8084) from ALB only
+resource "aws_vpc_security_group_ingress_rule" "web_8084_from_alb" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 8084
+  to_port                      = 8084
+  ip_protocol                  = "tcp"
+  description                  = "Allow HTTP 8084 from ALB"
 }
 
 # --- WORKER SG (privada): SSH opcional; egress abierto ---
@@ -79,12 +98,12 @@ resource "aws_security_group" "worker" {
 
 # SSH solo desde tu IP (puedes eliminarlo si administras por SSM)
 resource "aws_vpc_security_group_ingress_rule" "worker_ssh" {
-  security_group_id = aws_security_group.worker.id
-  referenced_security_group_id = aws_security_group.web.id 
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
-  description       = "Allow SSH from Web Server"
+  security_group_id            = aws_security_group.worker.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "Allow SSH from Web Server"
 }
 
 # --- NFS SG (privada): NFS 2049 desde WEB y WORKER, SSH desde tu IP ---
