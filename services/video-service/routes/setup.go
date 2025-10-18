@@ -7,6 +7,7 @@ import (
 	"ANB-WebApp/services/video-service/services"
 	"ANB-WebApp/services/video-service/storage"
 	"log"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,8 +28,8 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	// Servir archivos estáticos (para URLs públicas locales)
-	// Mapea /static/* a STORAGE_BASE_PATH
-	r.Static("/static", config.AppConfig.StorageBasePath)
+	// Mapea /static/* a STORAGE_BASE_PATH/static
+	r.Static("/static", filepath.Join(config.AppConfig.StorageBasePath, "static"))
 
 	ServiceRoutes(r, vc)
 	return r
