@@ -73,7 +73,7 @@ resource "aws_instance" "worker" {
     JWT_SECRET        = var.jwt_secret
     STORAGE_BASE_PATH = var.storage_base_path
     NFS_SERVER        = aws_instance.nfs.private_ip
-    REDIS_ADDR        = "anbapp-redis:6379"
+    REDIS_ADDR        = "${aws_instance.web.private_ip}:6379"
     REDIS_PORT        = "6379"
     SSM_BASE_PATH     = var.ssm_path
   })
