@@ -412,18 +412,17 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({"error": "Erreur lors de la suppression"}, 500)
 
     def handle_publish_video(self, video_id):
-        """Simule POST /api/videos/:id/publish"""
+        """Proxy POST /api/videos/:id/publish al video-service"""
         auth_token = self.get_auth_token_from_request()
         if not auth_token:
             self.send_json_response({"error": "Token d'autorisation requis"}, 401)
             return
         
         try:
-            # Simuler la publication d'une vidéo
-            self.send_json_response({
-                "message": "video publicado",
-                "video_id": video_id
-            })
+            # Hacer proxy al video-service real
+            headers = {'Authorization': f'Bearer {auth_token}'}
+            data, status = self.proxy_to_video_service(f'/videos/{video_id}/publish', method='POST', headers=headers, data={})
+            self.send_json_response(data, status)
             
         except Exception as e:
             print(f"Error in publish_video: {e}")

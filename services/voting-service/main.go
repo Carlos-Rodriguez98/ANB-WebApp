@@ -49,16 +49,21 @@ func main() {
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require TimeZone=America/Bogota search_path=app",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
+	
+	log.Printf("Intentando conectar a DB: host=%s port=%s db=%s user=%s", dbHost, dbPort, dbName, dbUser)
+	
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error al abrir conexión a DB: %v", err)
 	}
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
-		log.Println("Error conectando a la base de datos:", err)
+		log.Fatalf("Error al hacer ping a la base de datos: %v", err)
 	}
+	
+	log.Println("✓ Conexión a base de datos exitosa")
 
 	r := gin.Default()
 
@@ -204,6 +209,8 @@ func voteForVideo(c *gin.Context) {
 
 // Listar videos públicos disponibles para votación
 func getPublicVideos(c *gin.Context) {
+	log.Println("GET /api/public/videos - Iniciando consulta...")
+	
 	rows, err := db.Query(`
 		SELECT
 			v.video_id,
@@ -230,7 +237,8 @@ func getPublicVideos(c *gin.Context) {
 		ORDER BY votes DESC, v.uploaded_at DESC
 	`)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al buscar videos"})
+		log.Printf("ERROR en query de videos: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al buscar videos", "details": err.Error()})
 		return
 	}
 	defer rows.Close()
@@ -264,7 +272,8 @@ func getPublicVideos(c *gin.Context) {
 			&vr.Published,
 			&vr.Votes,
 		); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al escanear video"})
+			log.Printf("ERROR al escanear video: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al escanear video", "details": err.Error()})
 			return
 		}
 
@@ -285,9 +294,11 @@ func getPublicVideos(c *gin.Context) {
 	}
 
 	if err := rows.Err(); err != nil {
+		log.Printf("ERROR en rows.Err(): %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error en resultado de videos"})
 		return
 	}
 
+	log.Printf("✓ Consulta exitosa, encontrados %d videos", len(videos))
 	c.JSON(http.StatusOK, videos)
 }
