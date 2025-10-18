@@ -17,7 +17,7 @@ func NewLocalStorage() *LocalStorage {
 }
 
 func (s *LocalStorage) SaveOriginal(userID uint, videoID string, file *multipart.FileHeader) (string, error) {
-	relDir := filepath.Join("original", fmt.Sprintf("u%d", userID))
+	relDir := filepath.Join("static", "original", fmt.Sprintf("u%d", userID))
 	if err := os.MkdirAll(filepath.Join(s.base, relDir), 0755); err != nil {
 		return "", err
 	}
