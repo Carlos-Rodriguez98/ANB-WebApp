@@ -16,17 +16,17 @@ async function renderRankingsPage() {
             app.innerHTML = `
             <section class="container mx-auto px-4 py-8 fade-in">
               <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-primary-600">Classement</h2>
+                                <h2 class="text-xl font-semibold text-gray-900 mb-4">Clasificación</h2>
                 <div class="flex items-center gap-2">
-                  <input type="text" id="city-filter" class="form-input" placeholder="Filtrer par ville..." value="${cityFilter || ''}" style="max-width:180px;">
+                  <input type="text" id="city-filter" class="form-input" placeholder="Filtrar por ciudad..." value="${cityFilter || ''}" style="max-width:180px;">
                   <button class="btn-secondary" onclick="applyCityFilter()"><i class="fas fa-search"></i></button>
                 </div>
               </div>
               ${(!rankings || rankings.length === 0) ? `
                 <div class="empty-state">
                   <div class="empty-state-icon"><i class="fas fa-users-slash"></i></div>
-                  <div class="empty-state-title">Aucun résultat</div>
-                  <div class="empty-state-description">Aucun joueur trouvé pour ce filtre.</div>
+                  <div class="empty-state-title">Sin resultados</div>
+                  <div class="empty-state-description">No se encontraron jugadores para este filtro.</div>
                 </div>
               ` : `
                 <div class="overflow-x-auto">
@@ -34,9 +34,9 @@ async function renderRankingsPage() {
                     <thead>
                       <tr>
                         <th>Position</th>
-                        <th>Joueur</th>
-                        <th>Ville</th>
-                        <th>Votes</th>
+                        <th>Jugador</th>
+                                                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Votos</th>
+                        <th>Votos</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -66,7 +66,7 @@ async function renderRankingsPage() {
                 load(page, city);
             };
         } catch (err) {
-            app.innerHTML = `<div class='empty-state'><div class='empty-state-title'>Erreur</div><div class='empty-state-description'>${err.message || 'Impossible de charger le classement.'}</div></div>`;
+            app.innerHTML = `<div class='empty-state'><div class='empty-state-title'>Error</div><div class='empty-state-description'>${err.message || 'No se pudo cargar la clasificación.'}</div></div>`;
         }
     }
     load(page, city);

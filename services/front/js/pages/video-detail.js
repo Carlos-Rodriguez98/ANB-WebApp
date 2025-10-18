@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Upload date
         const uploadDate = new Date(currentVideo.uploaded_at);
-        videoUploadDate.textContent = uploadDate.toLocaleDateString('fr-FR', {
+        videoUploadDate.textContent = uploadDate.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Processed date
         if (currentVideo.processed_at) {
             const processedDate = new Date(currentVideo.processed_at);
-            videoProcessedDate.textContent = processedDate.toLocaleDateString('fr-FR', {
+            videoProcessedDate.textContent = processedDate.toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -132,17 +132,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update status display
     function updateStatusDisplay() {
         let statusClass = 'text-gray-600 bg-gray-100';
-        let statusText = 'En traitement';
+        let statusText = 'En procesamiento';
 
         if (currentVideo.status === 'processed') {
             statusClass = currentVideo.published ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100';
-            statusText = currentVideo.published ? 'Publié' : 'Traité';
+            statusText = currentVideo.published ? 'Publicado' : 'Procesado';
         } else if (currentVideo.status === 'processing') {
             statusClass = 'text-yellow-600 bg-yellow-100';
-            statusText = 'En traitement';
+            statusText = 'En procesamiento';
         } else if (currentVideo.status === 'error') {
             statusClass = 'text-red-600 bg-red-100';
-            statusText = 'Erreur';
+            statusText = 'Error';
         }
 
         videoStatus.className = `px-2 py-1 text-xs font-semibold rounded-full ${statusClass}`;
@@ -177,16 +177,14 @@ document.addEventListener('DOMContentLoaded', function() {
     async function publishVideo() {
         try {
             await apiClient.post(`/videos/${currentVideo.video_id}/publish`, {});
-            Toast.show('Vidéo publiée avec succès', 'success');
+            Toast.show('Video publicado exitosamente', 'success');
             
-            // Update current video data
-            currentVideo.published = true;
-            updateStatusDisplay();
-            updateActionButtons();
+            // Reload video details from API to get updated data
+            await loadVideoDetails(currentVideo.video_id);
             
         } catch (error) {
             console.error('Error publishing video:', error);
-            Toast.show('Erreur lors de la publication', 'error');
+            Toast.show('Error durante la publicación', 'error');
         }
     }
 
@@ -203,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             console.error('Error deleting video:', error);
-            Toast.show('Erreur lors de la suppression', 'error');
+            Toast.show('Error durante la eliminación', 'error');
         }
     }
 

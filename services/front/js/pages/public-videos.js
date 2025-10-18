@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyState.classList.add('hidden');
             
             const response = await apiClient.get('/public/videos');
-            allVideos = response.videos || [];
+            // La respuesta es directamente un array de videos
+            allVideos = Array.isArray(response) ? response : [];
             filteredVideos = [...allVideos];
             
             renderVideos();
@@ -66,35 +67,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Utiliser une image par défaut pour les thumbnails
         const thumbnail = video.thumbnail || 'https://via.placeholder.com/400x225/f97316/ffffff?text=Video';
-        const uploadDate = new Date(video.uploaded_at).toLocaleDateString('fr-FR');
         
         card.innerHTML = `
             <div class="relative">
-                <img src="${thumbnail}" alt="${video.title}" class="w-full h-48 object-cover">
+                <img src="${thumbnail}" alt="${video.titulo}" class="w-full h-48 object-cover">
                 <div class="absolute top-2 right-2">
                     <span class="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
                         ${video.duration || '0:00'}
                     </span>
                 </div>
+                <div class="absolute top-2 left-2">
+                    <span class="bg-green-600 bg-opacity-90 text-white text-xs px-2 py-1 rounded">
+                        Público
+                    </span>
+                </div>
             </div>
             <div class="p-4">
-                <h3 class="font-semibold text-lg mb-2">${video.title}</h3>
+                <h3 class="font-semibold text-lg mb-2">${video.titulo}</h3>
                 <div class="flex items-center text-sm text-gray-600 mb-2">
                     <i class="fas fa-user mr-2"></i>
-                    <span>${video.playerName}</span>
-                    <span class="mx-2">•</span>
-                    <span>${video.city}</span>
+                    <span>Jugador #${video.jugador_id}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm text-gray-500">
-                    <span>${uploadDate}</span>
                     <div class="flex items-center space-x-4">
                         <span class="flex items-center">
                             <i class="fas fa-thumbs-up mr-1 text-green-500"></i>
-                            ${video.votes || 0}
+                            ${video.votos || 0} votos
                         </span>
                         <span class="flex items-center">
                             <i class="fas fa-eye mr-1 text-blue-500"></i>
-                            Voir
+                            Ver video
                         </span>
                     </div>
                 </div>

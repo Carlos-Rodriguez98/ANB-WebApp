@@ -39,7 +39,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     ]
     videos = [
         {
-            "id": "1", 
+            "id": "550e8400-e29b-41d4-a716-446655440001", 
             "title": "Mi dribleo increíble", 
             "status": "processed", 
             "uploadedAt": "2025-08-25T10:00:00Z",
@@ -51,7 +51,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             "userId": "1"
         },
         {
-            "id": "2", 
+            "id": "550e8400-e29b-41d4-a716-446655440002", 
             "title": "Tir à 3 points", 
             "status": "processed", 
             "uploadedAt": "2025-08-24T14:30:00Z",
@@ -380,18 +380,26 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({"error": "Erreur lors de la suppression"}, 500)
 
     def handle_publish_video(self, video_id):
-        """Simule POST /api/videos/:id/publish"""
+        """Redirige POST /api/videos/:id/publish vers le video-service"""
         auth_token = self.get_auth_token_from_request()
         if not auth_token:
             self.send_json_response({"error": "Token d'autorisation requis"}, 401)
             return
         
         try:
-            # Simuler la publication d'une vidéo
-            self.send_json_response({
-                "message": "video publicado",
-                "video_id": video_id
-            })
+            # Rediriger vers le video-service
+            url = f"{self.VIDEO_SERVICE_URL}/api/videos/{video_id}/publish"
+            headers = {
+                'Authorization': auth_token,  # auth_token contient déjà "Bearer "
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(url, headers=headers)
+            
+            if response.status_code == 200:
+                self.send_json_response(response.json())
+            else:
+                self.send_json_response(response.json(), response.status_code)
             
         except Exception as e:
             print(f"Error in publish_video: {e}")
@@ -415,210 +423,198 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_json_response(stats)
     
     def handle_get_public_videos(self, query_params):
-        """Simule GET /api/public/videos en récupérant toutes les vidéos publiées"""
+        """Appel vers le vrai endpoint /api/public/videos sur le service voting (port 8082)"""
         try:
-            # Pour récupérer les vidéos publiques, nous devons simuler en récupérant
-            # toutes les vidéos publiées. En production, cela devrait être un endpoint dédié.
-            page = int(query_params.get('page', [1])[0])
-            limit = int(query_params.get('limit', [12])[0])
+            # Faire appel au vrai service voting sur le port 8082
+            voting_service_url = f"{self.VOTING_SERVICE_URL}/api/public/videos"
             
-            # Pour le moment, retournons des données simulées
-            # Dans une vraie implémentation, on pourrait avoir un service dédié 
-            # ou un cache des vidéos publiques
-            public_videos = [
-                {
-                    "id": "1",
-                    "video_id": "1", 
-                    "title": "Dribbling Skills Master Class", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-25T10:00:00Z",
-                    "processed_at": "2025-08-25T10:05:00Z",
-                    "votes": 15,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-25T11:00:00Z",
-                    "playerName": "Jean Dupont",
-                    "city": "Paris",
-                    "userId": "1"
-                },
-                {
-                    "id": "2",
-                    "video_id": "2", 
-                    "title": "3-Point Shooting Technique", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-24T14:30:00Z",
-                    "processed_at": "2025-08-24T14:35:00Z",
-                    "votes": 23,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-24T15:00:00Z",
-                    "playerName": "Marie Martin",
-                    "city": "Lyon",
-                    "userId": "2"
-                },
-                {
-                    "id": "3",
-                    "video_id": "3", 
-                    "title": "Defensive Moves Compilation", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-23T16:20:00Z",
-                    "processed_at": "2025-08-23T16:25:00Z",
-                    "votes": 31,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-23T17:00:00Z",
-                    "playerName": "Paul Bernard",
-                    "city": "Marseille",
-                    "userId": "3"
-                }
+            print(f"Appel vers: {voting_service_url}")
+            response = requests.get(voting_service_url)
+            
+            if response.status_code == 200:
+                # L'endpoint retourne directement un tableau de vidéos
+                videos_data = response.json()
+                print(f"Vidéos reçues: {videos_data}")
+                
+                # Retourner directement le tableau, car le JS s'attend maintenant à cela
+                self.send_json_response(videos_data)
+            else:
+                print(f"Erreur du service voting: {response.status_code} - {response.text}")
+                self.send_json_response({"error": "Service indisponible"}, 502)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion au service voting: {e}")
+            # En cas d'erreur, retourner des données par défaut
+            fallback_videos = [
+                {"id": 1, "jugador_id": 1, "titulo": "Video par défaut", "votos": 0, "published": True}
             ]
-            
-            total = len(public_videos)
-            start = (page - 1) * limit
-            end = start + limit
-            
-            self.send_json_response({
-                "videos": public_videos[start:end],
-                "total": total,
-                "totalPages": (total + limit - 1) // limit if total > 0 else 1,
-                "currentPage": page
-            })
-            
+            self.send_json_response(fallback_videos)
         except Exception as e:
             print(f"Error in get_public_videos: {e}")
             self.send_json_response({"error": "Erreur lors du chargement des vidéos publiques"}, 500)
     
     def handle_get_public_video_by_id(self, video_id):
-        """Simule GET /api/public/videos/:id"""
+        """Récupère une vidéo publique par son ID et enrichit avec les données du service vidéo"""
         try:
-            # Simuler la récupération d'une vidéo publique par ID
-            # En production, cela devrait vérifier que la vidéo est effectivement publique
-            public_videos = {
-                "1": {
-                    "id": "1",
-                    "video_id": "1", 
-                    "title": "Dribbling Skills Master Class", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-25T10:00:00Z",
-                    "processed_at": "2025-08-25T10:05:00Z",
-                    "votes": 15,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-25T11:00:00Z",
-                    "playerName": "Jean Dupont",
-                    "city": "Paris",
-                    "userId": "1"
-                },
-                "2": {
-                    "id": "2",
-                    "video_id": "2", 
-                    "title": "3-Point Shooting Technique", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-24T14:30:00Z",
-                    "processed_at": "2025-08-24T14:35:00Z",
-                    "votes": 23,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-24T15:00:00Z",
-                    "playerName": "Marie Martin",
-                    "city": "Lyon",
-                    "userId": "2"
-                },
-                "3": {
-                    "id": "3",
-                    "video_id": "3", 
-                    "title": "Defensive Moves Compilation", 
-                    "status": "processed", 
-                    "uploaded_at": "2025-08-23T16:20:00Z",
-                    "processed_at": "2025-08-23T16:25:00Z",
-                    "votes": 31,
-                    "processed_url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-                    "published": True,
-                    "published_at": "2025-08-23T17:00:00Z",
-                    "playerName": "Paul Bernard",
-                    "city": "Marseille",
-                    "userId": "3"
-                }
-            }
+            # Récupérer d'abord la liste des vidéos publiques
+            voting_service_url = f"{self.VOTING_SERVICE_URL}/api/public/videos"
             
-            video = public_videos.get(video_id)
-            if not video:
-                self.send_json_response({"error": "Vidéo publique non trouvée"}, 404)
-                return
+            print(f"Récupération de la liste des vidéos pour trouver: {video_id}")
+            response = requests.get(voting_service_url)
+            
+            if response.status_code == 200:
+                videos_list = response.json()
+                print(f"Liste récupérée, recherche de l'ID: {video_id}")
                 
-            self.send_json_response(video)
+                # Chercher la vidéo avec l'ID correspondant
+                video_found = None
+                for video in videos_list:
+                    # L'ID peut être dans différents champs selon la structure
+                    if (str(video.get('id')) == str(video_id) or 
+                        str(video.get('video_id')) == str(video_id) or
+                        str(video.get('ID')) == str(video_id)):
+                        video_found = video
+                        break
+                
+                if video_found:
+                    print(f"Vidéo trouvée dans le service voting: {video_found}")
+                    
+                    # Maintenant récupérer les détails depuis le service vidéo
+                    try:
+                        video_service_url = f"{self.VIDEO_SERVICE_URL}/api/videos/{video_id}"
+                        print(f"Appel au service vidéo: {video_service_url}")
+                        
+                        video_response = requests.get(video_service_url)
+                        
+                        if video_response.status_code == 200:
+                            video_details = video_response.json()
+                            print(f"Détails de la vidéo récupérés: {video_details}")
+                            
+                            # Fusionner les données des deux services
+                            enriched_video = {
+                                **video_found,  # Données du service voting (votes, published, etc.)
+                                **video_details,  # Données du service vidéo (URL, titre complet, etc.)
+                                # Garder les votes du service voting
+                                'votos': video_found.get('votos', 0),
+                                'votes': video_found.get('votos', 0),  # Pour compatibilité
+                            }
+                            
+                            self.send_json_response(enriched_video)
+                        else:
+                            print(f"Erreur du service vidéo: {video_response.status_code}")
+                            # Si on ne peut pas récupérer les détails, retourner au moins les données du voting
+                            self.send_json_response(video_found)
+                            
+                    except requests.exceptions.RequestException as e:
+                        print(f"Erreur de connexion au service vidéo: {e}")
+                        # Si on ne peut pas récupérer les détails, retourner au moins les données du voting
+                        self.send_json_response(video_found)
+                else:
+                    print(f"Vidéo avec ID {video_id} non trouvée dans la liste")
+                    self.send_json_response({"error": "Vidéo publique non trouvée"}, 404)
+            else:
+                print(f"Erreur du service voting: {response.status_code} - {response.text}")
+                self.send_json_response({"error": "Service indisponible"}, 502)
             
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion au service voting: {e}")
+            self.send_json_response({"error": "Service indisponible"}, 503)
         except Exception as e:
             print(f"Error in get_public_video_by_id: {e}")
             self.send_json_response({"error": "Erreur lors du chargement de la vidéo"}, 500)
     
     def handle_vote_for_video(self, video_id):
-        """Simule POST /api/public/videos/:id/vote"""
-        if not self.current_user_id:
-            self.send_json_response({"error": "Non autorisé"}, 401)
-            return
-        
-        video = next((v for v in self.videos if v['id'] == video_id), None)
-        if not video:
-            self.send_json_response({"error": "Vidéo non trouvée"}, 404)
-            return
-        
-        # Vérifier si l'utilisateur a déjà voté
-        if video_id not in self.votes:
-            self.votes[video_id] = []
-        
-        if self.current_user_id in self.votes[video_id]:
-            self.send_json_response({"error": "Vous avez déjà voté pour cette vidéo"}, 400)
-            return
-        
-        self.votes[video_id].append(self.current_user_id)
-        video['votes'] = len(self.votes[video_id])
-        
-        self.send_json_response({"message": "Vote enregistré"})
+        """Appel vers le vrai endpoint /api/public/videos/:id/vote sur le service voting (port 8082)"""
+        try:
+            # Récupérer les données du body de la requête
+            data = self.get_request_data()
+            user_id = data.get('user_id')
+            
+            if not user_id:
+                self.send_json_response({"error": "user_id requis"}, 400)
+                return
+            
+            # Faire appel au vrai service voting sur le port 8082
+            voting_service_url = f"{self.VOTING_SERVICE_URL}/api/public/videos/{video_id}/vote"
+            headers = {'Content-Type': 'application/json'}
+            payload = {'user_id': user_id}
+            
+            print(f"Appel vote vers: {voting_service_url} avec user_id: {user_id}")
+            response = requests.post(voting_service_url, headers=headers, json=payload)
+            
+            if response.status_code == 200:
+                vote_data = response.json()
+                print(f"Vote enregistré: {vote_data}")
+                self.send_json_response(vote_data)
+            elif response.status_code == 400 or response.status_code == 409:
+                # L'utilisateur a déjà voté ou autre erreur business
+                error_data = response.json()
+                self.send_json_response(error_data, response.status_code)
+            elif response.status_code == 404:
+                self.send_json_response({"error": "Vidéo non trouvée"}, 404)
+            elif response.status_code == 403:
+                self.send_json_response({"error": "Vidéo non disponible pour le vote"}, 403)
+            else:
+                print(f"Erreur du service voting: {response.status_code} - {response.text}")
+                self.send_json_response({"error": "Service indisponible"}, 502)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion au service voting: {e}")
+            self.send_json_response({"error": "Service indisponible"}, 503)
+        except Exception as e:
+            print(f"Error in vote_for_video: {e}")
+            self.send_json_response({"error": "Erreur lors du vote"}, 500)
     
     def handle_get_rankings(self, query_params):
-        """Simule GET /api/public/rankings"""
-        city_filter = query_params.get('city', [''])[0]
-        page = int(query_params.get('page', [1])[0])
-        limit = int(query_params.get('limit', [20])[0])
-        
-        # Créer des classements basés sur les votes
-        rankings = []
-        user_votes = {}
-        
-        for video in self.videos:
-            user_id = video.get('userId')
-            if user_id:
-                user = next((u for u in self.users if u['id'] == user_id), None)
-                if user:
-                    key = user['id']
-                    if key not in user_votes:
-                        user_votes[key] = {
-                            "username": f"{user['firstName']} {user['lastName']}",
-                            "city": user['city'],
-                            "votes": 0
-                        }
-                    user_votes[key]['votes'] += video.get('votes', 0)
-        
-        rankings = list(user_votes.values())
-        
-        # Filtrer par ville si spécifié
-        if city_filter:
-            rankings = [r for r in rankings if city_filter.lower() in r['city'].lower()]
-        
-        # Trier par votes décroissants
-        rankings.sort(key=lambda x: x['votes'], reverse=True)
-        
-        total = len(rankings)
-        start = (page - 1) * limit
-        end = start + limit
-        
-        self.send_json_response({
-            "rankings": rankings[start:end],
-            "total": total,
-            "totalPages": (total + limit - 1) // limit if total > 0 else 1,
-            "currentPage": page
-        })
+        """Proxy vers le service ranking réel"""
+        try:
+            # Appel au service ranking réel
+            response = requests.get(f"{self.RANKING_SERVICE_URL}/api/public/ranking", timeout=10)
+            
+            if response.status_code == 200:
+                rankings_data = response.json()
+                
+                # Adapter le format pour le front-end
+                # Le service ranking retourne: [{"jugador": 1, "votos_acumulados": 100}, ...]
+                # Le front-end s'attend à: {"rankings": [...], "total": x, "totalPages": y}
+                
+                adapted_rankings = []
+                for item in rankings_data:
+                    adapted_rankings.append({
+                        "username": f"Jugador {item['jugador']}",  # Nom générique car le service ne retourne que l'ID
+                        "playerName": f"Jugador {item['jugador']}",
+                        "votes": item['votos_acumulados'],
+                        "city": "N/A"  # Information non disponible dans le service ranking
+                    })
+                
+                # Pagination côté front-end
+                page = int(query_params.get('page', [1])[0])
+                limit = int(query_params.get('limit', [20])[0])
+                city_filter = query_params.get('city', [''])[0]
+                
+                # Filtrer par ville si spécifié (même si pas vraiment applicable ici)
+                if city_filter and city_filter.lower() != "n/a":
+                    adapted_rankings = [r for r in adapted_rankings if city_filter.lower() in r['city'].lower()]
+                
+                total = len(adapted_rankings)
+                start = (page - 1) * limit
+                end = start + limit
+                
+                self.send_json_response({
+                    "rankings": adapted_rankings[start:end],
+                    "total": total,
+                    "totalPages": (total + limit - 1) // limit if total > 0 else 1,
+                    "currentPage": page
+                })
+            else:
+                self.send_json_response({"error": "Service ranking indisponible"}, 503)
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Erreur de connexion au service ranking: {e}")
+            self.send_json_response({"error": "Service ranking indisponible"}, 503)
+        except Exception as e:
+            print(f"Erreur dans handle_get_rankings: {e}")
+            self.send_json_response({"error": "Erreur lors de la récupération du classement"}, 500)
     
     def end_headers(self):
         # Ajouter les headers CORS pour le développement
@@ -648,6 +644,9 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             video_id = path.split('/')[-2]
             return self.handle_publish_video(video_id)
         elif path.startswith('/api/public/videos/') and path.endswith('/vote'):
+            video_id = path.split('/')[-2]
+            return self.handle_vote_for_video(video_id)
+        elif path.startswith('/api/voting/public/videos/') and path.endswith('/vote'):
             video_id = path.split('/')[-2]
             return self.handle_vote_for_video(video_id)
         
@@ -681,6 +680,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 video_id = path.split('/')[-1]
                 return self.handle_get_video_by_id(video_id)
             elif path == '/api/public/videos':
+                return self.handle_get_public_videos(query_params)
+            elif path == '/api/voting/public/videos':
                 return self.handle_get_public_videos(query_params)
             elif path.startswith('/api/public/videos/') and len(path.split('/')) == 5:
                 video_id = path.split('/')[-1]
