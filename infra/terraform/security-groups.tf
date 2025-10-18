@@ -181,6 +181,118 @@ resource "aws_vpc_security_group_ingress_rule" "nfs_rpc_udp_from_worker" {
   description                  = "Allow RPC UDP from WORKER"
 }
 
+# Puertos estáticos adicionales de NFS desde WEB
+resource "aws_vpc_security_group_ingress_rule" "nfs_mountd_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 892
+  to_port                      = 892
+  ip_protocol                  = "tcp"
+  description                  = "Allow MOUNTD from WEB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_statd_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 662
+  to_port                      = 662
+  ip_protocol                  = "tcp"
+  description                  = "Allow STATD from WEB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_lockd_tcp_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 32803
+  to_port                      = 32803
+  ip_protocol                  = "tcp"
+  description                  = "Allow LOCKD TCP from WEB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_lockd_udp_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 32769
+  to_port                      = 32769
+  ip_protocol                  = "udp"
+  description                  = "Allow LOCKD UDP from WEB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_rquotad_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = 875
+  to_port                      = 875
+  ip_protocol                  = "tcp"
+  description                  = "Allow RQUOTAD from WEB"
+}
+
+# Puertos estáticos adicionales de NFS desde WORKER
+resource "aws_vpc_security_group_ingress_rule" "nfs_mountd_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 892
+  to_port                      = 892
+  ip_protocol                  = "tcp"
+  description                  = "Allow MOUNTD from WORKER"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_statd_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 662
+  to_port                      = 662
+  ip_protocol                  = "tcp"
+  description                  = "Allow STATD from WORKER"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_lockd_tcp_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 32803
+  to_port                      = 32803
+  ip_protocol                  = "tcp"
+  description                  = "Allow LOCKD TCP from WORKER"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_lockd_udp_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 32769
+  to_port                      = 32769
+  ip_protocol                  = "udp"
+  description                  = "Allow LOCKD UDP from WORKER"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nfs_rquotad_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = 875
+  to_port                      = 875
+  ip_protocol                  = "tcp"
+  description                  = "Allow RQUOTAD from WORKER"
+}
+
+# ICMP (ping) desde WEB para verificación de conectividad
+resource "aws_vpc_security_group_ingress_rule" "nfs_icmp_from_web" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.web.id
+  from_port                    = -1
+  to_port                      = -1
+  ip_protocol                  = "icmp"
+  description                  = "Allow ICMP (ping) from WEB"
+}
+
+# ICMP (ping) desde WORKER para verificación de conectividad
+resource "aws_vpc_security_group_ingress_rule" "nfs_icmp_from_worker" {
+  security_group_id            = aws_security_group.nfs.id
+  referenced_security_group_id = aws_security_group.worker.id
+  from_port                    = -1
+  to_port                      = -1
+  ip_protocol                  = "icmp"
+  description                  = "Allow ICMP (ping) from WORKER"
+}
+
 # SSH a NFS desde tu IP
 resource "aws_vpc_security_group_ingress_rule" "nfs_ssh" {
   security_group_id = aws_security_group.nfs.id
