@@ -221,8 +221,12 @@ func getPublicVideos(c *gin.Context) {
 			v.processed_at,
 			v.processed_path,
 			v.published,
+			u.first_name,
+			u.last_name,
+			u.city,
 			COUNT(vo.vote_id) AS votes
 		FROM app.videos v
+		INNER JOIN app.users u ON v.user_id = u.user_id
 		LEFT JOIN app.votes vo ON v.video_id = vo.video_id
 		WHERE v.published = TRUE
 		GROUP BY
@@ -233,7 +237,10 @@ func getPublicVideos(c *gin.Context) {
 			v.uploaded_at,
 			v.processed_at,
 			v.processed_path,
-			v.published
+			v.published,
+			u.first_name,
+			u.last_name,
+			u.city
 		ORDER BY votes DESC, v.uploaded_at DESC
 	`)
 	if err != nil {
@@ -244,6 +251,7 @@ func getPublicVideos(c *gin.Context) {
 	defer rows.Close()
 
 	type VideoResp struct {
+		ID           int64      `json:"id"`           // Alias para video_id (compatibilidad frontend)
 		VideoID      int64      `json:"video_id"`
 		UserID       int64      `json:"user_id"`
 		Title        string     `json:"title"`
@@ -252,6 +260,8 @@ func getPublicVideos(c *gin.Context) {
 		ProcessedAt  *time.Time `json:"processed_at,omitempty"`
 		ProcessedURL string     `json:"processed_url,omitempty"`
 		Published    bool       `json:"published"`
+		PlayerName   string     `json:"playerName"`   // Nombre completo del jugador
+		City         string     `json:"city"`         // Ciudad del jugador
 		Votes        int        `json:"votes"`
 	}
 
@@ -260,6 +270,7 @@ func getPublicVideos(c *gin.Context) {
 		var vr VideoResp
 		var processedPath sql.NullString
 		var processedAt sql.NullTime
+		var firstName, lastName, city string
 
 		if err := rows.Scan(
 			&vr.VideoID,
@@ -270,12 +281,22 @@ func getPublicVideos(c *gin.Context) {
 			&processedAt,
 			&processedPath,
 			&vr.Published,
+			&firstName,
+			&lastName,
+			&city,
 			&vr.Votes,
 		); err != nil {
 			log.Printf("ERROR al escanear video: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al escanear video", "details": err.Error()})
 			return
 		}
+
+		// Asignar ID como alias de VideoID
+		vr.ID = vr.VideoID
+		
+		// Construir nombre completo del jugador
+		vr.PlayerName = firstName + " " + lastName
+		vr.City = city
 
 		if processedAt.Valid {
 			t := processedAt.Time
