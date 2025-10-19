@@ -80,7 +80,7 @@ resource "aws_launch_template" "web_lt" {
     DB_SSLMODE        = "require"
     JWT_SECRET        = var.jwt_secret
     STORAGE_BASE_PATH = var.storage_base_path
-    S3_BUCKET_NAME    = "anbapp-uploads-bucket"
+    S3_BUCKET_NAME    = var.s3_uploads_bucket
     S3_PREFIX         = "videos"
     NFS_SERVER        = aws_instance.nfs.private_ip
     REDIS_ADDR        = "anbapp-redis:6379"

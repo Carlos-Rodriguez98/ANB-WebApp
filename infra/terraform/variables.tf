@@ -115,6 +115,11 @@ variable "storage_base_path" {
   default = "/app/files"
 }
 
+variable "s3_uploads_bucket" {
+  type    = string
+  default = "anbapp-uploads-bucket"
+}
+
 variable "enable_nat" {
   type        = bool
   description = "Habilitar NAT Gateway para subnets privadas"
