@@ -21,8 +21,10 @@ func SetupRouter() *gin.Engine {
 	}
 
 	repo := repository.NewVideoRepository(db)
-	store := storage.NewLocalStorage()
-	svc := services.NewVideoService(repo, store)
+	localStore := storage.NewLocalStorage()
+	s3Store := storage.NewS3Storage(config.AppConfig.S3BucketName, config.AppConfig.S3Prefix)
+	multiStore := storage.NewMultiStorage(localStore, s3Store, true) // Usar S3
+	svc := services.NewVideoService(repo, multiStore)
 	vc := controllers.NewVideoController(svc)
 
 	r := gin.Default()

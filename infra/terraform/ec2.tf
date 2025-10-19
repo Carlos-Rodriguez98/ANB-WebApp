@@ -80,6 +80,8 @@ resource "aws_launch_template" "web_lt" {
     DB_SSLMODE        = "require"
     JWT_SECRET        = var.jwt_secret
     STORAGE_BASE_PATH = var.storage_base_path
+    S3_BUCKET_NAME    = "anbapp-uploads-bucket"
+    S3_PREFIX         = "videos"
     NFS_SERVER        = aws_instance.nfs.private_ip
     REDIS_ADDR        = "anbapp-redis:6379"
     REDIS_PORT        = "6379"
@@ -196,7 +198,7 @@ resource "aws_instance" "worker" {
     JWT_SECRET        = var.jwt_secret
     STORAGE_BASE_PATH = var.storage_base_path
     NFS_SERVER        = aws_instance.nfs.private_ip
-    REDIS_ADDR        = "${aws_instance.web.private_ip}:6379"
+    REDIS_ADDR        = "anbapp-redis:6379"
     REDIS_PORT        = "6379"
     SSM_BASE_PATH     = var.ssm_path
   })

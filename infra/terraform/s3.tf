@@ -1,6 +1,6 @@
 # Almacenamiento de los videos originales y procesados
 resource "aws_s3_bucket" "video_uploads" {
-  bucket        = "${var.project_name}-videos-cargados"
+  bucket        = "anbapp-uploads-bucket"
   force_destroy = true
 }
 
