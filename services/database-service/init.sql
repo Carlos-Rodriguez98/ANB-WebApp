@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS votes (
 );
 
 -- Usuarios de prueba
+-- NOTA: Todos los usuarios tienen el mismo password hash
+-- Hash: $2a$12$uNdyCUr0n31df29OGWxOc.m94lMkiJyVdLYUUHcnMxROZ6jbwngRW
+-- Password en texto plano: "password123" (sin comillas)
+-- Para login use: email del usuario + password: password123
+
 INSERT INTO app.users (user_id, first_name, last_name, email, password, city, country) VALUES
 (1, 'Carlos', 'Ramírez', 'carlos.ramirez@example.com', '$2a$12$uNdyCUr0n31df29OGWxOc.m94lMkiJyVdLYUUHcnMxROZ6jbwngRW', 'Bogotá', 'Colombia'),
 (2, 'Ana', 'Martínez', 'ana.martinez@example.com', '$2a$12$uNdyCUr0n31df29OGWxOc.m94lMkiJyVdLYUUHcnMxROZ6jbwngRW', 'Medellín', 'Colombia'),
