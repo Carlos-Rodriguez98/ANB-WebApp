@@ -419,8 +419,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         
         try:
-            # Hacer proxy al video-service real
-            headers = {'Authorization': f'Bearer {auth_token}'}
+            # Hacer proxy al video-service real (auth_token ya incluye "Bearer ")
+            headers = {'Authorization': auth_token}
             data, status = self.proxy_to_video_service(f'/videos/{video_id}/publish', method='POST', headers=headers, data={})
             self.send_json_response(data, status)
             
