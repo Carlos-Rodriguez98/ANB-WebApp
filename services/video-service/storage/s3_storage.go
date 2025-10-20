@@ -3,11 +3,14 @@ package storage
 import (
     "context"
     "fmt"
+    "log"
     "mime/multipart"
     "path/filepath"
+
     "github.com/aws/aws-sdk-go-v2/config"
     "github.com/aws/aws-sdk-go-v2/service/s3"
     "github.com/aws/aws-sdk-go-v2/service/s3/types"
+    "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 )
 
 type S3Storage struct {
@@ -21,27 +24,33 @@ func NewS3Storage(bucket, prefix string) *S3Storage {
 
 func (s *S3Storage) SaveOriginal(userID uint, videoID string, file *multipart.FileHeader) (string, error) {
     relPath := filepath.Join(s.prefix, fmt.Sprintf("u%d", userID), videoID+filepath.Ext(file.Filename))
+    log.Printf("[S3Storage] Attempting upload: bucket=%s key=%s", s.bucket, relPath)
     src, err := file.Open()
     if err != nil {
+        log.Printf("[S3Storage] Error opening file: %v", err)
         return "", err
     }
     defer src.Close()
 
     cfg, err := config.LoadDefaultConfig(context.TODO())
     if err != nil {
+        log.Printf("[S3Storage] Error loading AWS config: %v", err)
         return "", err
     }
     client := s3.NewFromConfig(cfg)
+    uploader := manager.NewUploader(client)
 
-    _, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+    _, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
         Bucket: &s.bucket,
         Key:    &relPath,
         Body:   src,
         ACL:    types.ObjectCannedACLPrivate,
     })
     if err != nil {
+        log.Printf("[S3Storage] Error uploading to S3: %v", err)
         return "", err
     }
+    log.Printf("[S3Storage] Upload successful: bucket=%s key=%s", s.bucket, relPath)
     return relPath, nil
 }
 
