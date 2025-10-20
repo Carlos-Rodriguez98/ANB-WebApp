@@ -178,6 +178,45 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             return {"error": f"Connection error: {str(e)}"}, 500
     
+    def proxy_to_ranking_service(self, endpoint, method='GET', data=None, headers=None):
+        """Fait une requête vers le service ranking réel"""
+        url = f"{self.RANKING_SERVICE_URL}/api{endpoint}"
+        
+        try:
+            req_headers = headers or {}
+            req_data = None
+            
+            if method in ['POST', 'PUT'] and data:
+                # Pour les requêtes JSON
+                req_data = json.dumps(data).encode('utf-8')
+                req_headers['Content-Type'] = 'application/json'
+            
+            req = urllib.request.Request(url, data=req_data, headers=req_headers, method=method)
+            
+            # Faire la requête
+            with urllib.request.urlopen(req) as response:
+                response_data = response.read().decode('utf-8')
+                try:
+                    return json.loads(response_data), response.status
+                except:
+                    return {"data": response_data}, response.status
+                
+        except urllib.error.HTTPError as e:
+            error_data = e.read().decode('utf-8')
+            try:
+                return json.loads(error_data), e.code
+            except:
+                return {"error": f"Ranking service error: {e.reason}"}, e.code
+        except Exception as e:
+            return {"error": f"Connection error: {str(e)}"}, 500
+    
+    def get_auth_token_from_request(self):
+        """Extrait le token d'autorisation de la requête"""
+        auth_header = self.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            return auth_header
+        return None
+
     def handle_auth_signup(self):
         """Redirige POST /api/auth/signup vers le service auth réel"""
         data = self.get_request_data()
@@ -729,7 +768,10 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 data, status = self.proxy_to_voting_service(endpoint, method='GET', headers=headers)
                 return self.send_json_response(data, status)
             elif path == '/api/public/rankings':
-                return self.handle_get_rankings(query_params)
+                # Proxy hacia ranking-service
+                endpoint = path.replace('/api', '') + ('?' + parsed_path.query if parsed_path.query else '')
+                data, status = self.proxy_to_ranking_service(endpoint, method='GET')
+                return self.send_json_response(data, status)
             else:
                 self.send_json_response({"error": "Endpoint non trouvé"}, 404)
                 return
