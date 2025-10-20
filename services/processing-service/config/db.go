@@ -11,8 +11,8 @@ import (
 
 func ConnectDatabase() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=America/Bogota search_path=app",
-		App.DBHost, App.DBUser, App.DBPass, App.DBName, App.DBPort,
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=America/Bogota search_path=app",
+		App.DBHost, App.DBUser, App.DBPass, App.DBName, App.DBPort, App.DBSSLMode,
 	)
 	var db *gorm.DB
 	var err error

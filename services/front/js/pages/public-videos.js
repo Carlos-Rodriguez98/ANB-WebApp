@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyState.classList.add('hidden');
             
             const response = await apiClient.get('/public/videos');
-            // La respuesta es directamente un array de videos
-            allVideos = Array.isArray(response) ? response : [];
+            // El voting-service devuelve array directo o objeto con propiedad videos
+            allVideos = Array.isArray(response) ? response : (response.videos || []);
             filteredVideos = [...allVideos];
             
             renderVideos();

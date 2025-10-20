@@ -1,5 +1,5 @@
 # Build
-FROM golang:1.24.6 AS builder
+FROM golang:1.23 AS builder
 WORKDIR /app
 
 # 1) Solo los mod files para cachear dependencias
