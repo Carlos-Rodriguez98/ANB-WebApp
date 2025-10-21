@@ -58,8 +58,21 @@ func main() {
 		log.Println("Error conectando a BD:", err)
 	}
 
+	log.Println("✓ Conexión a base de datos exitosa")
+
 	r := gin.Default()
+	
+	// Middleware para logging detallado
+	r.Use(func(c *gin.Context) {
+		log.Printf("📥 Recibida petición: %s %s", c.Request.Method, c.Request.URL.String())
+		c.Next()
+	})
+	
 	r.GET("/api/public/rankings", getRanking)
+	
+	log.Println("✓ Ranking service iniciado en puerto:", serverPort)
+	log.Println("  GET  /api/public/rankings")
+	
 	r.Run(":" + serverPort)
 }
 
@@ -71,6 +84,8 @@ func main() {
 //   - limit (opcional): máximo de filas devueltas (int > 0).
 //   - offset (opcional): offset para paginación (int >= 0).
 func getRanking(c *gin.Context) {
+	log.Printf("GET /api/public/rankings - Procesando petición...")
+	
 	// Leer y validar parámetros
 	city := strings.TrimSpace(c.Query("city"))
 
@@ -216,9 +231,11 @@ func getRanking(c *gin.Context) {
 	}
 
 	if err := rows.Err(); err != nil {
+		log.Printf("ERROR en rows.Err(): %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno"})
 		return
 	}
 
+	log.Printf("✓ Consulta exitosa, encontrados %d jugadores en ranking", len(ranking))
 	c.JSON(http.StatusOK, ranking)
 }

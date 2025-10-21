@@ -145,6 +145,45 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             return {"error": f"Connection error: {str(e)}"}, 500
     
+    def proxy_to_ranking_service(self, endpoint, method='GET', data=None, headers=None):
+        """Fait une requête vers le service ranking réel"""
+        url = f"{self.RANKING_SERVICE_URL}/api{endpoint}"
+        
+        try:
+            req_headers = headers or {}
+            req_data = None
+            
+            if method in ['POST', 'PUT'] and data:
+                # Pour les requêtes JSON
+                req_data = json.dumps(data).encode('utf-8')
+                req_headers['Content-Type'] = 'application/json'
+            
+            req = urllib.request.Request(url, data=req_data, headers=req_headers, method=method)
+            
+            # Faire la requête
+            with urllib.request.urlopen(req) as response:
+                response_data = response.read().decode('utf-8')
+                try:
+                    return json.loads(response_data), response.status
+                except:
+                    return {"data": response_data}, response.status
+                
+        except urllib.error.HTTPError as e:
+            error_data = e.read().decode('utf-8')
+            try:
+                return json.loads(error_data), e.code
+            except:
+                return {"error": f"Ranking service error: {e.reason}"}, e.code
+        except Exception as e:
+            return {"error": f"Connection error: {str(e)}"}, 500
+    
+    def get_auth_token_from_request(self):
+        """Extrait le token d'autorisation de la requête"""
+        auth_header = self.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            return auth_header
+        return None
+
     def handle_auth_signup(self):
         """Redirige POST /api/auth/signup vers le service auth réel"""
         data = self.get_request_data()
@@ -342,41 +381,60 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({"error": "Erreur lors de la suppression de la vidéo"}, 500)
 
     def proxy_static_files(self, path):
-        """Proxy pour les fichiers statiques vers le service vidéo"""
+        """Servir archivos estáticos directamente desde el NFS compartido"""
         try:
-            import requests
+            # El NFS está montado en STORAGE_BASE_PATH (ej: /mnt/nfs/shared)
+            # Las rutas en el JSON son como: /static/processed/07/video_101.mp4
+            # Necesitamos mapear /static/ -> STORAGE_BASE_PATH/static/
             
-            # Construire l'URL vers le service vidéo
-            video_service_url = f"{self.VIDEO_SERVICE_URL}{path}"
+            storage_base = os.getenv('STORAGE_BASE_PATH', '/mnt/nfs/shared')
             
-            # Faire la requête vers le service vidéo
-            response = requests.get(video_service_url, stream=True, timeout=30)
+            # La ruta ya incluye /static/, solo necesitamos agregar el base path
+            # path = "/static/processed/07/video_101.mp4"
+            # full_path = "/mnt/nfs/shared/static/processed/07/video_101.mp4"
+            nfs_path = os.path.join(storage_base, path.lstrip('/'))
             
-            # Transférer la réponse
-            self.send_response(response.status_code)
+            print(f"📁 Serving static file: {path} -> {nfs_path}")
+            print(f"   STORAGE_BASE_PATH: {storage_base}")
             
-            # Transférer les headers
-            for header, value in response.headers.items():
-                if header.lower() not in ['connection', 'transfer-encoding']:
-                    self.send_header(header, value)
+            # Verificar si el archivo existe
+            if not os.path.exists(nfs_path):
+                print(f"❌ File not found: {nfs_path}")
+                self.send_response(404)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write(b'File not found')
+                return
             
+            # Determinar el content-type
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(nfs_path)
+            if content_type is None:
+                content_type = 'application/octet-stream'
+            
+            # Enviar el archivo
+            self.send_response(200)
+            self.send_header('Content-type', content_type)
+            self.send_header('Content-Length', str(os.path.getsize(nfs_path)))
+            self.send_header('Accept-Ranges', 'bytes')
             self.end_headers()
             
-            # Transférer le contenu
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
+            # Leer y enviar el archivo en chunks
+            with open(nfs_path, 'rb') as f:
+                while True:
+                    chunk = f.read(8192)
+                    if not chunk:
+                        break
                     self.wfile.write(chunk)
+            
+            print(f"✓ File served successfully: {nfs_path}")
                     
         except Exception as e:
-            print(f"Error proxying static file {path}: {e}")
-            self.send_response(404)
+            print(f"❌ Error serving static file {path}: {e}")
+            self.send_response(500)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(b'<h1>404 - File Not Found</h1>')
-            
-        except Exception as e:
-            print(f"Error in delete_video: {e}")
-            self.send_json_response({"error": "Erreur lors de la suppression"}, 500)
+            self.wfile.write(b'<h1>500 - Internal Server Error</h1>')
 
     def handle_publish_video(self, video_id):
         """Redirige POST /api/videos/:id/publish vers le video-service"""
@@ -706,7 +764,10 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 data, status = self.proxy_to_voting_service(endpoint, method='GET', headers=headers)
                 return self.send_json_response(data, status)
             elif path == '/api/public/rankings':
-                return self.handle_get_rankings(query_params)
+                # Proxy hacia ranking-service
+                endpoint = path.replace('/api', '') + ('?' + parsed_path.query if parsed_path.query else '')
+                data, status = self.proxy_to_ranking_service(endpoint, method='GET')
+                return self.send_json_response(data, status)
             else:
                 self.send_json_response({"error": "Endpoint non trouvé"}, 404)
                 return

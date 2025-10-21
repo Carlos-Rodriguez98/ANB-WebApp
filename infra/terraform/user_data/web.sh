@@ -152,6 +152,55 @@ set +a
 
 /usr/local/bin/docker-compose -f docker-compose.web.yml up -d --build
 
+# ============================================
+# Poblar base de datos con datos iniciales
+# ============================================
+echo "Ejecutando script de inicialización de base de datos..."
+
+# Instalar PostgreSQL client
+yum install -y postgresql15 || yum install -y postgresql || echo "Warning: Could not install PostgreSQL client"
+
+# Esperar a que RDS esté disponible
+echo "Esperando a que RDS esté disponible..."
+for i in {1..30}; do
+    if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1" > /dev/null 2>&1; then
+        echo "✓ Conexión a RDS establecida"
+        break
+    else
+        echo "Intento $i/30: Esperando RDS..."
+        sleep 10
+    fi
+    if [ $i -eq 30 ]; then
+        echo "WARNING: No se pudo conectar a RDS después de 5 minutos. Continuando sin poblar datos..."
+    fi
+done
+
+# Ejecutar init.sql directamente
+INIT_SQL="/opt/anbapp/repo/services/database-service/init.sql"
+
+if [ -f "$INIT_SQL" ]; then
+    echo "📄 Ejecutando init.sql..."
+    PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$INIT_SQL" > /tmp/seed-db.log 2>&1
+    
+    if [ $? -eq 0 ]; then
+        echo "✅ Script ejecutado exitosamente"
+        
+        # Mostrar resumen
+        PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "
+            SELECT '👥 Usuarios: ' || COUNT(*) FROM app.users
+            UNION ALL
+            SELECT '🎬 Videos: ' || COUNT(*) FROM app.videos
+            UNION ALL
+            SELECT '⭐ Votos: ' || COUNT(*) FROM app.votes;
+        " 2>/dev/null || echo "BD inicializada"
+    else
+        echo "⚠️ Hubo errores al ejecutar el script. Ver /tmp/seed-db.log"
+        cat /tmp/seed-db.log
+    fi
+else
+    echo "⚠️ No se encontró $INIT_SQL"
+fi
+
 # Create manual deploy script for future use
 cat > /opt/anbapp/deploy.sh <<'DEPLOY_SCRIPT'
 #!/bin/bash
