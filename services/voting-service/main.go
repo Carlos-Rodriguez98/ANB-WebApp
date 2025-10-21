@@ -49,9 +49,9 @@ func main() {
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require TimeZone=America/Bogota search_path=app",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
-	
+
 	log.Printf("Intentando conectar a DB: host=%s port=%s db=%s user=%s", dbHost, dbPort, dbName, dbUser)
-	
+
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Error al abrir conexión a DB: %v", err)
@@ -62,7 +62,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error al hacer ping a la base de datos: %v", err)
 	}
-	
+
 	log.Println("✓ Conexión a base de datos exitosa")
 
 	r := gin.Default()
@@ -71,6 +71,7 @@ func main() {
 	public := r.Group("/api/public")
 	{
 		public.GET("/videos", getPublicVideos)
+		public.GET("/videos/:video_id", getPublicVideoByID)
 		public.POST("/videos/:video_id/vote", voteForVideo)
 	}
 
@@ -210,7 +211,7 @@ func voteForVideo(c *gin.Context) {
 // Listar videos públicos disponibles para votación
 func getPublicVideos(c *gin.Context) {
 	log.Println("GET /api/public/videos - Iniciando consulta...")
-	
+
 	rows, err := db.Query(`
 		SELECT
 			v.video_id,
@@ -251,7 +252,7 @@ func getPublicVideos(c *gin.Context) {
 	defer rows.Close()
 
 	type VideoResp struct {
-		ID           int64      `json:"id"`           // Alias para video_id (compatibilidad frontend)
+		ID           int64      `json:"id"` // Alias para video_id (compatibilidad frontend)
 		VideoID      int64      `json:"video_id"`
 		UserID       int64      `json:"user_id"`
 		Title        string     `json:"title"`
@@ -260,8 +261,8 @@ func getPublicVideos(c *gin.Context) {
 		ProcessedAt  *time.Time `json:"processed_at,omitempty"`
 		ProcessedURL string     `json:"processed_url,omitempty"`
 		Published    bool       `json:"published"`
-		PlayerName   string     `json:"playerName"`   // Nombre completo del jugador
-		City         string     `json:"city"`         // Ciudad del jugador
+		PlayerName   string     `json:"playerName"` // Nombre completo del jugador
+		City         string     `json:"city"`       // Ciudad del jugador
 		Votes        int        `json:"votes"`
 	}
 
@@ -293,7 +294,7 @@ func getPublicVideos(c *gin.Context) {
 
 		// Asignar ID como alias de VideoID
 		vr.ID = vr.VideoID
-		
+
 		// Construir nombre completo del jugador
 		vr.PlayerName = firstName + " " + lastName
 		vr.City = city
@@ -322,4 +323,116 @@ func getPublicVideos(c *gin.Context) {
 
 	log.Printf("✓ Consulta exitosa, encontrados %d videos", len(videos))
 	c.JSON(http.StatusOK, videos)
+}
+
+// Obtener detalle de un video público específico
+func getPublicVideoByID(c *gin.Context) {
+	videoID, err := strconv.ParseInt(c.Param("video_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inválido"})
+		return
+	}
+
+	log.Printf("GET /api/public/videos/%d - Obteniendo detalle...", videoID)
+
+	var vr struct {
+		ID           int64      `json:"id"`
+		VideoID      int64      `json:"video_id"`
+		UserID       int64      `json:"user_id"`
+		Title        string     `json:"title"`
+		Status       string     `json:"status"`
+		UploadedAt   time.Time  `json:"uploaded_at"`
+		ProcessedAt  *time.Time `json:"processed_at,omitempty"`
+		ProcessedURL string     `json:"processed_url,omitempty"`
+		Published    bool       `json:"published"`
+		PublishedAt  *time.Time `json:"published_at,omitempty"`
+		PlayerName   string     `json:"playerName"`
+		City         string     `json:"city"`
+		Votes        int        `json:"votes"`
+	}
+
+	var processedPath sql.NullString
+	var processedAt sql.NullTime
+	var publishedAt sql.NullTime
+	var firstName, lastName, city string
+
+	err = db.QueryRow(`
+		SELECT
+			v.video_id,
+			v.user_id,
+			v.title,
+			v.status,
+			v.uploaded_at,
+			v.processed_at,
+			v.processed_path,
+			v.published,
+			v.published_at,
+			u.first_name,
+			u.last_name,
+			u.city,
+			COUNT(vo.vote_id) AS votes
+		FROM app.videos v
+		INNER JOIN app.users u ON v.user_id = u.user_id
+		LEFT JOIN app.votes vo ON v.video_id = vo.video_id
+		WHERE v.video_id = $1 AND v.published = TRUE
+		GROUP BY
+			v.video_id,
+			v.user_id,
+			v.title,
+			v.status,
+			v.uploaded_at,
+			v.processed_at,
+			v.processed_path,
+			v.published,
+			v.published_at,
+			u.first_name,
+			u.last_name,
+			u.city
+	`, videoID).Scan(
+		&vr.VideoID,
+		&vr.UserID,
+		&vr.Title,
+		&vr.Status,
+		&vr.UploadedAt,
+		&processedAt,
+		&processedPath,
+		&vr.Published,
+		&publishedAt,
+		&firstName,
+		&lastName,
+		&city,
+		&vr.Votes,
+	)
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado o no está publicado"})
+		return
+	}
+	if err != nil {
+		log.Printf("ERROR al obtener video: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al buscar video"})
+		return
+	}
+
+	// Asignar valores procesados
+	vr.ID = vr.VideoID
+	vr.PlayerName = firstName + " " + lastName
+	vr.City = city
+
+	if processedAt.Valid {
+		t := processedAt.Time
+		vr.ProcessedAt = &t
+	}
+
+	if publishedAt.Valid {
+		t := publishedAt.Time
+		vr.PublishedAt = &t
+	}
+
+	if processedPath.Valid && processedPath.String != "" {
+		vr.ProcessedURL = processedPath.String
+	}
+
+	log.Printf("✓ Video encontrado: %s", vr.Title)
+	c.JSON(http.StatusOK, vr)
 }

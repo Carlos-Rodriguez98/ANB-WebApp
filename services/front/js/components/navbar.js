@@ -15,18 +15,18 @@ function renderNavbar() {
           </a>
         </div>
         <div class="hidden md:flex items-center space-x-6">
-          <a href="/" onclick="event.preventDefault(); Router.navigate('/'); return false;" class="text-gray-100 hover:text-primary-400 transition">Accueil</a>
-          <a href="/public/videos" onclick="event.preventDefault(); Router.navigate('/public/videos'); return false;" class="text-gray-100 hover:text-primary-400 transition">Vidéos publiques</a>
-          <a href="/public/rankings" onclick="event.preventDefault(); Router.navigate('/public/rankings'); return false;" class="text-gray-100 hover:text-primary-400 transition">Classement</a>
-          ${isAuth ? `<a href="/dashboard" onclick="event.preventDefault(); Router.navigate('/dashboard'); return false;" class="text-gray-100 hover:text-primary-400 transition">Mon espace</a>` : ''}
+          <a href="/" onclick="event.preventDefault(); Router.navigate('/'); return false;" class="text-gray-100 hover:text-primary-400 transition">Inicio</a>
+          <a href="/public/videos" onclick="event.preventDefault(); Router.navigate('/public/videos'); return false;" class="text-gray-100 hover:text-primary-400 transition">Videos Públicos</a>
+          <a href="/public/rankings" onclick="event.preventDefault(); Router.navigate('/public/rankings'); return false;" class="text-gray-100 hover:text-primary-400 transition">Clasificación</a>
+          ${isAuth ? `<a href="/dashboard" onclick="event.preventDefault(); Router.navigate('/dashboard'); return false;" class="text-gray-100 hover:text-primary-400 transition">Mi Espacio</a>` : ''}
         </div>
         <div class="hidden md:flex items-center space-x-2">
           ${isAuth ? `
-            <span class="text-gray-200 mr-2">${user?.firstName || 'Utilisateur'}</span>
-            <button onclick="Auth.logout(); Router.navigate('/login'); Toast.success('Déconnexion réussie');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200">Déconnexion</button>
+            <span class="text-gray-200 mr-2">${user?.firstName || 'Usuario'}</span>
+            <button onclick="Auth.logout(); Router.navigate('/login'); Toast.success('Cierre de sesión exitoso');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200">Cerrar Sesión</button>
           ` : `
-            <a href="/login" onclick="event.preventDefault(); Router.navigate('/login'); return false;" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 mr-2">Connexion</a>
-            <a href="/signup" onclick="event.preventDefault(); Router.navigate('/signup'); return false;" class="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">Inscription</a>
+            <a href="/login" onclick="event.preventDefault(); Router.navigate('/login'); return false;" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 mr-2">Iniciar Sesión</a>
+            <a href="/signup" onclick="event.preventDefault(); Router.navigate('/signup'); return false;" class="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">Registrarse</a>
           `}
         </div>
         <!-- Mobile menu button -->
@@ -36,17 +36,17 @@ function renderNavbar() {
       </nav>
       <!-- Mobile menu -->
       <div id="mobile-menu" class="mobile-menu md:hidden bg-dark-800 px-4 pb-4">
-        <a href="/" onclick="event.preventDefault(); Router.navigate('/'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Accueil</a>
-        <a href="/public/videos" onclick="event.preventDefault(); Router.navigate('/public/videos'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Vidéos publiques</a>
-        <a href="/public/rankings" onclick="event.preventDefault(); Router.navigate('/public/rankings'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Classement</a>
-        ${isAuth ? `<a href="/dashboard" onclick="event.preventDefault(); Router.navigate('/dashboard'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Mon espace</a>` : ''}
+        <a href="/" onclick="event.preventDefault(); Router.navigate('/'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Inicio</a>
+        <a href="/public/videos" onclick="event.preventDefault(); Router.navigate('/public/videos'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Videos Públicos</a>
+        <a href="/public/rankings" onclick="event.preventDefault(); Router.navigate('/public/rankings'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Clasificación</a>
+        ${isAuth ? `<a href="/dashboard" onclick="event.preventDefault(); Router.navigate('/dashboard'); return false;" class="block py-2 text-gray-100 hover:text-primary-400">Mi Espacio</a>` : ''}
         <div class="mt-2">
           ${isAuth ? `
-            <span class="text-gray-200 mr-2">${user?.firstName || 'Utilisateur'}</span>
-            <button onclick="Auth.logout(); Router.navigate('/login'); Toast.success('Déconnexion réussie');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full mt-2">Déconnexion</button>
+            <span class="text-gray-200 mr-2">${user?.firstName || 'Usuario'}</span>
+            <button onclick="Auth.logout(); Router.navigate('/login'); Toast.success('Cierre de sesión exitoso');" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full mt-2">Cerrar Sesión</button>
           ` : `
-            <a href="/login" onclick="event.preventDefault(); Router.navigate('/login'); return false;" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full mb-2 block text-center">Connexion</a>
-            <a href="/signup" onclick="event.preventDefault(); Router.navigate('/signup'); return false;" class="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full block text-center">Inscription</a>
+            <a href="/login" onclick="event.preventDefault(); Router.navigate('/login'); return false;" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full mb-2 block text-center">Iniciar Sesión</a>
+            <a href="/signup" onclick="event.preventDefault(); Router.navigate('/signup'); return false;" class="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 w-full block text-center">Registrarse</a>
           `}
         </div>
       </div>

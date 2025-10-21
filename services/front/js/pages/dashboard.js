@@ -164,24 +164,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         
-        const uploadDate = new Date(video.uploaded_at).toLocaleDateString('fr-FR');
+        const uploadDate = new Date(video.uploaded_at).toLocaleDateString('es-ES');
         
         // Adapter les statuts du service vidéo
         let statusClass = 'text-gray-600 bg-gray-100';
-        let statusText = 'En traitement';
+        let statusText = 'En procesamiento';
         
         if (video.status === 'processed') {
             statusClass = video.published ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100';
-            statusText = video.published ? 'Publique' : 'Traité';
+            statusText = video.published ? 'Público' : 'Procesado';
         } else if (video.status === 'processing') {
             statusClass = 'text-yellow-600 bg-yellow-100';
-            statusText = 'En traitement';
+            statusText = 'En procesamiento';
         } else if (video.status === 'error') {
             statusClass = 'text-red-600 bg-red-100';
-            statusText = 'Erreur';
+            statusText = 'Error';
         } else if (video.status === 'uploaded') {
             statusClass = 'text-blue-600 bg-blue-100';
-            statusText = 'Uploadé';
+            statusText = 'Subido';
         }
 
         row.innerHTML = `
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="flex items-center">
                     ${video.processed_url 
                         ? `<a href="${video.processed_url}" target="_blank" class="text-blue-600 hover:text-blue-900">
-                             <i class="fas fa-play-circle mr-1"></i>Voir
+                             <i class="fas fa-play-circle mr-1"></i>Ver
                            </a>`
                         : '<span class="text-gray-400">Non disponible</span>'
                     }

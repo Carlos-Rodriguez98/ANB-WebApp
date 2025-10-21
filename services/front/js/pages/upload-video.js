@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Check required fields - only title is required by video service
         if (!titleInput.value.trim()) {
-            Toast.show('Le titre est requis', 'error');
+            Toast.show('El título es requerido', 'error');
             titleInput.focus();
             return false;
         }
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showUploadProgress() {
         uploadProgress.classList.remove('hidden');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Upload en cours...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Subida en curso...';
         
         // Disable form fields
         const formElements = uploadForm.querySelectorAll('input, select, textarea, button');

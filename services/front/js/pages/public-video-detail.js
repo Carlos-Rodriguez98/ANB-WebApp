@@ -67,15 +67,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayVideoDetails() {
         if (!currentVideo) return;
 
-        // Basic info
-        videoTitle.textContent = currentVideo.title;
-        videoPlayerName.textContent = currentVideo.playerName;
-        videoCity.textContent = currentVideo.city;
+        // Basic info - adaptar a los campos reales devueltos por el servicio de votación
+        videoTitle.textContent = currentVideo.titulo || currentVideo.title || 'Título no disponible';
+        videoPlayerName.textContent = currentVideo.playerName || `Jugador ${currentVideo.jugador_id}` || 'Jugador desconocido';
+        videoCity.textContent = currentVideo.city || 'Ciudad desconocida';
 
         // Published date
         if (currentVideo.published_at) {
             const publishedDate = new Date(currentVideo.published_at);
-            videoPublishedDate.textContent = publishedDate.toLocaleDateString('fr-FR', {
+            videoPublishedDate.textContent = publishedDate.toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -83,17 +83,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 minute: '2-digit'
             });
         } else {
-            videoPublishedDate.textContent = 'Date inconnue';
+            videoPublishedDate.textContent = 'Fecha desconocida';
         }
 
-        // Votes
-        videoVotes.textContent = currentVideo.votes || 0;
+        // Votes - adaptar al campo real
+        videoVotes.textContent = currentVideo.votos || currentVideo.votes || 0;
 
-        // Video player
-        if (currentVideo.processed_url) {
-            videoSource.src = currentVideo.processed_url;
-            videoPlayer.load();
+        // Video player - construire l'URL en utilisant le pattern du service vidéo
+        let videoUrl = currentVideo.processed_url || 
+                      currentVideo.processedUrl || 
+                      currentVideo.url || 
+                      currentVideo.video_url;
+        
+        if (!videoUrl && currentVideo.id && currentVideo.jugador_id) {
+            // Construire l'URL basée sur le pattern: /static/processed/u{user_id}/{video_id}.mp4
+            videoUrl = `http://localhost:8085/static/processed/u${currentVideo.jugador_id}/${currentVideo.id}.mp4`;
+            console.log('URL construite à partir du pattern:', videoUrl);
         }
+        
+        if (!videoUrl) {
+            // URL de vidéo de test en fallback
+            videoUrl = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+            console.warn('No se encontró URL de video, usando un video de prueba');
+        }
+        
+        videoSource.src = videoUrl;
+        videoPlayer.load();
+
+        console.log('Détails de la vidéo:', currentVideo);
+        console.log('URL finale de la vidéo:', videoUrl);
 
         videoDetailsElement.classList.remove('hidden');
     }
@@ -109,30 +127,73 @@ document.addEventListener('DOMContentLoaded', function() {
     async function voteForVideo() {
         if (!currentVideo) return;
 
+        // Vérifier si l'utilisateur est authentifié
+        if (!Auth.isAuthenticated()) {
+            showToast('Debes iniciar sesión para votar', 'warning');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
+            return;
+        }
+
+        // Extraire l'ID utilisateur du token JWT
+        const token = Auth.getToken();
+        let userId;
         try {
-            await apiClient.post(`/public/videos/${currentVideo.id}/vote`, {});
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.user_id || payload.sub || payload.id;
             
-            // Update vote count
-            currentVideo.votes = (currentVideo.votes || 0) + 1;
-            videoVotes.textContent = currentVideo.votes;
+            console.log('JWT payload:', payload);
+            console.log('Extracted userId:', userId);
+            
+            if (!userId) {
+                showToast('Error: No se pudo obtener el ID de usuario', 'error');
+                return;
+            }
+        } catch (error) {
+            console.error('Error parsing JWT:', error);
+            showToast('Error: Token inválido', 'error');
+            return;
+        }
+
+        try {
+            console.log('Sending vote with user_id:', parseInt(userId));
+            await apiClient.post(`/public/videos/${currentVideo.id}/vote`, {
+                user_id: parseInt(userId)
+            });
+            
+            // Update vote count - adaptar a los campos reales
+            if (currentVideo.votos !== undefined) {
+                currentVideo.votos = (currentVideo.votos || 0) + 1;
+                videoVotes.textContent = currentVideo.votos;
+            } else {
+                currentVideo.votes = (currentVideo.votes || 0) + 1;
+                videoVotes.textContent = currentVideo.votes;
+            }
             
             // Disable vote button
             voteBtn.disabled = true;
-            voteBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Voté !';
+            voteBtn.innerHTML = '<i class="fas fa-check mr-2"></i>¡Votado!';
             voteBtn.classList.remove('btn-success');
             voteBtn.classList.add('btn-secondary');
             
-            Toast.show('Vote enregistré avec succès !', 'success');
+            showToast('¡Voto registrado con éxito!', 'success');
             
         } catch (error) {
             console.error('Error voting:', error);
             
-            let errorMessage = 'Erreur lors du vote';
+            let errorMessage = 'Error al votar';
             if (error.message && error.message.includes('déjà voté')) {
-                errorMessage = 'Vous avez déjà voté pour cette vidéo';
+                errorMessage = 'Ya has votado por este video';
+            } else if (error.message.includes('Session expired') || error.message.includes('401')) {
+                showToast('Sesión expirada. Redirigiendo al login...', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
             }
             
-            Toast.show(errorMessage, 'error');
+            showToast(errorMessage, 'error');
         }
     }
 
