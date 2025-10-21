@@ -182,10 +182,12 @@ async function renderRankingsPage() {
     // Initial load
     load(page, city);
     
-    // Live refresh every 5s (only in SPA mode)
+    // Auto-refresh every 2 minutes (only in SPA mode)
+    // Según requisitos del proyecto: ranking actualizado con estrategia de caching TTL 1-5 min
     if (isSPA) {
         if (intervalId) clearInterval(intervalId);
-        intervalId = setInterval(() => load(page, city), 5000);
+        intervalId = setInterval(() => load(page, city), 120000); // 2 minutos = 120,000 ms
+        console.log('✓ Auto-refresh activado: cada 2 minutos');
         window.addEventListener('popstate', () => clearInterval(intervalId), { once: true });
     }
     
