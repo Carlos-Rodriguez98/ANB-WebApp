@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const videosPerPage = 9;
     let allVideos = [];
     let filteredVideos = [];
+    
+    // Cache pour les durées et miniatures
+    const videoMetadataCache = new Map();
 
     // Elements
     const videosGrid = document.getElementById('videos-grid');
@@ -24,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
             allVideos = Array.isArray(response) ? response : (response.videos || []);
             filteredVideos = [...allVideos];
             
+            // Précharger les métadonnées des vidéos
+            await preloadVideoMetadata();
+            
             renderVideos();
             
         } catch (error) {
@@ -33,6 +39,44 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             loadingElement.classList.add('hidden');
         }
+    }
+
+    // Précharge les métadonnées des vidéos (durée et miniatures)
+    async function preloadVideoMetadata() {
+        const promises = allVideos.slice(0, videosPerPage * 2).map(async (video) => {
+            if (video.processed_url || video.processedURL) {
+                const videoUrl = video.processed_url || video.processedURL;
+                
+                try {
+                    // Obtenir la durée réelle de la vidéo
+                    const duration = await videoUtils.getVideoDuration(videoUrl);
+                    
+                    // Générer une miniature si elle n'existe pas
+                    let thumbnail = videoUtils.getThumbnailUrl(video);
+                    
+                    // Si pas de miniature prédéfinie, essayer de la générer
+                    if (thumbnail.includes('placeholder')) {
+                        try {
+                            thumbnail = await videoUtils.generateThumbnail(videoUrl);
+                        } catch (thumbError) {
+                            console.warn('Impossible de générer la miniature pour', video.id, thumbError);
+                            // Garder l'image par défaut
+                        }
+                    }
+                    
+                    videoMetadataCache.set(video.id, {
+                        duration: duration,
+                        thumbnail: thumbnail
+                    });
+                    
+                } catch (error) {
+                    console.warn('Erreur lors du chargement des métadonnées pour la vidéo', video.id, error);
+                }
+            }
+        });
+        
+        // Attendre quelques métadonnées sans bloquer le rendu
+        await Promise.allSettled(promises.slice(0, 6));
     }
 
     // Render videos
@@ -65,15 +109,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const card = document.createElement('div');
         card.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer';
         
-        // Utiliser une image par défaut pour les thumbnails
-        const thumbnail = video.thumbnail || 'https://via.placeholder.com/400x225/f97316/ffffff?text=Video';
+        // Obtenir les métadonnées depuis le cache ou utiliser les valeurs par défaut
+        const metadata = videoMetadataCache.get(video.id) || {};
+        const thumbnail = metadata.thumbnail || videoUtils.getThumbnailUrl(video);
+        const duration = metadata.duration ? videoUtils.formatDuration(metadata.duration) : (video.duration || '0:00');
+        
+        // Nom du joueur - utiliser différents champs possibles
+        const playerName = video.playerName || video.player_name || `Jugador #${video.user_id || video.jugador_id}`;
         
         card.innerHTML = `
             <div class="relative">
-                <img src="${thumbnail}" alt="${video.titulo}" class="w-full h-48 object-cover">
+                <img src="${thumbnail}" 
+                     alt="${video.title || video.titulo}" 
+                     class="w-full h-48 object-cover"
+                     onerror="this.src='https://i.sstatic.net/l7kvp.jpg'"
+                     loading="lazy">
                 <div class="absolute top-2 right-2">
                     <span class="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                        ${video.duration || '0:00'}
+                        ${duration}
                     </span>
                 </div>
                 <div class="absolute top-2 left-2">
@@ -81,18 +134,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         Público
                     </span>
                 </div>
+                <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+                    <div class="opacity-0 hover:opacity-100 transition-opacity duration-200">
+                        <i class="fas fa-play-circle text-white text-4xl"></i>
+                    </div>
+                </div>
             </div>
             <div class="p-4">
-                <h3 class="font-semibold text-lg mb-2">${video.titulo}</h3>
+                <h3 class="font-semibold text-lg mb-2 line-clamp-2" title="${video.title || video.titulo}">
+                    ${video.title || video.titulo}
+                </h3>
                 <div class="flex items-center text-sm text-gray-600 mb-2">
                     <i class="fas fa-user mr-2"></i>
-                    <span>Jugador #${video.jugador_id}</span>
+                    <span class="truncate">${playerName}</span>
                 </div>
+                ${video.city ? `
+                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        <span class="truncate">${video.city}</span>
+                    </div>
+                ` : ''}
                 <div class="flex items-center justify-between text-sm text-gray-500">
                     <div class="flex items-center space-x-4">
                         <span class="flex items-center">
                             <i class="fas fa-thumbs-up mr-1 text-green-500"></i>
-                            ${video.votos || 0} votos
+                            ${video.votes || video.votos || 0} votos
                         </span>
                         <span class="flex items-center">
                             <i class="fas fa-eye mr-1 text-blue-500"></i>
@@ -103,12 +169,59 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
+        // Ajouter un indicateur de chargement pour les métadonnées si nécessaire
+        if (!metadata.duration && (video.processed_url || video.processedURL)) {
+            loadVideoMetadataAsync(video, card);
+        }
+
         card.addEventListener('click', () => {
             // Navigate to video detail page
             window.location.href = `public-video-detail.html?id=${video.id}`;
         });
 
         return card;
+    }
+
+    // Charge les métadonnées d'une vidéo de manière asynchrone et met à jour la carte
+    async function loadVideoMetadataAsync(video, cardElement) {
+        if (videoMetadataCache.has(video.id)) return;
+        
+        const videoUrl = video.processed_url || video.processedURL;
+        if (!videoUrl) return;
+        
+        try {
+            const duration = await videoUtils.getVideoDuration(videoUrl);
+            const formattedDuration = videoUtils.formatDuration(duration);
+            
+            // Mettre à jour l'affichage de la durée dans la carte
+            const durationElement = cardElement.querySelector('.bg-black span');
+            if (durationElement) {
+                durationElement.textContent = formattedDuration;
+            }
+            
+            // Essayer de générer une miniature si ce n'est pas déjà fait
+            let thumbnail = videoUtils.getThumbnailUrl(video);
+            if (thumbnail.includes('placeholder')) {
+                try {
+                    thumbnail = await videoUtils.generateThumbnail(videoUrl);
+                    const imgElement = cardElement.querySelector('img');
+                    if (imgElement) {
+                        imgElement.src = thumbnail;
+                    }
+                } catch (thumbError) {
+                    console.warn('Impossible de générer la miniature pour', video.id);
+                }
+            }
+            
+            // Mettre en cache les métadonnées
+            videoMetadataCache.set(video.id, {
+                duration: duration,
+                thumbnail: thumbnail
+            });
+            
+        } catch (error) {
+            console.warn('Erreur lors du chargement des métadonnées pour', video.id, error);
+        }
     }
 
     // Render pagination

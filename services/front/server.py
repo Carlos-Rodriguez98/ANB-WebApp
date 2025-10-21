@@ -32,40 +32,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Ajouter l'encodage UTF-8 pour tous les fichiers HTML
         self.send_header('Content-Type', 'text/html; charset=utf-8')
         super().end_headers()
-    
-    # Données simulées
-    users = [
-        {"id": "1", "firstName": "Jean", "lastName": "Dupont", "email": "jean@test.com", "city": "Paris", "country": "France"}
-    ]
-    videos = [
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440001", 
-            "title": "Mi dribleo increíble", 
-            "status": "processed", 
-            "uploadedAt": "2025-08-25T10:00:00Z",
-            "processedAt": "2025-08-25T10:05:00Z",
-            "votes": 15,
-            "processedUrl": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-            "playerName": "Jean Dupont",
-            "city": "Paris",
-            "userId": "1"
-        },
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440002", 
-            "title": "Tir à 3 points", 
-            "status": "processed", 
-            "uploadedAt": "2025-08-24T14:30:00Z",
-            "processedAt": "2025-08-24T14:35:00Z",
-            "votes": 8,
-            "processedUrl": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-            "playerName": "Marie Martin",
-            "city": "Lyon",
-            "userId": "2"
-        }
-    ]
-    votes = {}  # {"videoId": ["userId1", "userId2"]}
-    current_user_id = None
-    
+        
     def send_json_response(self, data, status=200):
         """Envoie une réponse JSON"""
         self.send_response(status)
