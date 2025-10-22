@@ -1,4 +1,4 @@
-
+ 
 # Reporte de arquitectura desplegada en AWS
 
 ![Arquitectura AWS](./artifacts/aws_arch.jpg)
@@ -21,9 +21,11 @@ El diseño busca aislar los componentes críticos (la base de datos) en una zona
 
 * **VPC**: red virtual en AWS donde residen todos los recursos. Define el rango de direcciones privadas (ejemplo: `172.16.0.0/16`).
 * **Subred Pública**: alojada en `us-east-1a`, contiene la instancia EC2 Web Server accesible desde Internet. Está asociada a una tabla de ruteo que envía tráfico externo al **Internet Gateway**.
-* **Subred Privada**: alojada en `us-east-1b`, contiene únicamente la instancia de RDS PostgreSQL y las instancias EC2 de File Server y Worker. No tiene acceso directo a Internet, lo que reduce la superficie de ataque.
+* **Subred Privada**: alojada en `us-east-1a` (Contiene la instancia de EC2 Worker y RDS PostgreSQL) y en `us-east-1b` (Contiene la instancia de EC2 File Server). No tiene acceso directo a Internet, lo que reduce la superficie de ataque, hace unso de un NAT Gateway para permitir la salida a Internet.
 * **Internet Gateway**: punto de entrada/salida de la VPC que conecta los recursos de la subred pública con Internet.
 * **Route Table**: tabla de enrutamiento que asegura que la subred pública tenga salida a Internet a través del Internet Gateway.
+* **NAT Gateway**: permite que los recursos en la subred privada accedan a Internet a través de la subred pública.
+* **SSM Service**: permite la gestión de los recursos de la VPC a través de la consola de AWS y se utilizó para la conexión a las instancias de las subred privada y la gestión de parametros del entorno.
 
 ### Seguridad
 
