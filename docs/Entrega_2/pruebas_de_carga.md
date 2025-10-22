@@ -274,27 +274,6 @@ USERS=${__P(users,100)}
 RAMP=${__P(ramp,120)}
 DURATION=${__P(duration,600)}
 ```
-
----
-
-### 🧠 Consideraciones de diseño de datos
-
-- Todos los correos y contraseñas deben ser **únicos por iteración** para evitar errores `409 Conflict`.  
-- Los archivos grandes (por ejemplo, `mp4_large_file`) deben superar los **25 MB** para evaluar correctamente el rendimiento de subida.  
-- Las pruebas de voto deben considerar la posibilidad de respuestas **400 Bad Request** cuando un mismo usuario intente votar dos veces.  
-- El conjunto de datos debe ser lo suficientemente grande para evitar repeticiones durante pruebas prolongadas o de alta concurrencia.
-
----
-
-### 🧩 Ejemplo práctico de generación de datos dinámicos
-
-| Campo | Expresión JMeter | Ejemplo resultante |
-|--------|------------------|--------------------|
-| Email | `${__time(YMMddHHmmss)}@test.com` | `user_20251021192345@test.com` |
-| Contraseña | `pass_${__RandomString(5,ABCDE)}` | `pass_CBZDE` |
-| Título | `Video_${__RandomString(3,xyz)}` | `Video_zyx` |
-| Descripción | `Test_${__UUID}` | `Test_5d1d64be-2b92-4e1e-84b9-77f9c5f5f7e0` |
-
 ---
 ## 7. Configuración JMeter
 
@@ -473,16 +452,6 @@ Su objetivo es garantizar que los resultados sean reproducibles y permitan ident
 
 ---
 
-### 🧮 Ejemplo de secuencia de ejecución
-
-| Orden | Escenario | Usuarios | Ramp-up | Duración | Tipo de prueba |
-|-------|------------|----------:|---------:|----------:|----------------|
-| 1 | Smoke test | 10 | 30 s | 2 min | Validación inicial |
-| 2 | Ruta crítica web | 100 | 120 s | 10 min | Carga nominal |
-| 3 | Procesamiento batch | 200 | 300 s | 20 min | Estrés |
-| 4 | Endurance | 100 | 120 s | 60 min | Resistencia |
-
----
 
 ### ⚙️ Criterios de repetición
 
