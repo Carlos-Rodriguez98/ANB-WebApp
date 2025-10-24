@@ -51,12 +51,48 @@ resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
   description       = "Allow SSH from admin IP"
 }
 
-# Puerto 8084 para la aplicación (Frontend)
-resource "aws_vpc_security_group_ingress_rule" "web_app" {
+resource "aws_vpc_security_group_ingress_rule" "web_auth" {
   security_group_id = aws_security_group.web.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 8084
-  to_port           = 8084
+  from_port         = var.auth_service_port
+  to_port           = var.auth_service_port
+  ip_protocol       = "tcp"
+  description       = "Allow Auth from Internet"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "web_video" {
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = var.video_service_port
+  to_port           = var.video_service_port
+  ip_protocol       = "tcp"
+  description       = "Allow Video from Internet"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "web_voting" {
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = var.voting_service_port
+  to_port           = var.voting_service_port
+  ip_protocol       = "tcp"
+  description       = "Allow Voting from Internet"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "web_ranking" {
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = var.ranking_service_port
+  to_port           = var.ranking_service_port
+  ip_protocol       = "tcp"
+  description       = "Allow Ranking from Internet"
+}
+
+# Puerto 8084 para la aplicación (Frontend)
+resource "aws_vpc_security_group_ingress_rule" "web_front" {
+  security_group_id = aws_security_group.web.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = var.front_server_port
+  to_port           = var.front_server_port
   ip_protocol       = "tcp"
   description       = "Allow access to frontend application"
 }
