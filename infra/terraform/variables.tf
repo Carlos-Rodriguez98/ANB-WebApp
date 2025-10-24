@@ -86,10 +86,11 @@ variable "db_username"      {
     type = string 
     default = "anbuser" 
     }
-variable "db_password"      { 
+variable "db_password" { 
     type = string 
-    sensitive = true 
-    }        # pásalo por tfvars/var de entorno
+    sensitive = true
+    default = "12345678"
+}
 variable "db_allocated_storage" { 
     type = number 
     default = 20 
@@ -117,8 +118,26 @@ variable "enable_nat" {
   default     = true
 }
 
+variable "auth_service_port"  {
+    type        = number
+    default     = 8080
+}
+
+variable "video_service_port" {
+    type        = number
+    default     = 8081
+}
+
+variable "voting_service_port"{
+    type        = number
+    default     = 8082
+}
+variable "ranking_service_port"{
+    type        = number
+    default     = 8083
+}
+
 variable "front_server_port" {
-  type        = number
-  description = "Puerto del servidor front-end"
-  default     = 5000
+    type        = number
+    default     = 8084
 }
