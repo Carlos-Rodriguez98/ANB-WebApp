@@ -4,9 +4,6 @@ FROM python:3.11-slim
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Installer les dépendances Python
-RUN pip install requests
-
 # Copier les fichiers de l'application
 COPY . .
 

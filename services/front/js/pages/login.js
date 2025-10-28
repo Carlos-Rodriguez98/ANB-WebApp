@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Iniciando sesión...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connexion...';
 
             try {
                 const response = await api.login({ email, password });
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 Auth.login(token, userData);
                 
-                Toast.success('¡Inicio de sesión exitoso! Redirigiendo...');
+                Toast.success('Connexion réussie ! Redirection...');
                 
                 // Redirect to dashboard
                 setTimeout(() => {

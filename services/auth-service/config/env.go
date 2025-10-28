@@ -14,7 +14,6 @@ type EnvConfig struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
-	DBSSLMode  string
 
 	ServerPort int
 }
@@ -50,18 +49,12 @@ func LoadEnv() {
 		serverPort = 8080 //Valor por defecto
 	}
 
-	dbSSLMode := os.Getenv("DB_SSLMODE")
-	if dbSSLMode == "" {
-		dbSSLMode = "require" // Valor por defecto para RDS
-	}
-
 	AppConfig = EnvConfig{
 		DBHost:     os.Getenv("DB_HOST"),
 		DBPort:     dbPort,
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
-		DBSSLMode:  dbSSLMode,
 		ServerPort: serverPort,
 	}
 

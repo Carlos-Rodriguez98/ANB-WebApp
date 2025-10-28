@@ -42,8 +42,8 @@ func TestGetPublicVideos(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"video_id", "user_id", "title", "published", "votes"}).
-			AddRow("550e8400-e29b-41d4-a716-446655440001", 1, "Test Video 1", true, 10).
-			AddRow("550e8400-e29b-41d4-a716-446655440002", 2, "Test Video 2", true, 5)
+			AddRow(1, 1, "Test Video 1", true, 10).
+			AddRow(2, 2, "Test Video 2", true, 5)
 
 		mock.ExpectQuery(`SELECT v.video_id, v.user_id, v.title, v.published, COUNT(vo.vote_id) as votes FROM "Videos" v LEFT JOIN "Votes" vo ON v.video_id = vo.video_id WHERE v.published = TRUE GROUP BY v.video_id ORDER BY votes DESC`).WillReturnRows(rows)
 
@@ -54,7 +54,7 @@ func TestGetPublicVideos(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `[{"id":"550e8400-e29b-41d4-a716-446655440001","jugador_id":1,"titulo":"Test Video 1","votos":10,"published":true},{"id":"550e8400-e29b-41d4-a716-446655440002","jugador_id":2,"titulo":"Test Video 2","votos":5,"published":true}]`, w.Body.String())
+		assert.JSONEq(t, `[{"id":1,"jugador_id":1,"titulo":"Test Video 1","votos":10,"published":true},{"id":2,"jugador_id":2,"titulo":"Test Video 2","votos":5,"published":true}]`, w.Body.String())
 	})
 
 	t.Run("db_error", func(t *testing.T) {
@@ -137,15 +137,15 @@ func TestVoteForVideo(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectQuery(`SELECT published FROM "Videos" WHERE video_id = \$1`).WithArgs("550e8400-e29b-41d4-a716-446655440001").WillReturnRows(sqlmock.NewRows([]string{"published"}).AddRow(true))
-		mock.ExpectQuery(`SELECT COUNT(\*\) FROM "Votes" WHERE video_id = \$1 AND user_id = \$2`).WithArgs("550e8400-e29b-41d4-a716-446655440001", 1).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-		mock.ExpectExec(`INSERT INTO "Votes" (video_id, user_id) VALUES (\$1, \$2)`).WithArgs("550e8400-e29b-41d4-a716-446655440001", 1).WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectQuery(`SELECT published FROM "Videos" WHERE video_id = \$1`).WithArgs(1).WillReturnRows(sqlmock.NewRows([]string{"published"}).AddRow(true))
+		mock.ExpectQuery(`SELECT COUNT(\*\) FROM "Votes" WHERE video_id = \$1 AND user_id = \$2`).WithArgs(1, 1).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
+		mock.ExpectExec(`INSERT INTO "Votes" (video_id, user_id) VALUES (\$1, \$2)`).WithArgs(1, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		r := setupRouter()
 
 		w := httptest.NewRecorder()
 		token := generateTestToken(1, "votante")
-		req, _ := http.NewRequest("POST", "/api/private/videos/550e8400-e29b-41d4-a716-446655440001/vote", nil)
+		req, _ := http.NewRequest("POST", "/api/private/videos/1/vote", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		r.ServeHTTP(w, req)
 
@@ -157,7 +157,7 @@ func TestVoteForVideo(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		token := generateTestToken(1, "not_a_voter")
-		req, _ := http.NewRequest("POST", "/api/private/videos/550e8400-e29b-41d4-a716-446655440001/vote", nil)
+		req, _ := http.NewRequest("POST", "/api/private/videos/1/vote", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		r.ServeHTTP(w, req)
 
@@ -165,14 +165,14 @@ func TestVoteForVideo(t *testing.T) {
 	})
 
 	t.Run("already_voted", func(t *testing.T) {
-		mock.ExpectQuery(`SELECT published FROM "Videos" WHERE video_id = \$1`).WithArgs("550e8400-e29b-41d4-a716-446655440001").WillReturnRows(sqlmock.NewRows([]string{"published"}).AddRow(true))
-		mock.ExpectQuery(`SELECT COUNT(\*\) FROM "Votes" WHERE video_id = \$1 AND user_id = \$2`).WithArgs("550e8400-e29b-41d4-a716-446655440001", 1).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+		mock.ExpectQuery(`SELECT published FROM "Videos" WHERE video_id = \$1`).WithArgs(1).WillReturnRows(sqlmock.NewRows([]string{"published"}).AddRow(true))
+		mock.ExpectQuery(`SELECT COUNT(\*\) FROM "Votes" WHERE video_id = \$1 AND user_id = \$2`).WithArgs(1, 1).WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 		r := setupRouter()
 
 		w := httptest.NewRecorder()
 		token := generateTestToken(1, "votante")
-		req, _ := http.NewRequest("POST", "/api/private/videos/550e8400-e29b-41d4-a716-446655440001/vote", nil)
+		req, _ := http.NewRequest("POST", "/api/private/videos/1/vote", nil)
 		req.Header.Set("Authorization", "Bearer "+token)
 		r.ServeHTTP(w, req)
 
