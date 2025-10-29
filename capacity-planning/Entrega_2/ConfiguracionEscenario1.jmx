@@ -47,7 +47,7 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
           </JSR223Sampler>
           <hashTree/>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_Registrarse" enabled="true">
-            <stringProp name="HTTPSampler.domain">localhost</stringProp>
+            <stringProp name="HTTPSampler.domain">host.docker.internal</stringProp>
             <stringProp name="HTTPSampler.port">8080</stringProp>
             <stringProp name="HTTPSampler.protocol">http</stringProp>
             <stringProp name="HTTPSampler.path">/api/auth/signup</stringProp>
@@ -89,7 +89,7 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
             <hashTree/>
           </hashTree>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_Iniciar_Sesión " enabled="true">
-            <stringProp name="HTTPSampler.domain">localhost</stringProp>
+            <stringProp name="HTTPSampler.domain">host.docker.internal</stringProp>
             <stringProp name="HTTPSampler.port">8080</stringProp>
             <stringProp name="HTTPSampler.protocol">http</stringProp>
             <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
@@ -103,7 +103,7 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
                   <boolProp name="HTTPArgument.always_encode">false</boolProp>
                   <stringProp name="Argument.value">{&#xd;
 	&quot;email&quot;: &quot;${TEST_EMAIL}&quot;,&#xd;
-  	&quot;password&quot;: &quot;${TEST_PASS}&quot;&#xd;
+  	&quot;password&quot;: &quot;${TEST_PASSWORD}&quot;&#xd;
 }</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>

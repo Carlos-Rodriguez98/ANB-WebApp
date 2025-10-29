@@ -1,10 +1,12 @@
-version: "3.8"
 services:
   jmeter:
-    build: .
     image: jmeter-cli:5.6.3
     container_name: jmeter-runner
-    entrypoint: ["tail", "-f", "/dev/null"]   # contenedor "idle" esperando comandos
+    entrypoint: []
+    command: tail -f /dev/null
     volumes:
-      - ./:/home/jmeter
-    restart: unless-stopped
+      # Montar el archivo JMX desde el directorio padre (solo lectura)
+      - ../ConfiguracionEscenario1.jmx:/home/jmeter/ConfiguracionEscenario1.jmx:ro
+      # Montar carpeta jmeter para resultados y reportes
+      - .:/home/jmeter/output
+    working_dir: /home/jmeter

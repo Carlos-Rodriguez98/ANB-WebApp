@@ -26,5 +26,5 @@ RUN useradd -m -d /home/jmeter -s /bin/bash jmeter && \
 USER jmeter
 WORKDIR /home/jmeter
 
-ENTRYPOINT ["jmeter"]
-CMD ["-v"]
+# Cambiar ENTRYPOINT por CMD para permitir override
+CMD ["tail", "-f", "/dev/null"]

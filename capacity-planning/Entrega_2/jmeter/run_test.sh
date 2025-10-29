@@ -1,29 +1,66 @@
 #!/usr/bin/env bash
+export MSYS_NO_PATHCONV=1
 set -euo pipefail
 
-# Parámetros
-JMX=${1:-ConfiguracionPruebas.jmx}
-JTL=${2:-resultados.jtl}
-REPORT_DIR=${3:-report}
-SERVICE=jmeter  # nombre del servicio en docker-compose
-
-# Asegurar que el servicio existe y está corriendo
-CID=$(docker compose ps -q $SERVICE 2>/dev/null || true)
-if [ -z "$CID" ]; then
-  echo "El servicio '$SERVICE' no está creado. Ejecuta: docker compose up -d"
-  exit 1
-fi
-RUNNING=$(docker inspect -f '{{.State.Running}}' "$CID")
-if [ "$RUNNING" != "true" ]; then
-  echo "El contenedor existe pero no está en ejecución. Iniciando..."
-  docker start "$CID" >/dev/null
+# Validar que se proporcione el archivo JMX
+if [ $# -eq 0 ]; then
+    echo "❌ Error: Debes proporcionar el nombre del archivo JMX"
+    echo "Uso: $0 <archivo.jmx> [resultados.jtl] [report_dir]"
+    echo "Ejemplo: $0 ConfiguracionEscenario1.jmx"
+    exit 1
 fi
 
-# Comandos con ruta absoluta a jmeter dentro del contenedor
-JMETER_BIN="/opt/jmeter/bin/jmeter"
-CMD="${JMETER_BIN} -n -t /home/jmeter/${JMX} -l /home/jmeter/${JTL} -j /home/jmeter/jmeter.log && ${JMETER_BIN} -g /home/jmeter/${JTL} -o /home/jmeter/${REPORT_DIR}"
+JMX_FILE=$1
+JTL=${2:-output/resultados.jtl}
+REPORT_DIR=${3:-output/report}
+CONTAINER_NAME=jmeter-runner
 
-echo "Ejecutando prueba: ${JMX} -> ${JTL} (report: ${REPORT_DIR})"
-docker compose exec -T $SERVICE bash -lc "$CMD"
+# Validar que el archivo JMX exista en el directorio padre
+if [ ! -f "../$JMX_FILE" ]; then
+    echo "❌ Error: El archivo '../$JMX_FILE' no existe"
+    echo "Asegúrate de que el archivo esté en Entrega_2/"
+    exit 1
+fi
 
-echo "Reporte generado en: ./${REPORT_DIR}/index.html"
+# Validar que el contenedor esté corriendo
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "❌ Error: El contenedor '$CONTAINER_NAME' no está corriendo"
+    echo "Ejecuta primero: docker compose up -d"
+    exit 1
+fi
+
+echo "📋 Configuración de prueba:"
+echo "   Archivo JMX: ${JMX_FILE}"
+echo "   Resultados: ${JTL}"
+echo "   Reporte: ${REPORT_DIR}"
+echo ""
+echo "🚀 Ejecutando JMeter..."
+
+# Ejecutar JMeter
+if docker exec -i "$CONTAINER_NAME" /opt/jmeter/bin/jmeter \
+    -n \
+    -t "/home/jmeter/${JMX_FILE}" \
+    -l "/home/jmeter/${JTL}" \
+    -j /home/jmeter/output/jmeter.log; then
+    
+    echo ""
+    echo "📊 Generando reporte HTML..."
+    
+    # Generar reporte HTML
+    docker exec -i "$CONTAINER_NAME" sh -c \
+        "rm -rf /home/jmeter/${REPORT_DIR} && /opt/jmeter/bin/jmeter -g /home/jmeter/${JTL} -o /home/jmeter/${REPORT_DIR}"
+    
+    echo ""
+    echo "✅ Prueba completada exitosamente"
+    echo "📁 Archivos generados en jmeter/:"
+    echo "   - resultados.jtl"
+    echo "   - report/index.html"
+    echo "   - jmeter.log"
+    echo ""
+    echo "Para ver el reporte: start report/index.html"
+else
+    echo ""
+    echo "❌ Error: La ejecución de JMeter falló"
+    echo "Revisa los logs en: jmeter.log"
+    exit 1
+fi
