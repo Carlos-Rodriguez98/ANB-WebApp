@@ -31,8 +31,6 @@ services:
       - /opt/anbapp/.env
     ports:
       - "${VIDEO_SERVER_PORT}:${VIDEO_SERVER_PORT}"
-    volumes:
-      - ${STORAGE_BASE_PATH}:${STORAGE_BASE_PATH}
     depends_on:
       - redis
     networks:
@@ -70,11 +68,10 @@ services:
       VOTING_SERVICE_URL: http://voting-service:${VOTING_SERVER_PORT}
       RANKING_SERVICE_URL: http://ranking-service:${RANKING_SERVER_PORT}
       SERVER_PORT: ${FRONT_SERVER_PORT}
-      STORAGE_BASE_PATH: ${STORAGE_BASE_PATH}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      AWS_REGION: ${AWS_REGION}
     ports:
       - "${FRONT_SERVER_PORT}:${FRONT_SERVER_PORT}"
-    volumes:
-      - ${STORAGE_BASE_PATH}:${STORAGE_BASE_PATH}
     depends_on:
       - auth-service
       - video-service
