@@ -6,8 +6,6 @@ services:
     restart: always
     env_file:
       - /opt/anbapp/.env
-    volumes:
-      - ${STORAGE_BASE_PATH}:${STORAGE_BASE_PATH}
     networks:
       - anbapp
 
