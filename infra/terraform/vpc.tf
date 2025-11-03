@@ -26,7 +26,7 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidr
   availability_zone       = local.az_a
   map_public_ip_on_launch = true
-  tags = merge(local.tags, { Name = "${var.project_name}-public-${local.az_a}", Tier = "public" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-public-${local.az_a}", Tier = "public" })
 }
 
 resource "aws_route_table" "public" {
@@ -51,7 +51,7 @@ resource "aws_subnet" "private_a" {
   cidr_block              = var.private_a_subnet_cidr
   availability_zone       = local.az_a
   map_public_ip_on_launch = false
-  tags = merge(local.tags, { Name = "${var.project_name}-private-a-${local.az_a}", Tier = "private" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-private-a-${local.az_a}", Tier = "private" })
 }
 
 resource "aws_subnet" "private_b" {
@@ -59,7 +59,7 @@ resource "aws_subnet" "private_b" {
   cidr_block              = var.private_b_subnet_cidr
   availability_zone       = local.az_b
   map_public_ip_on_launch = false
-  tags = merge(local.tags, { Name = "${var.project_name}-private-b-${local.az_b}", Tier = "private" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-private-b-${local.az_b}", Tier = "private" })
 }
 
 resource "aws_route_table" "private" {
