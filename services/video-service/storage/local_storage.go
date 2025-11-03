@@ -9,6 +9,12 @@ import (
 	"path/filepath"
 )
 
+type Storage interface {
+	SaveOriginal(userID uint, videoID string, file *multipart.FileHeader) (string, error)
+	GetPublicURL(path string) string
+	Delete(path string) error
+}
+
 type LocalStorage struct{ base string }
 
 func NewLocalStorage() *LocalStorage {

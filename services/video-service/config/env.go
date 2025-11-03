@@ -21,6 +21,9 @@ type EnvConfig struct {
 
 	StorageBasePath string // ej: ./uploads
 	JWTSecret       string
+	S3BucketName    string
+	AWSRegion       string
+	StorageMode     string
 }
 
 var AppConfig EnvConfig
@@ -42,6 +45,9 @@ func LoadEnv() {
 		ServerPort:      serverPort,
 		StorageBasePath: getOrDefault("STORAGE_BASE_PATH", "./uploads"),
 		JWTSecret:       getOrDefault("JWT_SECRET", "devsecret"),
+		S3BucketName:    getOrDefault("S3_BUCKET_NAME", "anb-bucket"),
+		AWSRegion:       getOrDefault("AWS_REGION", "us-east-1"),
+		StorageMode:     getOrDefault("STORAGE_MODE", "s3"),
 	}
 	log.Printf("[video-service] config OK, port=%d redis=%s basepath=%s",
 		AppConfig.ServerPort, AppConfig.RedisAddr, AppConfig.StorageBasePath)
