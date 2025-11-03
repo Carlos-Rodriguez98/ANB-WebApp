@@ -67,9 +67,10 @@ func (s *S3Storage) UploadFromFile(localPath, s3Path string) error {
 	defer file.Close()
 
 	_, err = s.client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(s3Path),
-		Body:   file,
+		Bucket:      aws.String(s.bucket),
+		Key:         aws.String(s3Path),
+		Body:        file,
+		ContentType: aws.String("video/mp4"),
 	})
 	return err
 }
