@@ -48,6 +48,13 @@ func (r *VideoRepository) MarkProcessed(id string, processedPath string) error {
 		Error
 }
 
+func (r *VideoRepository) UpdateOriginalPath(id string, originalPath string) error {
+	return r.DB.Model(&models.Video{}).
+		Where("video_id = ?", id).
+		Update("original_path", originalPath).
+		Error
+}
+
 func (r *VideoRepository) SoftDelete(v *models.Video) error {
 	return r.DB.Model(v).Updates(map[string]any{"status": models.StatusDeleted}).Error
 }

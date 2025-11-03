@@ -95,6 +95,12 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		return dto.UploadResponse{}, err
 	}
 
+	// Actualizar BD con original_path
+	err = s.Repo.UpdateOriginalPath(videoID, origPath)
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo actualizar original_path: %w", err)
+	}
+
 	err = tasks.EnqueueProcessVideo(tasks.ProcessVideoPayload{
 		VideoID: videoID, UserID: userID, OriginalPath: origPath, Title: title,
 	})
