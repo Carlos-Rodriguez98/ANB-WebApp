@@ -23,6 +23,11 @@ type EnvConfig struct {
 
 	// Worker
 	WorkerConcurrency int // ej: 5
+
+	// S3
+	S3BucketName string
+	AWSRegion    string
+	StorageMode  string
 }
 
 var App EnvConfig
@@ -50,6 +55,10 @@ func LoadEnv() {
 		StorageBasePath: getenv("STORAGE_BASE_PATH", "/data/uploads"),
 
 		WorkerConcurrency: concurrency,
+
+		S3BucketName: getenv("S3_BUCKET_NAME", ""),
+		AWSRegion:    getenv("AWS_REGION", "us-east-1"),
+		StorageMode:  getenv("STORAGE_MODE", "s3"),
 	}
 
 	log.Printf("[processing-service] env OK | redis=%s base=%s conc=%d",

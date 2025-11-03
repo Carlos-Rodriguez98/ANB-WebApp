@@ -3,6 +3,7 @@ package main
 import (
 	"ANB-WebApp/services/processing-service/config"
 	"ANB-WebApp/services/processing-service/repository"
+	"ANB-WebApp/services/processing-service/storage"
 	"ANB-WebApp/services/processing-service/tasks"
 	"context"
 	"encoding/json"
@@ -10,8 +11,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
 	"github.com/hibiken/asynq"
 )
@@ -36,8 +35,8 @@ func main() {
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(tasks.TaskProcessVideo, handleProcessVideo(repo))
 
-	log.Printf("[processing-service] iniciado | redis=%s | base=%s",
-		config.App.RedisAddr, config.App.StorageBasePath)
+	log.Printf("[processing-service] iniciado | redis=%s | mode=%s | bucket=%s",
+		config.App.RedisAddr, config.App.StorageMode, config.App.S3BucketName)
 
 	if err := srv.Run(mux); err != nil {
 		log.Fatal(err)
@@ -52,80 +51,84 @@ func handleProcessVideo(repo *repository.VideoRepository) asynq.HandlerFunc {
 			return fmt.Errorf("decode payload: %w", err)
 		}
 
-		base := config.App.StorageBasePath
-		inAbs := filepath.Join(base, p.OriginalPath)
-
-		outRelDir := filepath.Join("/static/processed", fmt.Sprintf("u%d", p.UserID))
-		if err := os.MkdirAll(filepath.Join(base, outRelDir), 0755); err != nil {
-			return err
-		}
-		outRel := filepath.Join(outRelDir, p.VideoID+".mp4")
-		outAbs := filepath.Join(base, outRel)
-
-		origRel := p.OriginalPath
-
-		// 1) Si ya contiene "/static/" usamos la subruta desde ahí
-		if idx := strings.Index(p.OriginalPath, "/static/"); idx != -1 {
-			origRel = p.OriginalPath[idx:]
-		} else if strings.HasPrefix(p.OriginalPath, base) {
-			// 2) Si p.OriginalPath es absoluta y base es prefijo, recortamos el base
-			origRel = strings.TrimPrefix(p.OriginalPath, base)
-			if !strings.HasPrefix(origRel, "/") {
-				origRel = "/" + origRel
-			}
-		} else {
-			// 3) Fallback: asumimos ubicación bajo /static/original/u{userID}/{videoID}.mp4
-			origRel = filepath.Join("/static/original", fmt.Sprintf("u%d", p.UserID), p.VideoID+".mp4")
+		// Inicializar storage S3
+		s3Storage, err := storage.NewS3Storage()
+		if err != nil {
+			return fmt.Errorf("error inicializando S3: %w", err)
 		}
 
-		log.Printf("[worker] ffmpeg %s -> %s", inAbs, outAbs)
+		// 1. Descargar video original de S3 a archivo temporal
+		log.Printf("[worker] Descargando de S3: %s", p.OriginalPath)
+		tmpInput, err := s3Storage.DownloadToTemp(p.OriginalPath)
+		if err != nil {
+			return fmt.Errorf("error descargando de S3: %w", err)
+		}
+		defer os.Remove(tmpInput)
+		log.Printf("[worker] Descargado a: %s", tmpInput)
 
+		// 2. Crear archivo temporal para video procesado
+		tmpOutput, err := os.CreateTemp("", "processed-*.mp4")
+		if err != nil {
+			return fmt.Errorf("error creando archivo temporal: %w", err)
+		}
+		tmpOutputPath := tmpOutput.Name()
+		tmpOutput.Close()
+		defer os.Remove(tmpOutputPath)
+
+		log.Printf("[worker] Procesando: %s -> %s", tmpInput, tmpOutputPath)
+
+		// 3. Procesar video con ffmpeg
 		inLogo := "/app/logo_anb.png"
 
 		cmd := exec.CommandContext(ctx, "ffmpeg",
 			"-y",
-			"-i", inAbs, // 0: original video
-			"-loop", "1", "-t", "2.5", "-i", inLogo, // 1: logo (initial)
-			"-loop", "1", "-t", "2.5", "-i", inLogo, // 2: logo (final)
-
-			// filter_complex: normalizar v0, preparar logo1 y logo2 con fades y fps,
-			// luego concat = [logo1][v0][logo2]
+			"-i", tmpInput,
+			"-loop", "1", "-t", "2.5", "-i", inLogo,
+			"-loop", "1", "-t", "2.5", "-i", inLogo,
 			"-filter_complex",
 			`
-			[0:v]scale=1280:720:force_original_aspect_ratio=decrease,
-				pad=1280:720:(ow-iw)/2:(oh-ih)/2,
-				setsar=1,
-				fps=60,
-				format=yuv420p[v0];
+            [0:v]scale=1280:720:force_original_aspect_ratio=decrease,
+                pad=1280:720:(ow-iw)/2:(oh-ih)/2,
+                setsar=1,
+                fps=60,
+                format=yuv420p[v0];
 
-			[1:v]scale=1280:720,setsar=1,fps=60,format=rgba,
-				fade=t=in:st=0:d=0.5:alpha=1,
-				fade=t=out:st=2:d=0.5:alpha=1[logo1];
+            [1:v]scale=1280:720,setsar=1,fps=60,format=rgba,
+                fade=t=in:st=0:d=0.5:alpha=1,
+                fade=t=out:st=2:d=0.5:alpha=1[logo1];
 
-			[2:v]scale=1280:720,setsar=1,fps=60,format=rgba,
-				fade=t=in:st=0:d=0.5:alpha=1,
-				fade=t=out:st=2:d=0.5:alpha=1[logo2];
+            [2:v]scale=1280:720,setsar=1,fps=60,format=rgba,
+                fade=t=in:st=0:d=0.5:alpha=1,
+                fade=t=out:st=2:d=0.5:alpha=1[logo2];
 
-			[logo1][v0][logo2]concat=n=3:v=1:a=0[outv]
-			`,
-
+            [logo1][v0][logo2]concat=n=3:v=1:a=0[outv]
+            `,
 			"-map", "[outv]",
 			"-c:v", "libx264",
 			"-preset", "veryfast",
 			"-crf", "23",
-			"-an", // sin audio
-			outAbs,
+			"-an",
+			tmpOutputPath,
 		)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			return err
+			return fmt.Errorf("error procesando con ffmpeg: %w", err)
 		}
 
-		if err := repo.MarkProcessed(p.VideoID, origRel, outRel); err != nil {
-			return err
+		// 4. Subir video procesado a S3
+		outS3Path := fmt.Sprintf("static/processed/u%d/%s.mp4", p.UserID, p.VideoID)
+		log.Printf("[worker] Subiendo a S3: %s", outS3Path)
+		if err := s3Storage.UploadFromFile(tmpOutputPath, outS3Path); err != nil {
+			return fmt.Errorf("error subiendo a S3: %w", err)
 		}
-		log.Printf("[worker] procesado OK video_id=%s", p.VideoID)
+
+		// 5. Actualizar base de datos
+		if err := repo.MarkProcessed(p.VideoID, p.OriginalPath, outS3Path); err != nil {
+			return fmt.Errorf("error actualizando BD: %w", err)
+		}
+
+		log.Printf("[worker] Procesamiento exitoso video_id=%s", p.VideoID)
 		return nil
 	}
 }
