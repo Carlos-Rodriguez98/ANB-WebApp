@@ -49,8 +49,9 @@ func LoadEnv() {
 		AWSRegion:       getOrDefault("AWS_REGION", "us-east-1"),
 		StorageMode:     getOrDefault("STORAGE_MODE", "s3"),
 	}
-	log.Printf("[video-service] config OK, port=%d redis=%s basepath=%s",
-		AppConfig.ServerPort, AppConfig.RedisAddr, AppConfig.StorageBasePath)
+	log.Printf("[video-service] config OK | port=%d redis=%s mode=%s bucket=%s region=%s",
+		AppConfig.ServerPort, AppConfig.RedisAddr, AppConfig.StorageMode,
+		AppConfig.S3BucketName, AppConfig.AWSRegion)
 }
 
 func getOrDefault(k, def string) string {
