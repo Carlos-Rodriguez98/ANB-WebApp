@@ -333,6 +333,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error publishing video:', error);
             showToast('Error al publicar', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
         }
     };
 
