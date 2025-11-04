@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         errorStateElement.classList.remove('hidden');
     }
 
-    // Publish video
+   // Publish video
     async function publishVideo() {
         // Prevenir múltiples clics
         if (publishBtn.disabled) return;
@@ -189,10 +189,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reload video details from API to get updated data
             await loadVideoDetails(currentVideo.video_id);
             
+            // No necesitamos rehabilitar el botón aquí porque loadVideoDetails
+            // llamará a updateActionButtons() que ocultará el botón si ya está publicado
+            
         } catch (error) {
             console.error('Error publishing video:', error);
             Toast.show('Error durante la publicación', 'error');
-        } finally {
+            
+            // Solo rehabilitar si hubo error
             publishBtn.disabled = false;
             publishBtn.innerHTML = originalText;
         }

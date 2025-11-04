@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td class="px-4 py-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-2">
                     ${video.status === 'processed' && !video.published 
-                        ? `<button class="text-green-600 hover:text-green-900" onclick="publishVideo('${video.video_id}')">
+                        ? `<button class="text-green-600 hover:text-green-900" onclick="publishVideo('${video.video_id}', event)">
                              <i class="fas fa-upload"></i>
                            </button>` 
                         : ''
@@ -314,15 +314,20 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteModal.classList.add('show');
     };
 
-    window.publishVideo = async function(videoId) {
+    window.publishVideo = async function(videoId, evt) {
         // Prevenir múltiples clics
-        const btn = event.target.closest('button');
-         if (!btn || btn.disabled) return;
+        if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
+        
+        const btn = evt ? evt.currentTarget : null;
+        if (!btn || btn.disabled) return;
     
         btn.disabled = true;
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+    
         try {
             await apiClient.post(`/videos/${videoId}/publish`, {});
             showToast('Video publicado exitosamente', 'success');
