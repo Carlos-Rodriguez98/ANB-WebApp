@@ -315,6 +315,14 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.publishVideo = async function(videoId) {
+        // Prevenir múltiples clics
+        const btn = event.target.closest('button');
+         if (!btn || btn.disabled) return;
+    
+        btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
         try {
             await apiClient.post(`/videos/${videoId}/publish`, {});
             showToast('Video publicado exitosamente', 'success');
