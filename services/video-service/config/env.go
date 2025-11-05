@@ -16,8 +16,8 @@ type EnvConfig struct {
 	DBName     string
 	DBSSLMode  string
 
-	RedisAddr  string
-	ServerPort int
+	SQSQueueURL string
+	ServerPort  int
 
 	StorageBasePath string // ej: ./uploads
 	JWTSecret       string
@@ -41,7 +41,7 @@ func LoadEnv() {
 		DBPassword:      getOrDefault("DB_PASSWORD", "postgres"),
 		DBName:          getOrDefault("DB_NAME", "anb"),
 		DBSSLMode:       getOrDefault("DB_SSLMODE", "require"),
-		RedisAddr:       getOrDefault("REDIS_ADDR", "localhost:6379"),
+		SQSQueueURL:     getOrDefault("SQS_QUEUE_URL", ""),
 		ServerPort:      serverPort,
 		StorageBasePath: getOrDefault("STORAGE_BASE_PATH", "./uploads"),
 		JWTSecret:       getOrDefault("JWT_SECRET", "devsecret"),
@@ -49,8 +49,8 @@ func LoadEnv() {
 		AWSRegion:       getOrDefault("AWS_REGION", "us-east-1"),
 		StorageMode:     getOrDefault("STORAGE_MODE", "s3"),
 	}
-	log.Printf("[video-service] config OK | port=%d redis=%s mode=%s bucket=%s region=%s",
-		AppConfig.ServerPort, AppConfig.RedisAddr, AppConfig.StorageMode,
+	log.Printf("[video-service] config OK | port=%d sqs=%s mode=%s bucket=%s region=%s",
+		AppConfig.ServerPort, AppConfig.SQSQueueURL, AppConfig.StorageMode,
 		AppConfig.S3BucketName, AppConfig.AWSRegion)
 }
 
