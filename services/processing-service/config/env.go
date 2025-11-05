@@ -18,7 +18,7 @@ type EnvConfig struct {
 	DBSSLMode string
 
 	// Infra
-	RedisAddr       string // ej: redis:6379
+	SQSQueueURL     string
 	StorageBasePath string // ej: /data/uploads
 
 	// Worker
@@ -51,7 +51,7 @@ func LoadEnv() {
 		DBName:    os.Getenv("DB_NAME"),
 		DBSSLMode: dbSSLMode,
 
-		RedisAddr:       getenv("REDIS_ADDR", "redis:6379"),
+		SQSQueueURL:     getenv("SQS_QUEUE_URL", ""),
 		StorageBasePath: getenv("STORAGE_BASE_PATH", "/data/uploads"),
 
 		WorkerConcurrency: concurrency,
@@ -61,8 +61,8 @@ func LoadEnv() {
 		StorageMode:  getenv("STORAGE_MODE", "s3"),
 	}
 
-	log.Printf("[processing-service] env OK | redis=%s base=%s conc=%d",
-		App.RedisAddr, App.StorageBasePath, App.WorkerConcurrency)
+	log.Printf("[processing-service] env OK | sqs=%s base=%s conc=%d",
+		App.SQSQueueURL, App.StorageBasePath, App.WorkerConcurrency)
 }
 
 func atoiDefault(s string, def int) int {
