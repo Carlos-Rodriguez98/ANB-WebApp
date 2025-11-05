@@ -38,6 +38,10 @@ variable "public_subnet_cidr" {
   type    = string
   default = "10.0.1.0/24"
 }
+variable "public_subnet_b_cidr" {
+  type    = string
+  default = "10.0.4.0/24"
+}
 variable "private_a_subnet_cidr" {
   type    = string
   default = "10.0.2.0/24"
@@ -50,7 +54,7 @@ variable "private_b_subnet_cidr" {
 variable "allowed_ssh_cidr" {
   type        = string
   description = "IP pública para SSH (CIDR). Ej: 200.1.2.3/32"
-  default     = "191.107.37.114/32"
+  default     = "191.107.43.22/32"
 }
 
 variable "db_port" {
@@ -66,7 +70,7 @@ variable "db_engine" {
 }
 variable "db_engine_version" {
   type    = string
-  default = "15.8"
+  default = "16.9"
 }
 variable "db_instance_class" {
   type    = string
