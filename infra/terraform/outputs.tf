@@ -37,3 +37,19 @@ output "application_url" {
   description = "URL de acceso a la aplicación web vía ALB"
   value       = "http://${aws_lb.main.dns_name}"
 }
+
+# SQS Queues
+output "sqs_queue_url" {
+  description = "URL de la cola SQS para procesamiento de videos"
+  value       = aws_sqs_queue.video_processing.url
+}
+
+output "sqs_queue_arn" {
+  description = "ARN de la cola SQS"
+  value       = aws_sqs_queue.video_processing.arn
+}
+
+output "sqs_dlq_url" {
+  description = "URL de la Dead Letter Queue"
+  value       = aws_sqs_queue.video_processing_dlq.url
+}
