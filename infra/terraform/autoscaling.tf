@@ -30,8 +30,7 @@ resource "aws_launch_template" "web" {
     JWT_SECRET     = var.jwt_secret
     S3_BUCKET_NAME = aws_s3_bucket.storage.id
     AWS_REGION     = var.aws_region
-    REDIS_ADDR     = "anbapp-redis:6379"
-    REDIS_PORT     = "6379"
+    SQS_QUEUE_URL  = aws_sqs_queue.video_processing.url
     SSM_BASE_PATH  = var.ssm_path
   }))
 
