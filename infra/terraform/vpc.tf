@@ -46,7 +46,7 @@ resource "aws_route_table_association" "public_assoc" {
 }
 
 # Segunda subred pública en AZ diferente para uso de available
-resource "aws_subnet" "public_b"{
+resource "aws_subnet" "public_b" {
   vpc_id = aws_vpc.main.id
   cidr_block = var.public_subnet_b_cidr
   availability_zone = local.az_b
