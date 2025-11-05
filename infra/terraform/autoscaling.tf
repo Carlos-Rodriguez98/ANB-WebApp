@@ -1,0 +1,127 @@
+# Launch Template para instancias Web
+resource "aws_launch_template" "web" {
+  name_prefix   = "${var.project_name}-web-lt-"
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  key_name      = data.aws_key_pair.main.key_name
+
+  iam_instance_profile {
+    name = data.aws_iam_instance_profile.lab_instance_profile.name
+  }
+
+  vpc_security_group_ids = [aws_security_group.web.id]
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      volume_size = var.instance_disk_size
+      volume_type = "gp3"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/user_data/web.sh", {
+    DB_HOST        = aws_db_instance.main.address
+    DB_PORT        = var.db_port
+    DB_USER        = var.db_username
+    DB_PASSWORD    = var.db_password
+    DB_NAME        = var.db_name
+    DB_SSLMODE     = "require"
+    JWT_SECRET     = var.jwt_secret
+    S3_BUCKET_NAME = aws_s3_bucket.storage.id
+    AWS_REGION     = var.aws_region
+    REDIS_ADDR     = "anbapp-redis:6379"
+    REDIS_PORT     = "6379"
+    SSM_BASE_PATH  = var.ssm_path
+  }))
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name    = "${var.project_name}-web-asg"
+      Project = var.project_name
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Auto Scaling Group
+resource "aws_autoscaling_group" "web" {
+  name                = "${var.project_name}-web-asg"
+  vpc_zone_identifier = [aws_subnet.public.id, aws_subnet.public_b.id]
+  target_group_arns = [
+    aws_lb_target_group.auth.arn,
+    aws_lb_target_group.video.arn,
+    aws_lb_target_group.voting.arn,
+    aws_lb_target_group.ranking.arn,
+    aws_lb_target_group.front.arn
+  ]
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+  min_size                  = 1
+  max_size                  = 3
+  desired_capacity          = 1
+
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+
+  enabled_metrics = [
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupTotalInstances"
+  ]
+
+  tag {
+    key                 = "Name"
+    value               = "${var.project_name}-web-asg"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = var.project_name
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [desired_capacity]
+  }
+}
+
+# Política de escalado basada en CPU
+resource "aws_autoscaling_policy" "cpu_high" {
+  name                   = "${var.project_name}-cpu-high"
+  autoscaling_group_name = aws_autoscaling_group.web.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 70.0
+  }
+}
+
+# Política de escalado basada en número de requests por target
+resource "aws_autoscaling_policy" "alb_request_count" {
+  name                   = "${var.project_name}-alb-request-count"
+  autoscaling_group_name = aws_autoscaling_group.web.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${aws_lb.main.arn_suffix}/${aws_lb_target_group.video.arn_suffix}"
+    }
+    target_value = 1000.0
+  }
+}
