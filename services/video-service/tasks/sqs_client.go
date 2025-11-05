@@ -2,37 +2,43 @@ package tasks
 
 import (
 	"ANB-WebApp/services/video-service/config"
+	"context"
 	"encoding/json"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
 // SQSClient maneja la comunicación con SQS
 type SQSClient struct {
-	client   *sqs.SQS
+	client   *sqs.Client
 	queueURL string
 }
 
-// NewSQSClient crea un nuevo cliente SQS
+// NewSQSClient crea un nuevo cliente SQS usando AWS SDK v2
 func NewSQSClient() (*SQSClient, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.AppConfig.AWSRegion),
-	})
+	ctx := context.Background()
+
+	// Cargar configuración de AWS
+	cfg, err := awsConfig.LoadDefaultConfig(ctx,
+		awsConfig.WithRegion(config.AppConfig.AWSRegion),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("error creando sesión AWS: %w", err)
+		return nil, fmt.Errorf("error cargando configuración AWS: %w", err)
 	}
 
 	return &SQSClient{
-		client:   sqs.New(sess),
+		client:   sqs.NewFromConfig(cfg),
 		queueURL: config.AppConfig.SQSQueueURL,
 	}, nil
 }
 
 // EnqueueProcessVideo envía un mensaje a SQS para procesar un video
 func (c *SQSClient) EnqueueProcessVideo(p ProcessVideoPayload) error {
+	ctx := context.Background()
+
 	// Serializar payload a JSON
 	messageBody, err := json.Marshal(p)
 	if err != nil {
@@ -40,17 +46,17 @@ func (c *SQSClient) EnqueueProcessVideo(p ProcessVideoPayload) error {
 	}
 
 	// Enviar mensaje a SQS
-	_, err = c.client.SendMessage(&sqs.SendMessageInput{
-		QueueUrl:    aws.String(c.queueURL),
-		MessageBody: aws.String(string(messageBody)),
-		MessageAttributes: map[string]*sqs.MessageAttributeValue{
+	_, err = c.client.SendMessage(ctx, &sqs.SendMessageInput{
+		QueueUrl:    &c.queueURL,
+		MessageBody: stringPtr(string(messageBody)),
+		MessageAttributes: map[string]types.MessageAttributeValue{
 			"VideoID": {
-				DataType:    aws.String("String"),
-				StringValue: aws.String(p.VideoID),
+				DataType:    stringPtr("String"),
+				StringValue: stringPtr(p.VideoID),
 			},
 			"UserID": {
-				DataType:    aws.String("Number"),
-				StringValue: aws.String(fmt.Sprintf("%d", p.UserID)),
+				DataType:    stringPtr("Number"),
+				StringValue: stringPtr(fmt.Sprintf("%d", p.UserID)),
 			},
 		},
 	})
@@ -60,4 +66,9 @@ func (c *SQSClient) EnqueueProcessVideo(p ProcessVideoPayload) error {
 	}
 
 	return nil
+}
+
+// Helper para crear punteros de strings
+func stringPtr(s string) *string {
+	return &s
 }
