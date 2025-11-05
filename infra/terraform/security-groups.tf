@@ -5,7 +5,40 @@ locals {
   }
 }
 
-# --- WEB SG (pública): HTTP/HTTPS desde Internet, SSH solo desde tu IP ---
+# --- ALB SG: HTTP/HTTPS desde Internet ---
+resource "aws_security_group" "alb" {
+  name        = "${var.project_name}-alb-sg"
+  description = "Allow HTTP/HTTPS from Internet to ALB"
+  vpc_id      = aws_vpc.main.id
+  tags        = merge(local.sg_tags, { Name = "${var.project_name}-alb-sg" })
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+  security_group_id = aws_security_group.alb.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  description       = "Allow HTTP from Internet to ALB"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  security_group_id = aws_security_group.alb.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  description       = "Allow HTTPS from Internet to ALB"
+}
+
+# --- WEB SG (pública): HTTP/HTTPS desde ALB, SSH solo desde tu IP ---
 resource "aws_security_group" "web" {
   name        = "${var.project_name}-web-sg"
   description = "Allow HTTP/HTTPS from Internet; SSH from allowed CIDR"
@@ -21,24 +54,22 @@ resource "aws_security_group" "web" {
   }
 }
 
-# HTTP 80 desde Internet
-resource "aws_vpc_security_group_ingress_rule" "web_http" {
-  security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 80
-  to_port           = 80
-  ip_protocol       = "tcp"
-  description       = "Allow HTTP from Internet"
+resource "aws_vpc_security_group_ingress_rule" "web_http_from_alb" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  description                  = "Allow HTTP from ALB"
 }
 
-# HTTPS 443 desde Internet (si vas a usar TLS)
-resource "aws_vpc_security_group_ingress_rule" "web_https" {
-  security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 443
-  to_port           = 443
-  ip_protocol       = "tcp"
-  description       = "Allow HTTPS from Internet"
+resource "aws_vpc_security_group_ingress_rule" "web_https_from_alb" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  description                  = "Allow HTTPS from ALB"
 }
 
 # SSH solo desde tu IP
@@ -53,48 +84,48 @@ resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
 
 resource "aws_vpc_security_group_ingress_rule" "web_auth" {
   security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
+  referenced_security_group_id = aws_security_group.alb.id
   from_port         = var.auth_service_port
   to_port           = var.auth_service_port
   ip_protocol       = "tcp"
-  description       = "Allow Auth from Internet"
+  description       = "Allow Auth from from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_video" {
   security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
+  referenced_security_group_id = aws_security_group.alb.id
   from_port         = var.video_service_port
   to_port           = var.video_service_port
   ip_protocol       = "tcp"
-  description       = "Allow Video from Internet"
+  description       = "Allow Video from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_voting" {
   security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
+  referenced_security_group_id = aws_security_group.alb.id
   from_port         = var.voting_service_port
   to_port           = var.voting_service_port
   ip_protocol       = "tcp"
-  description       = "Allow Voting from Internet"
+  description       = "Allow Voting from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_ranking" {
   security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
+  referenced_security_group_id = aws_security_group.alb.id
   from_port         = var.ranking_service_port
   to_port           = var.ranking_service_port
   ip_protocol       = "tcp"
-  description       = "Allow Ranking from Internet"
+  description       = "Allow Ranking from ALB"
 }
 
 # Puerto 8084 para la aplicación (Frontend)
 resource "aws_vpc_security_group_ingress_rule" "web_front" {
   security_group_id = aws_security_group.web.id
-  cidr_ipv4         = "0.0.0.0/0"
+  referenced_security_group_id = aws_security_group.alb.id
   from_port         = var.front_server_port
   to_port           = var.front_server_port
   ip_protocol       = "tcp"
-  description       = "Allow access to frontend application"
+  description       = "Allow access to frontend application from ALB"
 }
 
 # --- WORKER SG (privada): SSH opcional; egress abierto ---
