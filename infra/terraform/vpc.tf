@@ -45,6 +45,20 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public.id
 }
 
+# Segunda subred pública en AZ diferente para uso de available
+resource "aws_subnet" "public_b"{
+  vpc_id = aws_vpc.main.id
+  cidr_block = var.public_subnet_b_cidr
+  availability_zone = local.az_b
+  map_public_ip_on_launch = true
+  tags = merge(local.tags, { Name = "${var.project_name}-public-${local.az_b}", Tier = "public" })
+}
+
+resource "aws_route_table_association" "public_assoc_b" {
+  subnet_id = aws_subnet.public_b.id
+  route_table_id = aws_route_table.public.id
+}
+
 # Subredes PRIVADAS (Worker, NFS y luego RDS)
 resource "aws_subnet" "private_a" {
   vpc_id                  = aws_vpc.main.id
