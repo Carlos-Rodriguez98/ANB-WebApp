@@ -101,8 +101,17 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		return dto.UploadResponse{}, fmt.Errorf("no se pudo actualizar original_path: %w", err)
 	}
 
-	err = tasks.EnqueueProcessVideo(tasks.ProcessVideoPayload{
-		VideoID: videoID, UserID: userID, OriginalPath: origPath, Title: title,
+	// Crear cliente SQS y encolar procesamiento
+	sqsClient, err := tasks.NewSQSClient()
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("error creando cliente SQS: %w", err)
+	}
+
+	err = sqsClient.EnqueueProcessVideo(tasks.ProcessVideoPayload{
+		VideoID:      videoID,
+		UserID:       userID,
+		OriginalPath: origPath,
+		Title:        title,
 	})
 	if err != nil {
 		return dto.UploadResponse{}, fmt.Errorf("no se pudo encolar la tarea: %w", err)
