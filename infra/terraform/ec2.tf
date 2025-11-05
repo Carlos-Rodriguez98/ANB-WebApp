@@ -13,41 +13,41 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# --- EC2 Web ---
-resource "aws_instance" "web" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public.id
-  vpc_security_group_ids      = [aws_security_group.web.id]
-  key_name                    = data.aws_key_pair.main.key_name
-  associate_public_ip_address = true
-  iam_instance_profile        = data.aws_iam_instance_profile.lab_instance_profile.name
+# --- EC2 Web --- Se deshabilita para uso de autoscaling
+# resource "aws_instance" "web" {
+#   ami                         = data.aws_ami.amazon_linux.id
+#   instance_type               = var.instance_type
+#   subnet_id                   = aws_subnet.public.id
+#   vpc_security_group_ids      = [aws_security_group.web.id]
+#   key_name                    = data.aws_key_pair.main.key_name
+#   associate_public_ip_address = true
+#   iam_instance_profile        = data.aws_iam_instance_profile.lab_instance_profile.name
 
-  root_block_device {
-    volume_size = var.instance_disk_size
-    volume_type = "gp3"
-  }
+#   root_block_device {
+#     volume_size = var.instance_disk_size
+#     volume_type = "gp3"
+#   }
 
-  user_data = templatefile("${path.module}/user_data/web.sh", {
-    DB_HOST        = aws_db_instance.main.address
-    DB_PORT        = var.db_port
-    DB_USER        = var.db_username
-    DB_PASSWORD    = var.db_password
-    DB_NAME        = var.db_name
-    DB_SSLMODE     = "require"
-    JWT_SECRET     = var.jwt_secret
-    S3_BUCKET_NAME = aws_s3_bucket.storage.id
-    AWS_REGION     = var.aws_region
-    REDIS_ADDR     = "anbapp-redis:6379"
-    REDIS_PORT     = "6379"
-    SSM_BASE_PATH  = var.ssm_path
-  })
+#   user_data = templatefile("${path.module}/user_data/web.sh", {
+#     DB_HOST        = aws_db_instance.main.address
+#     DB_PORT        = var.db_port
+#     DB_USER        = var.db_username
+#     DB_PASSWORD    = var.db_password
+#     DB_NAME        = var.db_name
+#     DB_SSLMODE     = "require"
+#     JWT_SECRET     = var.jwt_secret
+#     S3_BUCKET_NAME = aws_s3_bucket.storage.id
+#     AWS_REGION     = var.aws_region
+#     REDIS_ADDR     = "anbapp-redis:6379"
+#     REDIS_PORT     = "6379"
+#     SSM_BASE_PATH  = var.ssm_path
+#   })
 
-  tags = {
-    Name    = "${var.project_name}-web"
-    Project = var.project_name
-  }
-}
+#   tags = {
+#     Name    = "${var.project_name}-web"
+#     Project = var.project_name
+#   }
+# }
 
 # --- EC2 Worker ---
 resource "aws_instance" "worker" {
