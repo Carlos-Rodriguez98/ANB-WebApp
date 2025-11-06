@@ -41,8 +41,15 @@ if docker exec -i "$CONTAINER_NAME" /opt/jmeter/bin/jmeter \
     -n \
     -t "/home/jmeter/${JMX_FILE}" \
     -l "/home/jmeter/${JTL}" \
-    -j /home/jmeter/output/jmeter.log; then
-    
+    -j /home/jmeter/output/jmeter.log \
+    -JUSERS="${USERS:-1}" \
+    -JRAMP="${RAMP:-5}" \
+    -JPROTOCOL="${PROTOCOL:-http}" \
+    -JSERVER_NAME="${SERVER_NAME:-host.docker.internal}" \
+    -JAUTH_SERVICE_PORT="${AUTH_SERVICE_PORT:-8080}" \
+    -JPUBLIC_VIDEO_SERVICE_PORT="${PUBLIC_VIDEO_SERVICE_PORT:-8082}" \
+    -JRANKING_SERVICE_PORT="${RANKING_SERVICE_PORT:-8083}"; then
+
     echo ""
     echo "📊 Generando reporte HTML..."
     

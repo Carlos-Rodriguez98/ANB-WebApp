@@ -1,4 +1,4 @@
-# 🧪 Plan de Pruebas de Carga – ANB_App_API
+# Plan de Pruebas de Carga – ANB_App_API
 
 **Proyecto:** Asociación Nacional de Baloncesto (ANB)  
 **Herramienta:** Apache JMeter  

@@ -1,5 +1,6 @@
 # Dockerfile - imagen ligera para JMeter CLI (no GUI) con Java 17
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
+
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG JMETER_VERSION=5.6.3
