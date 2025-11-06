@@ -14,6 +14,7 @@ JMX_FILE=$1
 JTL=${2:-output/resultados.jtl}
 REPORT_DIR=${3:-output/report}
 CONTAINER_NAME=jmeter-runner
+LOG_FILE=output/jmeter.log
 
 # Validar que el archivo JMX exista en el directorio padre
 if [ ! -f "../$JMX_FILE" ]; then
@@ -29,6 +30,16 @@ if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
     exit 1
 fi
 
+# Limpiar archivos anteriores
+echo "🧹 Limpiando archivos de ejecuciones anteriores..."
+docker exec -i "$CONTAINER_NAME" sh -c "
+    rm -f /home/jmeter/${LOG_FILE}
+    rm -f /home/jmeter/${JTL}
+    rm -rf /home/jmeter/${REPORT_DIR}
+"
+echo "✓ Limpieza completada"
+echo ""
+
 echo "📋 Configuración de prueba:"
 echo "   Archivo JMX: ${JMX_FILE}"
 echo "   Resultados: ${JTL}"
@@ -41,7 +52,7 @@ if docker exec -i "$CONTAINER_NAME" /opt/jmeter/bin/jmeter \
     -n \
     -t "/home/jmeter/${JMX_FILE}" \
     -l "/home/jmeter/${JTL}" \
-    -j /home/jmeter/output/jmeter.log \
+    -j /home/jmeter/${LOG_FILE} \
     -JUSERS="${USERS:-1}" \
     -JRAMP="${RAMP:-5}" \
     -JPROTOCOL="${PROTOCOL:-http}" \
