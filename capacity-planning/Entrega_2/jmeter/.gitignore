@@ -7,6 +7,8 @@
 # Reportes HTML generados
 report/
 
+temp_runs/
+
 # Directorios de Java generados por JMeter
 .java/
 
