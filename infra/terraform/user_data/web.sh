@@ -1,3 +1,25 @@
+#!/bin/bash
+set -xe
+
+# Install Docker and utilities (Amazon Linux 2023)
+yum update -y || true
+yum install -y docker || true
+systemctl enable docker
+systemctl start docker
+
+# Install docker-compose v2 (standalone)
+DOCKER_COMPOSE_VERSION="2.23.0"
+curl -L "https://github.com/docker/compose/releases/download/v$${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+# Verify docker-compose installation
+/usr/local/bin/docker-compose version || echo "Warning: docker-compose installation may have issues"
+
+usermod -aG docker ec2-user || true
+
+# Prepare env file
+mkdir -p /opt/anbapp && chown ec2-user:ec2-user /opt/anbapp
+
 # Variables pasadas desde Terraform
 DB_HOST="${DB_HOST}"
 DB_PORT="${DB_PORT}"
@@ -8,8 +30,7 @@ DB_SSLMODE="${DB_SSLMODE}"
 JWT_SECRET="${JWT_SECRET}"
 S3_BUCKET_NAME="${S3_BUCKET_NAME}"
 AWS_REGION="${AWS_REGION}"
-REDIS_ADDR="${REDIS_ADDR}"
-REDIS_PORT="${REDIS_PORT}"
+SQS_QUEUE_URL="${SQS_QUEUE_URL}"
 
 cat > /opt/anbapp/.env <<EOF
 DB_HOST=$DB_HOST
@@ -22,8 +43,7 @@ JWT_SECRET=$JWT_SECRET
 S3_BUCKET_NAME=$S3_BUCKET_NAME
 AWS_REGION=$AWS_REGION
 STORAGE_MODE=s3
-REDIS_ADDR=$REDIS_ADDR
-REDIS_PORT=$REDIS_PORT
+SQS_QUEUE_URL=$SQS_QUEUE_URL
 AUTH_SERVER_PORT=8080
 VIDEO_SERVER_PORT=8081
 VOTING_SERVER_PORT=8082
@@ -49,7 +69,7 @@ cd /opt/anbapp
 
 # Clone repository
 echo "Clonando repositorio..."
-git clone -b dev https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
+git clone -b feature/carlos-entrega3 https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
     echo "Error al clonar repositorio. Verifica la URL y permisos."
     exit 1
 }

@@ -83,49 +83,49 @@ resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_auth" {
-  security_group_id = aws_security_group.web.id
+  security_group_id            = aws_security_group.web.id
   referenced_security_group_id = aws_security_group.alb.id
-  from_port         = var.auth_service_port
-  to_port           = var.auth_service_port
-  ip_protocol       = "tcp"
-  description       = "Allow Auth from from ALB"
+  from_port                    = var.auth_service_port
+  to_port                      = var.auth_service_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow Auth from from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_video" {
-  security_group_id = aws_security_group.web.id
+  security_group_id            = aws_security_group.web.id
   referenced_security_group_id = aws_security_group.alb.id
-  from_port         = var.video_service_port
-  to_port           = var.video_service_port
-  ip_protocol       = "tcp"
-  description       = "Allow Video from ALB"
+  from_port                    = var.video_service_port
+  to_port                      = var.video_service_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow Video from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_voting" {
-  security_group_id = aws_security_group.web.id
+  security_group_id            = aws_security_group.web.id
   referenced_security_group_id = aws_security_group.alb.id
-  from_port         = var.voting_service_port
-  to_port           = var.voting_service_port
-  ip_protocol       = "tcp"
-  description       = "Allow Voting from ALB"
+  from_port                    = var.voting_service_port
+  to_port                      = var.voting_service_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow Voting from ALB"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "web_ranking" {
-  security_group_id = aws_security_group.web.id
+  security_group_id            = aws_security_group.web.id
   referenced_security_group_id = aws_security_group.alb.id
-  from_port         = var.ranking_service_port
-  to_port           = var.ranking_service_port
-  ip_protocol       = "tcp"
-  description       = "Allow Ranking from ALB"
+  from_port                    = var.ranking_service_port
+  to_port                      = var.ranking_service_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow Ranking from ALB"
 }
 
 # Puerto 8084 para la aplicación (Frontend)
 resource "aws_vpc_security_group_ingress_rule" "web_front" {
-  security_group_id = aws_security_group.web.id
+  security_group_id            = aws_security_group.web.id
   referenced_security_group_id = aws_security_group.alb.id
-  from_port         = var.front_server_port
-  to_port           = var.front_server_port
-  ip_protocol       = "tcp"
-  description       = "Allow access to frontend application from ALB"
+  from_port                    = var.front_server_port
+  to_port                      = var.front_server_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow access to frontend application from ALB"
 }
 
 # --- WORKER SG (privada): SSH opcional; egress abierto ---
@@ -144,14 +144,14 @@ resource "aws_security_group" "worker" {
   }
 }
 
-# SSH solo desde tu IP (puedes eliminarlo si administras por SSM)
+# SSH desde tu IP para administración directa
 resource "aws_vpc_security_group_ingress_rule" "worker_ssh" {
-  security_group_id            = aws_security_group.worker.id
-  referenced_security_group_id = aws_security_group.web.id
-  from_port                    = 22
-  to_port                      = 22
-  ip_protocol                  = "tcp"
-  description                  = "Allow SSH from Web Server"
+  security_group_id = aws_security_group.worker.id
+  cidr_ipv4         = var.allowed_ssh_cidr
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+  description       = "Allow SSH from admin IP"
 }
 
 # --- RDS SG (privada): DB_PORT desde WEB y WORKER ---
@@ -188,14 +188,4 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_worker" {
   to_port                      = var.db_port
   ip_protocol                  = "tcp"
   description                  = "Allow DB from WORKER"
-}
-
-# Permitir Redis (6379) desde WORKER hacia WEB
-resource "aws_vpc_security_group_ingress_rule" "web_redis_from_worker" {
-  security_group_id            = aws_security_group.web.id
-  referenced_security_group_id = aws_security_group.worker.id
-  from_port                    = 6379
-  to_port                      = 6379
-  ip_protocol                  = "tcp"
-  description                  = "Allow Redis from WORKER"
 }
