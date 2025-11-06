@@ -97,7 +97,7 @@ Para ejecutar la prueba de carga se ejecuta los siguientes comandos para levanta
 ```
 cd capacity-planning/Entrega_2/jmeter
 
-docker build --no-cache -t jmeter-cli:5.6.3 .
+docker build -t jmeter-cli:5.6.3 .
 
 docker-compose up -d
 ```
