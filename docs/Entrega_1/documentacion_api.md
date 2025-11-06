@@ -8,11 +8,11 @@ Tenemos los siguientes 10 endpoints del backend de la aplicación:
 | Autenticación | `/api/auth/login` | POST | Inicio de sesión |
 | Videos | `/api/videos/upload` | POST | Subida de video |
 | Videos | `/api/videos` | GET | Listado de videos del usuario |
-| Videos | `/api/videos/{id}` | GET | Detalle de un video |
-| Videos | `/api/videos/{id}` | DELETE | Eliminación de un video |
-| Videos | `/api/videos/{id}/publish` | POST | Publicar un video |
+| Videos | `/api/videos/{video_id}` | GET | Detalle de un video |
+| Videos | `/api/videos/{video_id}` | DELETE | Eliminación de un video |
+| Videos | `/api/videos/{video_id}/publish` | POST | Publicar un video |
 | Público | `/api/public/videos` | GET | Lista de videos públicos |
-| Público | `/api/public/videos/{id}/vote` | POST | Votar un video |
+| Público | `/api/public/videos/{video_id}/vote` | POST | Votar un video |
 | Ranking | `/api/public/rankings` | GET | Ranking general |
 
 ## Grupo Autenticación
