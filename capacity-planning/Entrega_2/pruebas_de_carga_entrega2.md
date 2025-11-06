@@ -40,27 +40,29 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 **5. Consultar Ranking:** /api/public/rankings
 
 <p align="center">
-  <img width="921" height="882" alt="Imagen1" src="https://github.com/user-attachments/assets/8f9cbaa2-5025-4b6d-91e9-ae20a8cb1499" />
+  <img alt="Imagen1" src="https://github.com/user-attachments/assets/8f9cbaa2-5025-4b6d-91e9-ae20a8cb1499" />
 </p>
 
 ### **Criterios de Aceptación**
 
-Así mismo, se definen los criterios de aceptación junto con los umbrales de desempeño esperados para establecer cuánta carga de usuarios puede soportar el servidor:
+Así mismo, se definen los criterios de aceptación que establecen los umbrales mínimos de desempeño que el sistema debe cumplir para considerarse estable y operativo durante las pruebas de carga. Estos umbrales permiten determinar cuánta carga concurrente puede soportar el servidor sin degradar la experiencia del usuario ni comprometer los recursos del sistema.
 
-| Endpoint | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
-|:--------:|:-------------------:|:----------------------:|:-------:|:-------:|:---------------:|
-| Registro                  | ≥ 5 req/s      | ≤ 2.0 s      | ≤ 70%     | ≤ 75%     | ≤ 1%     |
-| Iniciar Sesión            | ≥ 10 req/s     | ≤ 4.0 s      | ≤ 70%     | ≤ 75%     | ≤ 1%     |
-| Consultar Videos Públicos | ≥ 20 req/s     | ≤ 2.5 s      | ≤ 70%     | ≤ 75%     | ≤ 1%     |
-| Realizar Voto             | ≥ 8 req/s      | ≤ 6.0 s      | ≤ 70%     | ≤ 75%     | ≤ 1%     |
-| Consultar Ranking         | ≥ 8 req/s      | ≤ 6.0 s      | ≤ 70%     | ≤ 75%     | ≤ 1%     |
-| **Flujo Completo**        | **≥ 5 req/s** | **≤ 20.5 s** | **≤ 70%** | **≤ 75%** | **≤ 1%** | 
+| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
+|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
+| Registro                  | ≥ 5 req/s           | ≤ 2000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Consultar Videos Públicos | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Realizar Voto             | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Consultar Ranking         | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
+
+> **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Registro → Inicio de Sesión → Consultar Videos Publicos → Realizar Voto → Consultar Ranking). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
 ### **Configuración JMeter (ConfiguracionEscenario1.jmx)**
 
 <br>
 <p align="center">
-  <img width="492" height="433" alt="Imagen2" src="https://github.com/user-attachments/assets/04fe0798-ea07-46d4-9068-e5ab23d2d0a1" />
+  <img alt="Imagen2" src="https://github.com/user-attachments/assets/04fe0798-ea07-46d4-9068-e5ab23d2d0a1" />
 </p>
 <br>
 
@@ -69,6 +71,7 @@ Primero se definen las siguientes variables de entorno parametrizadas para ejecu
 ```
 USERS=1
 RAMP=5
+NUM_RUNS=5
 PROTOCOL=http
 SERVER_NAME=host.docker.internal
 AUTH_SERVICE_PORT=8080
@@ -96,33 +99,91 @@ Para ejecutar la prueba de carga se ejecuta los siguientes comandos para levanta
 
 ```
 cd capacity-planning/Entrega_2/jmeter
-
+```
+```
 docker build -t jmeter-cli:5.6.3 .
-
-docker-compose up -d
+```
+```
+docker compose up -d
 ```
 
 Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script para correr la prueba:
 
 ```
 cd capacity-planning/Entrega_2/jmeter
-
-SERVER_NAME=host.docker.internal USERS=1 RAMP=5 ./run_test.sh ConfiguracionEscenario1.jmx
+```
+```
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=host.docker.internal ./run_test.sh ConfiguracionEscenario1.jmx
 ```
 
 Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
 
 <br>
 <p align="center">
-  <img width="2550" height="1330" alt="Imagen3" src="https://github.com/user-attachments/assets/d57684e9-9c3f-4c5a-bde0-e3aa3276c5c1" />
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/d57684e9-9c3f-4c5a-bde0-e3aa3276c5c1" />
 </p>
 <br>
 
 ### Resultados
 
-Para una **prueba smoke** se obtienen los siguientes resultados:
+Se definen 3 etapas diferentes de número de usuarios concurrentes para observar el comportamiento del servidor. En particular una prueba de humo, una prueba de carga progresiva, y una prueba de estrés.
 
+#### Prueba de humo
 
+Se define la prueba con los siguientes parametros:
 
+```
+USERS=10,20,30,40,50
+RAMP=5
+SERVER_NAME={amazon_url}
+```
 
+Es una prueba rápida y ligera que valida si el sistema está correctamente configurado y responde de forma básica antes de ejecutar las otras pruebas más intensas. Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
 
+| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
+|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
+| 10                    | 2.01 req/s          | 855 ms                       | N/A     | N/A     | 0%              |
+| 20                    | 3.65 req/s          | 964 ms                       | N/A     | N/A     | 0%              |
+| 30                    | 4.58 req/s          | 2775 ms                      | N/A     | N/A     | 0%              |
+| 40                    | 5.85 req/s          | 2817 ms                      | N/A     | N/A     | 0%              |
+| 50                    | 6.06 req/s          | 4020 ms                      | N/A     | N/A     | 0%              |
+
+#### Prueba de carga progresiva
+
+Se define la prueba con los siguientes parametros:
+
+```
+USERS=75,100,125,150,175
+RAMP=5
+SERVER_NAME={amazon_url}
+```
+
+Es una prueba que evalúa el comportamiento del sistema al aumentar progresivamente la carga, observando cómo varía el rendimiento (latencia, throughput, errores). Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
+
+| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
+|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
+| 75                    | 6.65 req/s          | 7120 ms                      | N/A     | N/A     | 0%              |
+| 100                   | 6.35 req/s          | 11483 ms                     | N/A     | N/A     | 0%              |
+| 125                   | 6.88 req/s          | 13757 ms                     | N/A     | N/A     | 0%              |
+| 150                   | 6.69 req/s          | 17956 ms                     | N/A     | N/A     | 0%              |
+| 175                   | 6.58 req/s          | 22494 ms                     | N/A     | N/A     | 0%              |
+
+#### Prueba de estrés
+
+Se define la prueba con los siguientes parametros:
+
+```
+USERS=200,250,300,350,400
+RAMP=5
+SERVER_NAME={amazon_url}
+```
+
+Es una prueba que somete al sistema a una carga superior a la esperada para encontrar el punto de ruptura y evaluar su comportamiento bajo condiciones extremas. Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
+
+| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
+|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
+| 200                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
+| 250                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
+| 300                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
+| 350                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
+| 400                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
