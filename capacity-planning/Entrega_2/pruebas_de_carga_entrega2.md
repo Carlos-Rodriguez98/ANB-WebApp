@@ -60,6 +60,8 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 ### **Configuración JMeter (ConfiguracionEscenario1.jmx)**
 
+### **Configuración JMeter ([ConfiguracionEscenario1.jmx](ConfiguracionEscenario1.jmx))**
+
 <br>
 <p align="center">
   <img alt="Imagen2" src="https://github.com/user-attachments/assets/9dd8dca6-a507-44a7-b2bf-9486a6e1ec67" />
