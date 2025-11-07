@@ -220,6 +220,12 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 
 **4. Consultar Detalle Video:** /api/videos/{id_video}
 
+<br>
+<p align="center">
+  <img alt="imagen4" src="https://github.com/user-attachments/assets/70fc71af-83a3-4bf4-bada-509ee00f7a6f" />
+</p>
+<br>
+
 ### **Criterios de Aceptación**
 
 Así mismo, se definen los criterios de aceptación que establecen los umbrales mínimos de desempeño que el sistema debe cumplir para considerarse estable y operativo durante las pruebas de carga. Estos umbrales permiten determinar cuánta carga concurrente puede soportar el servidor sin degradar la experiencia del usuario ni comprometer los recursos del sistema.
