@@ -60,7 +60,7 @@ resource "aws_autoscaling_group" "web" {
     aws_lb_target_group.front.arn
   ]
   health_check_type         = "ELB"
-  health_check_grace_period = 300
+  health_check_grace_period = 900
   min_size                  = 1
   max_size                  = 3
   desired_capacity          = 1

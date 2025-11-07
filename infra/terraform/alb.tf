@@ -25,8 +25,8 @@ resource "aws_lb_target_group" "auth" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     path                = "/api/auth/login"
     protocol            = "HTTP"
@@ -51,8 +51,8 @@ resource "aws_lb_target_group" "video" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     path                = "/api/videos"
     protocol            = "HTTP"
@@ -77,8 +77,8 @@ resource "aws_lb_target_group" "voting" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     path                = "/api/public/videos"
     protocol            = "HTTP"
@@ -103,8 +103,8 @@ resource "aws_lb_target_group" "ranking" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     path                = "/api/public/rankings"
     protocol            = "HTTP"
@@ -129,8 +129,8 @@ resource "aws_lb_target_group" "front" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     path                = "/"
     protocol            = "HTTP"
