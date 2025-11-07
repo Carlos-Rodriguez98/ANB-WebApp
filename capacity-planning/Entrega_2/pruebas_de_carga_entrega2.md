@@ -148,6 +148,8 @@ Es una prueba rápida y ligera que valida si el sistema está correctamente conf
 | 40                    | 5.85 req/s          | 2817 ms                      | N/A     | N/A     | 0%              |
 | 50                    | 6.06 req/s          | 4020 ms                      | N/A     | N/A     | 0%              |
 
+> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
+
 #### Prueba de carga progresiva
 
 Se define la prueba con los siguientes parametros:
@@ -168,6 +170,8 @@ Es una prueba que evalúa el comportamiento del sistema al aumentar progresivame
 | 150                   | 6.69 req/s          | 17956 ms                     | N/A     | N/A     | 0%              |
 | 175                   | 6.58 req/s          | 22494 ms                     | N/A     | N/A     | 0%              |
 
+> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
+
 #### Prueba de estrés
 
 Se define la prueba con los siguientes parametros:
@@ -182,8 +186,50 @@ Es una prueba que somete al sistema a una carga superior a la esperada para enco
 
 | Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
 |:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 200                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
-| 250                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
-| 300                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
-| 350                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
-| 400                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | ≤ 1%            |
+| 200                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
+| 250                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
+| 300                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
+| 350                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
+| 400                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
+
+> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
+
+Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **250 usuarios concurrentes**. Por otro lado, con **240 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación. Podemos asumir que para este flujo completo el número de usuarios concurrentes que puede soportar el servidor web es de **240 usuarios concurrentes** antes de que se degrade 
+
+ En particular tenemos los siguientes resultados especificos por endpoint para ese número de usuarios concurrentes:
+
+| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
+|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
+| Registro                  | ≥ 5 req/s           | ≤ 2000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
+| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
+| Consultar Videos Públicos | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
+| Realizar Voto             | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
+| Consultar Ranking         | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
+
+
+
+## **Escenario 2**
+
+Para este escenario se define el siguiente flujo de peticiones relacionado con la capa de procesamiento de videos (worker):
+
+**1. Iniciar Sesión:** /api/auth/login
+
+**2. Consultar Video Propios:** /api/videos/login
+
+**3. Subir Video:** /api/videos/upload
+
+**4. Consultar Detalle Video:** /api/videos/{id_video}
+
+### **Criterios de Aceptación**
+
+Así mismo, se definen los criterios de aceptación que establecen los umbrales mínimos de desempeño que el sistema debe cumplir para considerarse estable y operativo durante las pruebas de carga. Estos umbrales permiten determinar cuánta carga concurrente puede soportar el servidor sin degradar la experiencia del usuario ni comprometer los recursos del sistema.
+
+| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
+|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
+| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Consultar Video Propios   | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Subir Video               | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| Consultar Detalle Video   | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
+
+> **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
