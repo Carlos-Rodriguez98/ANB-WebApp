@@ -222,7 +222,7 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 
 <br>
 <p align="center">
-  <img alt="imagen4" src="https://github.com/user-attachments/assets/70fc71af-83a3-4bf4-bada-509ee00f7a6f" />
+  <img alt="imagen4" src="https://github.com/user-attachments/assets/3651611b-1071-47bc-83e0-d21f7ec3d927" />
 </p>
 <br>
 
