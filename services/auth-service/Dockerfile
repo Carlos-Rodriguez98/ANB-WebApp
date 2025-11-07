@@ -1,5 +1,5 @@
 # Etapa de compilación (imagen oficial de GO)
-FROM golang:1.23 AS builder
+FROM golang:1.24.6 AS builder
 
 # Define directorio de trabajo dentro del contenedor
 WORKDIR /app

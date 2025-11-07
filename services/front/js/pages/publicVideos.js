@@ -13,12 +13,12 @@ async function renderPublicVideosPage() {
             totalPages = res.totalPages || Math.ceil((res.total || videos.length) / limit) || 1;
             app.innerHTML = `
             <section class="container mx-auto px-4 py-8 fade-in">
-              <h2 class="text-2xl font-bold text-primary-600 mb-6">Videos Públicos</h2>
+              <h2 class="text-2xl font-bold text-primary-600 mb-6">Vidéos publiques</h2>
               ${(!videos || videos.length === 0) ? `
                 <div class="empty-state">
                   <div class="empty-state-icon"><i class="fas fa-video-slash"></i></div>
-                  <div class="empty-state-title">No hay videos disponibles</div>
-                  <div class="empty-state-description">Aún no se han publicado videos.</div>
+                  <div class="empty-state-title">Aucune vidéo disponible</div>
+                  <div class="empty-state-description">Aucune vidéo n'a encore été publiée.</div>
                 </div>
               ` : `
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -42,7 +42,7 @@ async function renderPublicVideosPage() {
                 load(page);
             };
         } catch (err) {
-            app.innerHTML = `<div class='empty-state'><div class='empty-state-title'>Error</div><div class='empty-state-description'>${err.message || 'No se pudieron cargar los videos.'}</div></div>`;
+            app.innerHTML = `<div class='empty-state'><div class='empty-state-title'>Erreur</div><div class='empty-state-description'>${err.message || 'Impossible de charger les vidéos.'}</div></div>`;
         }
     }
     load(page);

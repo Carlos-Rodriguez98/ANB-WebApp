@@ -72,7 +72,7 @@ variable "db_engine"        {
     }
 variable "db_engine_version"{ 
     type = string 
-    default = "15.8" 
+    default = "15" 
     }
 variable "db_instance_class"{ 
     type = string 

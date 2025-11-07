@@ -1,33 +1,57 @@
 package tasks
 
 import (
-	"ANB-WebApp/services/video-service/config"
 	"encoding/json"
+	"errors"
+	"os"
 	"time"
 
 	"github.com/hibiken/asynq"
 )
 
-func NewClient() *asynq.Client {
-	return asynq.NewClient(asynq.RedisClientOpt{Addr: config.AppConfig.RedisAddr})
+var client *asynq.Client
+
+func InitClient() {
+	client = asynq.NewClient(asynq.RedisClientOpt{Addr: os.Getenv("REDIS_ADDR")})
 }
 
-func EnqueueProcessVideo(p ProcessVideoPayload) error {
-	client := NewClient()
-	defer client.Close()
+func CloseClient() {
+	if client != nil {
+		client.Close()
+	}
+}
 
-	payload, _ := json.Marshal(p)
-	task := asynq.NewTask(TaskProcessVideo, payload)
+type ProcessVideoPayload struct {
+	VideoID      string `json:"video_id"`
+	UserID       uint   `json:"user_id"`
+	OriginalPath string `json:"original_path"`
+	Title        string `json:"title"`
+}
 
-	_, err := client.Enqueue(
+func EnqueueValidateAndProcess(p ProcessVideoPayload) error {
+
+	if client == nil {
+		return errors.New("asynq client not initialized")
+	}
+
+	payload, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	task := asynq.NewTask("video:process", payload)
+
+	_, err = client.Enqueue(
 		task,
 		asynq.Queue("videos"),
 		asynq.MaxRetry(5),
 		asynq.Timeout(30*time.Minute),
-		asynq.TaskID(p.VideoID), // TaskID = VideoID
+		asynq.TaskID(p.VideoID),
 		asynq.Retention(24*time.Hour),
 	)
 	if err != nil {
+		if errors.Is(err, asynq.ErrDuplicateTask) || errors.Is(err, asynq.ErrTaskIDConflict) {
+			return nil
+		}
 		return err
 	}
 	return nil
