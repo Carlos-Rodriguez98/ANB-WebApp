@@ -67,6 +67,11 @@ func main() {
 
 	r := gin.Default()
 
+	// Health check endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "voting"})
+	})
+
 	// Grupo de rutas públicas
 	public := r.Group("/api/public")
 	{
