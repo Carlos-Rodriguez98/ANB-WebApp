@@ -164,7 +164,7 @@ resource "aws_lb_listener" "http" {
 
 # Reglas de enrutamiento basadas en path
 
-# /auth/* -> Auth Service
+# /api/auth/* -> Auth Service
 resource "aws_lb_listener_rule" "auth" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 10
@@ -176,12 +176,12 @@ resource "aws_lb_listener_rule" "auth" {
 
   condition {
     path_pattern {
-      values = ["/auth*"]
+      values = ["/api/auth*"]
     }
   }
 }
 
-# /videos/* -> Video Service
+# /api/videos* -> Video Service
 resource "aws_lb_listener_rule" "video" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 20
@@ -193,12 +193,12 @@ resource "aws_lb_listener_rule" "video" {
 
   condition {
     path_pattern {
-      values = ["/videos*"]
+      values = ["/api/videos*"]
     }
   }
 }
 
-# /votes/* -> Voting Service
+# /api/public/videos* -> Voting Service
 resource "aws_lb_listener_rule" "voting" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 30
@@ -210,12 +210,12 @@ resource "aws_lb_listener_rule" "voting" {
 
   condition {
     path_pattern {
-      values = ["/votes*"]
+      values = ["/api/public/videos*"]
     }
   }
 }
 
-# /ranking/* -> Ranking Service
+# /api/public/rankings* -> Ranking Service
 resource "aws_lb_listener_rule" "ranking" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 40
@@ -227,7 +227,7 @@ resource "aws_lb_listener_rule" "ranking" {
 
   condition {
     path_pattern {
-      values = ["/ranking*"]
+      values = ["/api/public/rankings*"]
     }
   }
 }
