@@ -25,12 +25,12 @@ resource "aws_lb_target_group" "auth" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/auth/health"
+    path                = "/api/auth/login"
     protocol            = "HTTP"
-    matcher             = "200"
+    matcher             = "200,400,405"
   }
 
   deregistration_delay = 30
@@ -51,12 +51,12 @@ resource "aws_lb_target_group" "video" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/videos/health"
+    path                = "/api/videos"
     protocol            = "HTTP"
-    matcher             = "200"
+    matcher             = "200,401"
   }
 
   deregistration_delay = 30
@@ -77,10 +77,10 @@ resource "aws_lb_target_group" "voting" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/votes/health"
+    path                = "/api/public/videos"
     protocol            = "HTTP"
     matcher             = "200"
   }
@@ -103,10 +103,10 @@ resource "aws_lb_target_group" "ranking" {
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/ranking/health"
+    path                = "/api/public/rankings"
     protocol            = "HTTP"
     matcher             = "200"
   }
