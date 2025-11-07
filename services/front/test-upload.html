@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            background: #007cba; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            cursor: pointer; 
+            margin: 10px;
+        }
+        .test-zone {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .hidden-input {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #007cba;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test File Upload</h1>
+    
+    <div class="log" id="log"></div>
+    
+    <button class="test-button" id="btn1">Test Button 1 - Standard</button>
+    <input type="file" id="file1" accept="video/*">
+    
+    <button class="test-button" id="btn2">Test Button 2 - Hidden Input</button>
+    <input type="file" id="file2" accept="video/*" class="hidden-input">
+    
+    <div class="test-zone" id="zone3">
+        <p>Test Zone 3 - Click to Select File</p>
+        <input type="file" id="file3" accept="video/*" style="position: absolute; left: -9999px; opacity: 0;">
+    </div>
+    
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Test 1: Standard button with visible input
+        document.getElementById('btn1').addEventListener('click', () => {
+            log('Button 1 clicked');
+            const file1 = document.getElementById('file1');
+            file1.click();
+            log('file1.click() called');
+        });
+        
+        document.getElementById('file1').addEventListener('change', (e) => {
+            log(`File 1 selected: ${e.target.files[0]?.name || 'none'}`);
+        });
+        
+        // Test 2: Button with hidden input
+        document.getElementById('btn2').addEventListener('click', () => {
+            log('Button 2 clicked');
+            const file2 = document.getElementById('file2');
+            file2.click();
+            log('file2.click() called');
+        });
+        
+        document.getElementById('file2').addEventListener('change', (e) => {
+            log(`File 2 selected: ${e.target.files[0]?.name || 'none'}`);
+        });
+        
+        // Test 3: Zone with hidden input
+        document.getElementById('zone3').addEventListener('click', () => {
+            log('Zone 3 clicked');
+            const file3 = document.getElementById('file3');
+            try {
+                file3.click();
+                log('file3.click() called successfully');
+            } catch (error) {
+                log(`Error: ${error.message}`);
+            }
+        });
+        
+        document.getElementById('file3').addEventListener('change', (e) => {
+            log(`File 3 selected: ${e.target.files[0]?.name || 'none'}`);
+        });
+        
+        log('Test page loaded successfully');
+    </script>
+</body>
+</html>

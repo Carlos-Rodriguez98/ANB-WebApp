@@ -22,7 +22,6 @@ services:
     restart: always
     command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000", "--loglevel", "warning"]
     ports:
-      - "6379:6379"
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - redis_data:/data

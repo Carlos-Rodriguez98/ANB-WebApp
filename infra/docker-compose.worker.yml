@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  processing-service:
+    build: ../services/processing-service
+    container_name: processing-service
+    restart: always
+    env_file:
+      - /opt/anbapp/.env
+    volumes:
+      - ${STORAGE_BASE_PATH}:${STORAGE_BASE_PATH}
+    networks:
+      - anbapp
+
+networks:
+  anbapp:
+    driver: bridge
