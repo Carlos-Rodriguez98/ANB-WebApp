@@ -94,3 +94,43 @@ La arquitectura se organiza en capas:
 * **Escalabilidad**: la separación de roles (Web, Worker, File Server) permite la posibilidad de escalar cada capa de forma independiente.
 * **Separación de responsabilidades**: infraestructura organizada en capas claras (frontend, lógica, datos).
 * **Cumplimiento con buenas prácticas de AWS**: aislamiento de datos sensibles y exposición mínima de servicios públicos.
+
+## 6. Comandos para desplegar la arquitectura en amazon
+
+Primero, en una terminal bash nos paramos en la carpeta que contiene los scripts del despliegue:
+
+```
+cd infra/terraform/
+```
+
+Segundo, en AWS Academy entramos al Learner Lab y obtenemos la credenciales **aws_access_key_id**, **aws_secret_access_key** y **aws_session_token**. Luego, ejecutamos el siguiente script que nos pedira esa información para guardarla en variables de entorno:
+
+```
+./1-set-credentials.sh
+```
+
+Tercero, una vez guardadas las credenciales de acceso debemos inicializar terraform con:
+
+```
+terraform init
+```
+
+Cuarto, ejecutamos el siguiente script para ver el plan de despligue de la arquitectura:
+
+```
+./2-plan.sh
+```
+
+Quinto, ejecutamos el siguiente script para desplegar el plan en el Learner Lab:
+
+```
+./3-apply.sh
+```
+
+Con esto la arquitectura ya estaria desplegada correctamente para hacer pruebas. Cuando se termine de trabajar y probar la arquitectura se debe eliminar todo el despliegue para no consumir los recursos de Learner Lab, para ello, se ejecuta el siguiente script:
+
+```
+./4-destroy.sh
+```
+
+
