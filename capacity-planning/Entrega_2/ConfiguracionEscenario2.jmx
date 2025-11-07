@@ -5,6 +5,8 @@
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
     </TestPlan>
     <hashTree>
       <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables_Entorno">
@@ -34,20 +36,32 @@
             <stringProp name="Argument.value">${__P(AUTH_SERVICE_PORT,8080)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="PUBLIC_VIDEO_SERVICE_PORT" elementType="Argument">
-            <stringProp name="Argument.name">PUBLIC_VIDEO_SERVICE_PORT</stringProp>
-            <stringProp name="Argument.value">${__P(PUBLIC_VIDEO_SERVICE_PORT,8082)}</stringProp>
+          <elementProp name="VIDEO_SERVICE_PORT" elementType="Argument">
+            <stringProp name="Argument.name">VIDEO_SERVICE_PORT</stringProp>
+            <stringProp name="Argument.value">${__P(VIDEO_SERVICE_PORT,8081)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="RANKING_SERVICE_PORT" elementType="Argument">
-            <stringProp name="Argument.name">RANKING_SERVICE_PORT</stringProp>
-            <stringProp name="Argument.value">${__P(RANKING_SERVICE_PORT,8083)}</stringProp>
+          <elementProp name="TEST_EMAIL" elementType="Argument">
+            <stringProp name="Argument.name">TEST_EMAIL</stringProp>
+            <stringProp name="Argument.value">${__P(TEST_EMAIL,carlos.ramirez@example.com)}</stringProp>
+            <stringProp name="Argument.desc"></stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="TEST_PASSWORD" elementType="Argument">
+            <stringProp name="Argument.name">TEST_PASSWORD</stringProp>
+            <stringProp name="Argument.value">${__P(TEST_PASSWORD,password123)}</stringProp>
+            <stringProp name="Argument.desc"></stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="VIDEO_FILE_PATH" elementType="Argument">
+            <stringProp name="Argument.name">VIDEO_FILE_PATH</stringProp>
+            <stringProp name="Argument.value">${__P(VIDEO_FILE_PATH,collections/mp4_16mb_test.mp4)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
         </collectionProp>
       </Arguments>
       <hashTree/>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Pruebas_Escenario_1" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Pruebas_Escenario_2" enabled="true">
         <stringProp name="ThreadGroup.num_threads">${USERS}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">${RAMP}</stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -58,60 +72,11 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Escenario_1" enabled="true">
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Escenario_2" enabled="true">
           <boolProp name="TransactionController.includeTimers">false</boolProp>
         </TransactionController>
         <hashTree>
-          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Generar TEST_EMAIL y TEST_PASSWORD" enabled="true">
-            <stringProp name="cacheKey">true</stringProp>
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">// JSR223 (Groovy) - Generar credenciales únicas por hilo
-def tnum = ctx.getThreadNum()                       // número del hilo
-def host = java.net.InetAddress.getLocalHost().getHostName().replaceAll(&apos;[^A-Za-z0-9]&apos;,&apos;&apos;)
-def uuid = java.util.UUID.randomUUID().toString().replaceAll(&apos;-&apos;,&apos;&apos;).substring(0,8)
-def stamp = System.currentTimeMillis().toString().takeRight(6)
-
-def email = &quot;user_${host}_${tnum}_${stamp}_${uuid}@example.com&quot;
-def password = &quot;P@ssw0rd_${uuid}&quot;
-
-// Guardar en variables de JMeter (visibles solo para este hilo)
-vars.put(&quot;TEST_EMAIL&quot;, email)
-vars.put(&quot;TEST_PASSWORD&quot;, password)
-
-log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password}&quot;)</stringProp>
-            <stringProp name="scriptLanguage">groovy</stringProp>
-          </JSR223Sampler>
-          <hashTree/>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_1_Registrarse">
-            <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${AUTH_SERVICE_PORT}</stringProp>
-            <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
-            <stringProp name="HTTPSampler.path">/api/auth/signup</stringProp>
-            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-            <stringProp name="HTTPSampler.method">POST</stringProp>
-            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-              <collectionProp name="Arguments.arguments">
-                <elementProp name="" elementType="HTTPArgument">
-                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                  <stringProp name="Argument.value">{&#xd;
-	&quot;first_name&quot;: &quot;John&quot;,&#xd;
-  	&quot;last_name&quot;: &quot;Newman&quot;,&#xd;
-  	&quot;email&quot;: &quot;${TEST_EMAIL}&quot;,&#xd;
-  	&quot;password1&quot;: &quot;${TEST_PASSWORD}&quot;,&#xd;
-  	&quot;password2&quot;: &quot;${TEST_PASSWORD}&quot;,&#xd;
-  	&quot;city&quot;: &quot;Bogotá&quot;,&#xd;
-  	&quot;country&quot;: &quot;Colombia&quot;&#xd;
-}</stringProp>
-                  <stringProp name="Argument.metadata">=</stringProp>
-                </elementProp>
-              </collectionProp>
-            </elementProp>
-          </HTTPSamplerProxy>
-          <hashTree/>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_2_Iniciar_Sesión ">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_1_Iniciar_Sesión ">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
             <stringProp name="HTTPSampler.port">${AUTH_SERVICE_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
@@ -142,11 +107,11 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
             </JSONPostProcessor>
             <hashTree/>
           </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_3_Consultar_Videos_Publicos">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_2_Consultar_Videos_Propios" enabled="true">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${PUBLIC_VIDEO_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
-            <stringProp name="HTTPSampler.path">/api/public/videos</stringProp>
+            <stringProp name="HTTPSampler.path">/api/videos</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <stringProp name="HTTPSampler.method">GET</stringProp>
             <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -156,29 +121,7 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
             </elementProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer VIDEO_ID" enabled="true">
-              <stringProp name="JSONPostProcessor.referenceNames">VIDEO_ID</stringProp>
-              <stringProp name="JSONPostProcessor.jsonPathExprs">$[0].video_id</stringProp>
-              <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
-              <stringProp name="JSONPostProcessor.defaultValues">NOT_FOUND</stringProp>
-            </JSONPostProcessor>
-            <hashTree/>
-          </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_4_Realizar_Voto" enabled="true">
-            <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${PUBLIC_VIDEO_SERVICE_PORT}</stringProp>
-            <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
-            <stringProp name="HTTPSampler.path">/api/public/videos/${VIDEO_ID}/vote</stringProp>
-            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-            <stringProp name="HTTPSampler.method">POST</stringProp>
-            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
-            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
-              <collectionProp name="Arguments.arguments"/>
-            </elementProp>
-          </HTTPSamplerProxy>
-          <hashTree>
-            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
                 <elementProp name="" elementType="Header">
                   <stringProp name="Header.name">Authorization</stringProp>
@@ -188,11 +131,61 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
             </HeaderManager>
             <hashTree/>
           </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_5_Consultar_Ranking">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_3_Subir_Video" enabled="true">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${RANKING_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
-            <stringProp name="HTTPSampler.path">/api/public/rankings</stringProp>
+            <stringProp name="HTTPSampler.path">/api/videos/upload</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">true</boolProp>
+            <elementProp name="HTTPsampler.Files" elementType="HTTPFileArgs">
+              <collectionProp name="HTTPFileArgs.files">
+                <elementProp name="${VIDEO_FILE_PATH}" elementType="HTTPFileArg">
+                  <stringProp name="File.mimetype">video/mp4</stringProp>
+                  <stringProp name="File.path">${VIDEO_FILE_PATH}</stringProp>
+                  <stringProp name="File.paramname">video_file</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="title" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                  <stringProp name="Argument.value">Título descriptivo del video</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                  <stringProp name="Argument.name">title</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${ACCESS_TOKEN}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer VIDEO_ID" enabled="true">
+              <stringProp name="JSONPostProcessor.referenceNames">VIDEO_ID</stringProp>
+              <stringProp name="JSONPostProcessor.jsonPathExprs">$.task_id</stringProp>
+              <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
+              <stringProp name="JSONPostProcessor.defaultValues">NOT_FOUND</stringProp>
+            </JSONPostProcessor>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_4_Consultar_Detalle_Video" enabled="true">
+            <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
+            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+            <stringProp name="HTTPSampler.path">/api/videos/${VIDEO_ID}</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <stringProp name="HTTPSampler.method">GET</stringProp>
             <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -201,7 +194,17 @@ log.info(&quot;Thread ${tnum} -&gt; TEST_EMAIL=${email} TEST_PASSWORD=${password
               <collectionProp name="Arguments.arguments"/>
             </elementProp>
           </HTTPSamplerProxy>
-          <hashTree/>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${ACCESS_TOKEN}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
         </hashTree>
       </hashTree>
     </hashTree>

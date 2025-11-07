@@ -6,7 +6,7 @@ set -euo pipefail
 if [ $# -eq 0 ]; then
     echo "❌ Error: Debes proporcionar el nombre del archivo JMX"
     echo "Uso: $0 <archivo.jmx> [num_runs] [resultados.jtl] [report_dir]"
-    echo "Ejemplo: $0 ConfiguracionEscenario1.jmx 5"
+    echo "Ejemplo: $0 Configuracion.jmx 5"
     exit 1
 fi
 
@@ -51,6 +51,21 @@ echo "   Resultados finales: ${JTL}"
 echo "   Reporte: ${REPORT_DIR}"
 echo ""
 
+VIDEO_SOURCE="../../../collections/mp4_16mb_test.mp4"
+VIDEO_DEST="collections/mp4_16mb_test.mp4"
+
+if [ -f "$VIDEO_SOURCE" ]; then
+    echo "📦 Copiando archivo de video al contenedor..."
+    docker exec -i "$CONTAINER_NAME" mkdir -p /home/jmeter/collections
+    docker cp "$VIDEO_SOURCE" "${CONTAINER_NAME}:/home/jmeter/${VIDEO_DEST}"
+    echo "✓ Archivo de video copiado: ${VIDEO_DEST}"
+    echo ""
+else
+    echo "⚠️  Advertencia: No se encontró el archivo de video en ${VIDEO_SOURCE}"
+    echo "   Si tu prueba requiere subir videos, esto causará errores."
+    echo ""
+fi
+
 # Ejecutar JMeter múltiples veces
 SUCCESS_COUNT=0
 for i in $(seq 1 $NUM_RUNS); do
@@ -70,8 +85,10 @@ for i in $(seq 1 $NUM_RUNS); do
         -JPROTOCOL="${PROTOCOL:-http}" \
         -JSERVER_NAME="${SERVER_NAME:-host.docker.internal}" \
         -JAUTH_SERVICE_PORT="${AUTH_SERVICE_PORT:-8080}" \
+        -JVIDEO_SERVICE_PORT="${VIDEO_SERVICE_PORT:-8081}" \
         -JPUBLIC_VIDEO_SERVICE_PORT="${PUBLIC_VIDEO_SERVICE_PORT:-8082}" \
-        -JRANKING_SERVICE_PORT="${RANKING_SERVICE_PORT:-8083}"; then
+        -JRANKING_SERVICE_PORT="${RANKING_SERVICE_PORT:-8083}" \
+        -JVIDEO_FILE_PATH="${VIDEO_FILE_PATH:-${VIDEO_DEST}}"; then
         
         echo "✓ Ejecución ${i} completada exitosamente"
         
