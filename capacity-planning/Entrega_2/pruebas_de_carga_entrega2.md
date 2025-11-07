@@ -62,7 +62,7 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 <br>
 <p align="center">
-  <img alt="Imagen2" src="https://github.com/user-attachments/assets/04fe0798-ea07-46d4-9068-e5ab23d2d0a1" />
+  <img alt="Imagen2" src="https://github.com/user-attachments/assets/9dd8dca6-a507-44a7-b2bf-9486a6e1ec67" />
 </p>
 <br>
 
@@ -214,7 +214,7 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 
 **1. Iniciar Sesión:** /api/auth/login
 
-**2. Consultar Video Propios:** /api/videos/login
+**2. Consultar Videos Propios:** /api/videos
 
 **3. Subir Video:** /api/videos/upload
 
@@ -239,3 +239,11 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 | **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
+
+### **Configuración JMeter (ConfiguracionEscenario2.jmx)**
+
+<br>
+<p align="center">
+  <img alt="Imagen2" src="https://github.com/user-attachments/assets/3a5309ec-9e6c-4b3d-9dd5-d309cec6eebd" />
+</p>
+<br>
