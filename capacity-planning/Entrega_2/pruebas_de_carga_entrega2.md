@@ -62,7 +62,7 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 <br>
 <p align="center">
-  <img alt="Imagen2" src="https://github.com/user-attachments/assets/04fe0798-ea07-46d4-9068-e5ab23d2d0a1" />
+  <img alt="Imagen2" src="https://github.com/user-attachments/assets/9dd8dca6-a507-44a7-b2bf-9486a6e1ec67" />
 </p>
 <br>
 
@@ -83,15 +83,15 @@ Luego, se define el Transaction Controller (Escenario_1) que ejecutará cada hil
 
 **1. JSR223 Sampler (Generar TEST_EMAIL y TEST_PASSWORD):** script escrito en Groovy que se ejecuta al inicio del flujo para generar los datos de prueba que utilizará cada hilo. En particular, se crean las variables TEST_EMAIL y TEST_PASSWORD.
 
-**2. HTTP Request (Request_Registrarse):** primera petición del flujo, correspondiente al registro de usuario. En ella se envía el cuerpo de la solicitud con las variables de email y contraseña generadas, creando así un usuario único para cada hilo.
+**2. HTTP Request (Request_1_Registrarse):** primera petición del flujo, correspondiente al registro de usuario. En ella se envía el cuerpo de la solicitud con las variables de email y contraseña generadas, creando así un usuario único para cada hilo.
 
-**3. HTTP Request (Request_Iniciar_Sesión):** segunda petición, donde el hilo inicia sesión utilizando las credenciales del usuario recién creado. Esta solicitud devuelve un access_token, el cual se extrae mediante un **JSON Extractor** y se almacena en la variable ACCESS_TOKEN.
+**3. HTTP Request (Request_2_Iniciar_Sesión):** segunda petición, donde el hilo inicia sesión utilizando las credenciales del usuario recién creado. Esta solicitud devuelve un access_token, el cual se extrae mediante un **JSON Extractor** y se almacena en la variable ACCESS_TOKEN.
 
-**4. HTTP Request (Request_Consultar_Videos_Públicos):** tercera petición, donde el hilo obtiene la lista de videos públicos disponibles para votar. A continuación, se extrae el identificador del primer video usando un **JSON Extractor**, y se guarda en la variable VIDEO_ID.
+**4. HTTP Request (Request_3_Consultar_Videos_Públicos):** tercera petición, donde el hilo obtiene la lista de videos públicos disponibles para votar. A continuación, se extrae el identificador del primer video usando un **JSON Extractor**, y se guarda en la variable VIDEO_ID.
 
-**5. HTTP Request (Request_Realizar_Voto):** cuarta petición, en la que el hilo emite un voto para el video obtenido anteriormente. Esta solicitud requiere una cabecera de autenticación con el formato Authorization: Bearer ${ACCESS_TOKEN}, utilizando el token obtenido en el inicio de sesión.
+**5. HTTP Request (Request_4_Realizar_Voto):** cuarta petición, en la que el hilo emite un voto para el video obtenido anteriormente. Esta solicitud requiere una cabecera de autenticación con el formato Authorization: Bearer ${ACCESS_TOKEN}, utilizando el token obtenido en el inicio de sesión.
 
-**6. HTTP Request (Request_Consultar_Ranking):** quinta y última petición del flujo, en la que el hilo consulta la tabla de ranking de los participantes.
+**6. HTTP Request (Request_5_Consultar_Ranking):** quinta y última petición del flujo, en la que el hilo consulta la tabla de ranking de los participantes.
 
 ### Ejecución de las Pruebas
 
@@ -214,11 +214,17 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 
 **1. Iniciar Sesión:** /api/auth/login
 
-**2. Consultar Video Propios:** /api/videos/login
+**2. Consultar Videos Propios:** /api/videos
 
 **3. Subir Video:** /api/videos/upload
 
 **4. Consultar Detalle Video:** /api/videos/{id_video}
+
+<br>
+<p align="center">
+  <img alt="imagen4" src="https://github.com/user-attachments/assets/3651611b-1071-47bc-83e0-d21f7ec3d927" />
+</p>
+<br>
 
 ### **Criterios de Aceptación**
 
@@ -233,3 +239,67 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 | **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
+
+### **Configuración JMeter (ConfiguracionEscenario2.jmx)**
+
+<br>
+<p align="center">
+  <img alt="Imagen2" src="https://github.com/user-attachments/assets/3a5309ec-9e6c-4b3d-9dd5-d309cec6eebd" />
+</p>
+<br>
+
+Primero se definen las siguientes variables de entorno parametrizadas para ejecutar la prueba de carga:
+
+```
+USERS=1
+RAMP=5
+NUM_RUNS=5
+PROTOCOL=http
+SERVER_NAME=host.docker.internal
+AUTH_SERVICE_PORT=8080
+VIDEO_SERVICE_PORT=8081
+TEST_EMAIL=carlos.ramirez@example.com
+TEST_PASSWORD=password123
+VIDEO_FILE_PATH=
+```
+
+Luego, se define el Transaction Controller (Escenario_2) que ejecutará cada hilo para simular el flujo completo del escenario. Dentro de esta transacción se incluyen los siguientes elementos:
+
+**1. HTTP Request (Request_1_Iniciar_Sesión):** primera petición, donde el hilo inicia sesión utilizando las credenciales del usuario pasado por las variables de entorno. Esta solicitud devuelve un access_token, el cual se extrae mediante un **JSON Extractor** y se almacena en la variable ACCESS_TOKEN.
+
+**2. HTTP Request (Request_2_Consultar_Videos_Propios):** segunda petición, donde el hilo obtiene la lista de videos propios. Esta solicitud requiere una cabecera de autenticación con el formato Authorization: Bearer ${ACCESS_TOKEN}, utilizando el token obtenido en el inicio de sesión.
+
+**3. HTTP Request (Request_3_Subir_Video):** tercera petición, en la que el hilo sube un video a la plataforma y se encola para que el worker lo processe de forma asíncrona. A continuación, se extrae el identificador del primer video usando un **JSON Extractor**, y se guarda en la variable VIDEO_ID. Esta solicitud requiere una cabecera de autenticación con el formato Authorization: Bearer ${ACCESS_TOKEN}, utilizando el token obtenido en el inicio de sesión.
+
+**4. HTTP Request (Request_4_Consultar_Detalle_Video):** cuarta y última petición del flujo, en la que el hilo consulta la información detallada de ese video que acaba de subir. Esta solicitud requiere una cabecera de autenticación con el formato Authorization: Bearer ${ACCESS_TOKEN}, utilizando el token obtenido en el inicio de sesión.
+
+### Ejecución de las Pruebas
+
+Para ejecutar la prueba de carga se ejecuta los siguientes comandos para levantar el contenedor con JMeter:
+
+```
+cd capacity-planning/Entrega_2/jmeter
+```
+```
+docker build -t jmeter-cli:5.6.3 .
+```
+```
+docker compose up -d
+```
+
+Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script para correr la prueba:
+
+```
+cd capacity-planning/Entrega_2/jmeter
+```
+```
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=host.docker.internal ./run_test.sh ConfiguracionEscenario2.jmx
+```
+
+Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
+
+<br>
+<p align="center">
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/4b820b81-e080-4187-a013-54d23c16a478" />
+</p>
+<br>
