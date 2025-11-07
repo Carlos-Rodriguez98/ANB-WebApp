@@ -105,8 +105,8 @@ for i in $(seq 1 $NUM_RUNS); do
     
     # Pausa entre ejecuciones para estabilizar el sistema
     if [ $i -lt $NUM_RUNS ]; then
-        echo "⏳ Esperando 60 segundos antes de la siguiente ejecución..."
-        sleep 60
+        echo "⏳ Esperando 30 segundos antes de la siguiente ejecución..."
+        sleep 30
     fi
     echo ""
 done
