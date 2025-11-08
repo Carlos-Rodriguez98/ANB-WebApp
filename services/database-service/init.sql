@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 2) Tabla de videos
 CREATE TABLE IF NOT EXISTS videos (
-    video_id       VARCHAR(36) PRIMARY KEY,
+    video_id       BIGSERIAL PRIMARY KEY,
     user_id        BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     title          VARCHAR(255) NOT NULL,
     original_path  TEXT,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS videos (
 -- 3) Tabla de votos
 CREATE TABLE IF NOT EXISTS votes (
     vote_id    BIGSERIAL PRIMARY KEY,
-    video_id   VARCHAR(36) NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
+    video_id   BIGINT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
     user_id    BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT now(),
     -- Evita que un mismo usuario vote varias veces el mismo video
