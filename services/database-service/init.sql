@@ -3,7 +3,7 @@ CREATE SCHEMA IF NOT EXISTS app;
 SET search_path = app, public;
 
 -- 1) Tabla de usuarios
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS app.users (
     user_id    BIGSERIAL PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name  VARCHAR(100) NOT NULL,
@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- 2) Tabla de videos
-CREATE TABLE IF NOT EXISTS videos (
+CREATE TABLE IF NOT EXISTS app.videos (
     video_id       BIGSERIAL PRIMARY KEY,
-    user_id        BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id        BIGINT NOT NULL REFERENCES app.users(user_id) ON DELETE CASCADE,
     title          VARCHAR(255) NOT NULL,
     original_path  TEXT,
     processed_path TEXT,
@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS videos (
 );
 
 -- 3) Tabla de votos
-CREATE TABLE IF NOT EXISTS votes (
+CREATE TABLE IF NOT EXISTS app.votes (
     vote_id    BIGSERIAL PRIMARY KEY,
-    video_id   BIGINT NOT NULL REFERENCES videos(video_id) ON DELETE CASCADE,
-    user_id    BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    video_id   BIGINT NOT NULL REFERENCES app.videos(video_id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES app.users(user_id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT now(),
     -- Evita que un mismo usuario vote varias veces el mismo video
     UNIQUE(video_id, user_id)
@@ -74,13 +74,13 @@ ON CONFLICT (video_id, user_id) DO NOTHING;
 -- Solo si las secuencias existen (pueden no existir si GORM usó otra convención)
 DO $$ 
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'users_user_id_seq') THEN
-        PERFORM setval('users_user_id_seq', (SELECT COALESCE(MAX(user_id), 1) FROM app.users) + 1);
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'app' AND c.relname = 'users_user_id_seq') THEN
+        PERFORM setval('app.users_user_id_seq', (SELECT COALESCE(MAX(user_id), 1) FROM app.users) + 1);
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'videos_video_id_seq') THEN
-        PERFORM setval('videos_video_id_seq', (SELECT COALESCE(MAX(video_id), 1) FROM app.videos) + 1);
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'app' AND c.relname = 'videos_video_id_seq') THEN
+        PERFORM setval('app.videos_video_id_seq', (SELECT COALESCE(MAX(video_id), 1) FROM app.videos) + 1);
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'votes_vote_id_seq') THEN
-        PERFORM setval('votes_vote_id_seq', (SELECT COALESCE(MAX(vote_id), 1) FROM app.votes) + 1);
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'app' AND c.relname = 'votes_vote_id_seq') THEN
+        PERFORM setval('app.votes_vote_id_seq', (SELECT COALESCE(MAX(vote_id), 1) FROM app.votes) + 1);
     END IF;
 END $$;
