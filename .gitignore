@@ -36,3 +36,8 @@ go.work.sum
 .env
 .env.*
 
+infra/terraform/aws_credentials.auto.tfvars
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup
+infra/terraform/.terraform/
