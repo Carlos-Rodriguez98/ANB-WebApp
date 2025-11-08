@@ -201,6 +201,9 @@ else
     echo "⚠️ No se encontró $INIT_SQL"
 fi
 
+# /usr/local/bin/docker-compose -f docker-compose.web.yml up --build
+# /usr/local/bin/docker-compose -f docker-compose.web.yml down
+
 # Create manual deploy script for future use
 cat > /opt/anbapp/deploy.sh <<'DEPLOY_SCRIPT'
 #!/bin/bash
