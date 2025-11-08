@@ -50,7 +50,7 @@ variable "private_b_subnet_cidr" {
 variable "allowed_ssh_cidr" {
   type        = string
   description = "IP pública para SSH (CIDR). Ej: 200.1.2.3/32"
-  default     = "191.107.37.114/32" 
+  default     = "190.27.177.156/32" 
 }
 
 variable "db_port" {
