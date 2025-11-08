@@ -11,7 +11,7 @@ resource "aws_db_subnet_group" "main" {
 # (Opcional) Parameter Group básico para Postgres
 resource "aws_db_parameter_group" "pg" {
   name        = "${var.project_name}-pg"
-  family      = "postgres15"
+  family      = "postgres16"
   description = "Param group dev"
 
   # Activar loggings minímo
