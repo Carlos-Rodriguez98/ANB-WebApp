@@ -35,7 +35,7 @@ func LoadEnv() {
 
 	dbSSLMode := os.Getenv("DB_SSLMODE")
 	if dbSSLMode == "" {
-		dbSSLMode = "disable" // Valor por defecto
+		dbSSLMode = "require" // Valor por defecto
 	}
 
 	App = EnvConfig{
