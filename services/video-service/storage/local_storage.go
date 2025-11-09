@@ -1,4 +1,4 @@
-﻿package storage
+package storage
 
 import (
 	"ANB-WebApp/services/video-service/config"

@@ -39,7 +39,13 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=America/Bogota search_path=app",
+	// Si no hay puerto definido, usar 8081 por defecto
+	if serverPort == "" {
+		log.Println("SERVER_PORT no definido, usando puerto por defecto 8081")
+		serverPort = "8081"
+	}
+
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require TimeZone=America/Bogota search_path=app",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -52,20 +58,26 @@ func main() {
 		log.Println("Error conectando a BD:", err)
 	}
 
-	r := gin.Default()
+	log.Println("✓ Conexión a base de datos exitosa")
 
+	r := gin.Default()
+	
 	// Health check endpoint
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "service": "ranking"})
 	})
-
+	
 	// Middleware para logging detallado
 	r.Use(func(c *gin.Context) {
 		log.Printf("📥 Recibida petición: %s %s", c.Request.Method, c.Request.URL.String())
 		c.Next()
 	})
-
+	
 	r.GET("/api/public/rankings", getRanking)
+	
+	log.Println("✓ Ranking service iniciado en puerto:", serverPort)
+	log.Println("  GET  /api/public/rankings")
+	
 	r.Run(":" + serverPort)
 }
 
@@ -77,6 +89,8 @@ func main() {
 //   - limit (opcional): máximo de filas devueltas (int > 0).
 //   - offset (opcional): offset para paginación (int >= 0).
 func getRanking(c *gin.Context) {
+	log.Printf("GET /api/public/rankings - Procesando petición...")
+	
 	// Leer y validar parámetros
 	city := strings.TrimSpace(c.Query("city"))
 
@@ -222,9 +236,11 @@ func getRanking(c *gin.Context) {
 	}
 
 	if err := rows.Err(); err != nil {
+		log.Printf("ERROR en rows.Err(): %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno"})
 		return
 	}
 
+	log.Printf("✓ Consulta exitosa, encontrados %d jugadores en ranking", len(ranking))
 	c.JSON(http.StatusOK, ranking)
 }

@@ -1,4 +1,4 @@
-﻿package services
+package services
 
 import (
 	"ANB-WebApp/services/video-service/dto"
@@ -34,7 +34,7 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		return dto.UploadResponse{}, errors.New("el archivo del video es requerido")
 	}
 	if fh.Size > 100*1024*1024 {
-		return dto.UploadResponse{}, errors.New("el video debe tener un m├íximo de 100mb de tama├▒o")
+		return dto.UploadResponse{}, errors.New("el video debe tener un máximo de 100mb de tamaño")
 	}
 	name := strings.ToLower(fh.Filename)
 	if !strings.HasSuffix(name, ".mp4") {
@@ -77,14 +77,14 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 	}
 	tmpFile.Close() // Cerrar para que ffprobe pueda leerlo
 
-	// Validar duraci├│n con ffprobe
+	// Validar duración con ffprobe
 	dur, err := utils.ProbeDurationSeconds(tmpFile.Name())
 	if err != nil {
-		return dto.UploadResponse{}, fmt.Errorf("no se pudo leer la duraci├│n del video")
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo leer la duración del video")
 	}
 	if dur < minVideoSeconds || dur > maxVideoSeconds {
 		return dto.UploadResponse{}, fmt.Errorf(
-			"la duraci├│n del video debe estar entre %.0fs y %.0fs (actual: %.1fs)",
+			"la duración del video debe estar entre %.0fs y %.0fs (actual: %.1fs)",
 			minVideoSeconds, maxVideoSeconds, dur,
 		)
 	}
@@ -227,7 +227,7 @@ func (s *VideoService) Publish(userID uint, videoID string) error {
 		return err
 	}
 	if v.Published {
-		return errors.New("el video ya est├í publicado")
+		return errors.New("el video ya está publicado")
 	}
 	// Debe estar procesado y tener archivo procesado
 	if v.Status != models.StatusProcessed || v.ProcessedPath == nil {

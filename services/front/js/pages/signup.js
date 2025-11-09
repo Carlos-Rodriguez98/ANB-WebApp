@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Inscription...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registrando...';
 
             try {
                 const response = await api.signup({
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     country: formData.country
                 });
 
-                Toast.success('Inscription réussie ! Veuillez vous connecter.');
+                Toast.success('¡Registro exitoso! Por favor, inicie sesión.');
                 
                 // Redirect to login page
                 setTimeout(() => {
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } catch (error) {
                 console.error('Signup error:', error);
-                Toast.error(error.message || 'Erreur lors de l\'inscription');
+                Toast.error(error.message || 'Error durante el registro');
             } finally {
                 // Re-enable submit button
                 submitBtn.disabled = false;
