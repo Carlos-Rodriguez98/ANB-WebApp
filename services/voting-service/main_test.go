@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"encoding/json"
@@ -83,8 +83,8 @@ func TestGetPublicVideos(t *testing.T) {
 		// Insertar datos de prueba
 		testDB.Exec(`
 			INSERT INTO users (user_id, first_name, last_name, email, password, city, country) 
-			VALUES (1, 'Juan', 'Perez', 'juan@test.com', 'hash', 'Bogot├í', 'Colombia'),
-			       (2, 'Maria', 'Lopez', 'maria@test.com', 'hash', 'Medell├¡n', 'Colombia')
+			VALUES (1, 'Juan', 'Perez', 'juan@test.com', 'hash', 'Bogotá', 'Colombia'),
+			       (2, 'Maria', 'Lopez', 'maria@test.com', 'hash', 'Medellín', 'Colombia')
 		`)
 
 		testDB.Exec(`
@@ -186,14 +186,14 @@ func TestVoteForVideo(t *testing.T) {
 	t.Run("missing_auth", func(t *testing.T) {
 		r := setupRouter()
 		w := httptest.NewRecorder()
-		// No enviar token de autenticaci├│n
+		// No enviar token de autenticación
 		req, _ := http.NewRequest("POST", "/api/public/videos/101/vote", nil)
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 		var response map[string]string
 		json.Unmarshal(w.Body.Bytes(), &response)
-		assert.Equal(t, "Falta de autenticaci├│n.", response["error"])
+		assert.Equal(t, "Falta de autenticación.", response["error"])
 	})
 
 	t.Run("already_voted", func(t *testing.T) {

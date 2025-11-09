@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"errors"
@@ -61,7 +61,7 @@ func main() {
 		log.Fatalf("Error al conectar a DB: %v", err)
 	}
 
-	// Verificar conexi├│n
+	// Verificar conexión
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("Error al obtener DB subyacente: %v", err)
@@ -71,7 +71,7 @@ func main() {
 		log.Fatalf("Error al hacer ping a la base de datos: %v", err)
 	}
 
-	log.Println("Ô£ô Conexi├│n a base de datos exitosa")
+	log.Println("✓ Conexión a base de datos exitosa")
 
 	// Verificar/crear esquema app
 	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS app").Error; err != nil {
@@ -80,9 +80,9 @@ func main() {
 
 	// AutoMigrate para crear la tabla votes con el constraint UNIQUE
 	if err := db.AutoMigrate(&models.Vote{}); err != nil {
-		log.Printf("Error en migraci├│n: %v", err)
+		log.Printf("Error en migración: %v", err)
 	} else {
-		log.Println("Ô£ô Tabla 'votes' verificada/creada con constraint UNIQUE(video_id, user_id)")
+		log.Println("✓ Tabla 'votes' verificada/creada con constraint UNIQUE(video_id, user_id)")
 	}
 
 	r := gin.Default()
@@ -92,7 +92,7 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok", "service": "voting"})
 	})
 
-	// Grupo de rutas p├║blicas
+	// Grupo de rutas públicas
 	public := r.Group("/api/public")
 	{
 		public.GET("/videos", getPublicVideos)
@@ -103,19 +103,19 @@ func main() {
 	r.Run(":" + serverPort)
 }
 
-// Emitir voto por video (ruta p├║blica) - responde con los c├│digos solicitados
+// Emitir voto por video (ruta pública) - responde con los códigos solicitados
 func voteForVideo(c *gin.Context) {
 	// 1) Obtener video_id de la ruta
 	videoID, err := strconv.ParseInt(c.Param("video_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inv├ílido"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inválido"})
 		return
 	}
 
 	// 2) Leer Authorization header y extraer token
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 	tokenString := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
@@ -123,30 +123,30 @@ func voteForVideo(c *gin.Context) {
 	// 3) Parsear y validar token usando la secret del .env
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		// error de servidor por configuraci├│n; devolvemos 401 para mantener la especificaci├│n de auth
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		// error de servidor por configuración; devolvemos 401 para mantener la especificación de auth
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		// Validar m├®todo de firma
+		// Validar método de firma
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("m├®todo de firma inesperado: %v", t.Header["alg"])
+			return nil, fmt.Errorf("método de firma inesperado: %v", t.Header["alg"])
 		}
 		return []byte(secret), nil
 	})
 	if err != nil || token == nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 
-	// 4) Comprobar expiraci├│n (tu GenerateJWT usa "expiration")
+	// 4) Comprobar expiración (tu GenerateJWT usa "expiration")
 	if expRaw, found := claims["expiration"]; found {
 		var expUnix int64
 		switch v := expRaw.(type) {
@@ -162,11 +162,11 @@ func voteForVideo(c *gin.Context) {
 			expUnix = 0
 		}
 		if expUnix == 0 || time.Now().Unix() > expUnix {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 			return
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 
@@ -186,19 +186,19 @@ func voteForVideo(c *gin.Context) {
 			if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
 				userID = parsed
 			} else {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 				return
 			}
 		default:
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 			return
 		}
 	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticaci├│n."})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Falta de autenticación."})
 		return
 	}
 
-	// 6) Verificar que el video existe y est├í publicado
+	// 6) Verificar que el video existe y está publicado
 	var video struct {
 		Published bool `gorm:"column:published"`
 	}
@@ -209,14 +209,14 @@ func voteForVideo(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado."})
 			return
 		}
-		// error de servidor (no previsto) -> mantener respuesta gen├®rica de servidor
+		// error de servidor (no previsto) -> mantener respuesta genérica de servidor
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno"})
 		return
 	}
 
 	if !video.Published {
-		// seg├║n los c├│digos solicitados, usamos 400 para indicar que no est├í disponible para votar
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Este video no est├í disponible para votaci├│n."})
+		// según los códigos solicitados, usamos 400 para indicar que no está disponible para votar
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Este video no está disponible para votación."})
 		return
 	}
 
@@ -227,11 +227,11 @@ func voteForVideo(c *gin.Context) {
 	}
 
 	if err := db.Create(&vote).Error; err != nil {
-		// Detectar violaci├│n de constraint UNIQUE
+		// Detectar violación de constraint UNIQUE
 		if strings.Contains(err.Error(), "duplicate key") ||
 			strings.Contains(err.Error(), "unique constraint") ||
 			strings.Contains(err.Error(), "idx_vote_unique") {
-			// Unique violation -> ya vot├│
+			// Unique violation -> ya votó
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Ya has votado por este video."})
 			return
 		}
@@ -241,11 +241,11 @@ func voteForVideo(c *gin.Context) {
 		return
 	}
 
-	// 8) ├ëxito
+	// 8) Éxito
 	c.JSON(http.StatusOK, gin.H{"message": "Voto exitoso."})
 }
 
-// Listar videos p├║blicos disponibles para votaci├│n
+// Listar videos públicos disponibles para votación
 func getPublicVideos(c *gin.Context) {
 	log.Println("GET /api/public/videos - Iniciando consulta con GORM...")
 
@@ -306,15 +306,15 @@ func getPublicVideos(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Ô£ô Consulta exitosa, encontrados %d videos", len(videos))
+	log.Printf("✓ Consulta exitosa, encontrados %d videos", len(videos))
 	c.JSON(http.StatusOK, videos)
 }
 
-// Obtener detalle de un video p├║blico espec├¡fico
+// Obtener detalle de un video público específico
 func getPublicVideoByID(c *gin.Context) {
 	videoID, err := strconv.ParseInt(c.Param("video_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inv├ílido"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de video inválido"})
 		return
 	}
 
@@ -373,7 +373,7 @@ func getPublicVideoByID(c *gin.Context) {
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado o no est├í publicado"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado o no está publicado"})
 			return
 		}
 		log.Printf("ERROR al obtener video: %v", err)
@@ -381,12 +381,12 @@ func getPublicVideoByID(c *gin.Context) {
 		return
 	}
 
-	// Verificar que se encontr├│ el video
+	// Verificar que se encontró el video
 	if vr.VideoID == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado o no est├í publicado"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Video no encontrado o no está publicado"})
 		return
 	}
 
-	log.Printf("Ô£ô Video encontrado: %s", vr.Title)
+	log.Printf("✓ Video encontrado: %s", vr.Title)
 	c.JSON(http.StatusOK, vr)
 }
