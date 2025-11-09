@@ -49,16 +49,14 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  | ≥ 5 req/s           | ≤ 2000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Consultar Videos Públicos | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Realizar Voto             | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Consultar Ranking         | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
+| Registro                  | ≥ 5 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Videos Públicos | ≥ 20 req/s          | ≤ 1000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Realizar Voto             | ≥ 8 req/s           | ≤ 1000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Ranking         | ≥ 8 req/s           | ≤  500 ms                    | ≤ 70%     | ≤ 89%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 12500 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Registro → Inicio de Sesión → Consultar Videos Publicos → Realizar Voto → Consultar Ranking). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
-
-### **Configuración JMeter (ConfiguracionEscenario1.jmx)**
 
 ### **Configuración JMeter ([ConfiguracionEscenario1.jmx](ConfiguracionEscenario1.jmx))**
 
@@ -115,7 +113,7 @@ Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script p
 cd capacity-planning/Entrega_2/jmeter
 ```
 ```
-USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=host.docker.internal ./run_test.sh ConfiguracionEscenario1.jmx
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=3.236.136.31 ./run_test.sh ConfiguracionEscenario1.jmx
 ```
 
 Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
@@ -128,87 +126,43 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 ### Resultados
 
-Se definen 3 etapas diferentes de número de usuarios concurrentes para observar el comportamiento del servidor. En particular una prueba de humo, una prueba de carga progresiva, y una prueba de estrés.
-
-#### Prueba de humo
-
-Se define la prueba con los siguientes parametros:
+Se definen diferentes pruebas con un número creciente de usuarios concurrentes para observar el comportamiento del servidor. Para ello, se definen las pruebas con los siguientes parametros:
 
 ```
-USERS=10,20,30,40,50
+USERS=10
 RAMP=5
-SERVER_NAME={amazon_url}
+SERVER_NAME=3.236.136.31
 ```
 
-Es una prueba rápida y ligera que valida si el sistema está correctamente configurado y responde de forma básica antes de ejecutar las otras pruebas más intensas. Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
+Tenemos la siguiente tabla que contiene las métricas del **Flujo Completo** del escenario con diferentes usuarios concurrentes:
 
 | Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
 |:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 10                    | 2.01 req/s          | 855 ms                       | N/A     | N/A     | 0%              |
-| 20                    | 3.65 req/s          | 964 ms                       | N/A     | N/A     | 0%              |
-| 30                    | 4.58 req/s          | 2775 ms                      | N/A     | N/A     | 0%              |
-| 40                    | 5.85 req/s          | 2817 ms                      | N/A     | N/A     | 0%              |
-| 50                    | 6.06 req/s          | 4020 ms                      | N/A     | N/A     | 0%              |
+| 10                    | 0.27 req/s          |  2217 ms                     | 12%     |  18%    |     0%          |
+| 25                    | 0.60 req/s          |  6116 ms                     | 20%     |  25%    |     0%          |
+| 40                    | 0.88 req/s          |  9988 ms                     | 30%     |  33%    |     0%          |
+| 50                    | 1.02 req/s          | 12860 ms                     | 33%     |  38%    |     0%          |
+| 60                    | 1.14 req/s          | 15962 ms                     | 35%     |  42%    |     0%          |
+| 75                    | 1.25 req/s          | 20916 ms                     | 40%     |  49%    |     0%          |
+| 100                   | 1.45 req/s          | 27230 ms                     | 54%     |  57%    |     0%          |
+| 125                   | 1.67 req/s          | 35278 ms                     | 67%     |  64%    |     0%          |
+| 150                   | 1.82 req/s          | 41373 ms                     | 80%     |  71%    |  2.93%          |
+| 175                   | 2.06 req/s          | 43710 ms                     | 88%     |  79%    | 15.89%	         |
+| 200                   | 2.24 req/s          | 46477 ms                     | 92%     |  85%    | 28.10%          |
 
 > **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
 
-#### Prueba de carga progresiva
+Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **50 usuarios concurrentes**. Por otro lado, con **40 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación.
 
-Se define la prueba con los siguientes parametros:
-
-```
-USERS=75,100,125,150,175
-RAMP=5
-SERVER_NAME={amazon_url}
-```
-
-Es una prueba que evalúa el comportamiento del sistema al aumentar progresivamente la carga, observando cómo varía el rendimiento (latencia, throughput, errores). Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
-
-| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
-|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 75                    | 6.65 req/s          | 7120 ms                      | N/A     | N/A     | 0%              |
-| 100                   | 6.35 req/s          | 11483 ms                     | N/A     | N/A     | 0%              |
-| 125                   | 6.88 req/s          | 13757 ms                     | N/A     | N/A     | 0%              |
-| 150                   | 6.69 req/s          | 17956 ms                     | N/A     | N/A     | 0%              |
-| 175                   | 6.58 req/s          | 22494 ms                     | N/A     | N/A     | 0%              |
-
-> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
-
-#### Prueba de estrés
-
-Se define la prueba con los siguientes parametros:
-
-```
-USERS=200,250,300,350,400
-RAMP=5
-SERVER_NAME={amazon_url}
-```
-
-Es una prueba que somete al sistema a una carga superior a la esperada para encontrar el punto de ruptura y evaluar su comportamiento bajo condiciones extremas. Tenemos la siguiente tabla que mide las métricas para el Flujo Completo del escenario con diferentes usuarios concurrentes:
-
-| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
-|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 200                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
-| 250                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
-| 300                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
-| 350                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
-| 400                   | ≥ 5 req/s           | ≤ 2.0 s                      | ≤ 70%   | ≤ 75%   | 0%              |
-
-> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
-
-Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **250 usuarios concurrentes**. Por otro lado, con **240 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación. Podemos asumir que para este flujo completo el número de usuarios concurrentes que puede soportar el servidor web es de **240 usuarios concurrentes** antes de que se degrade 
-
- En particular tenemos los siguientes resultados especificos por endpoint para ese número de usuarios concurrentes:
+Podemos asumir que para este escenario 1 que el número de usuarios concurrentes que puede soportar el servidor web es de **40 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  | ≥ 5 req/s           | ≤ 2000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
-| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
-| Consultar Videos Públicos | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
-| Realizar Voto             | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
-| Consultar Ranking         | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | 0%              |
-
-
+| Registro                  | 1.73 req/s          | 5324 ms                      | 70%       | 90%       | 0%              |
+| Iniciar Sesión            | 1.72 req/s          | 3982 ms                      | 70%       | 90%       | 0%              |
+| Consultar Videos Públicos | 1.78 req/s          | 184 ms                       | 70%       | 90%       | 0%              |
+| Realizar Voto             | 1.78 req/s          | 95 ms                        | 70%       | 90%       | 0%              |
+| Consultar Ranking         | 1.78 req/s          | 182 ms                       | 70%       | 90%       | 0%              |
 
 ## **Escenario 2**
 
@@ -242,7 +196,7 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
-### **Configuración JMeter (ConfiguracionEscenario2.jmx)**
+### **Configuración JMeter ([ConfiguracionEscenario2.jmx](ConfiguracionEscenario2.jmx))**
 
 <br>
 <p align="center">
@@ -295,7 +249,7 @@ Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script p
 cd capacity-planning/Entrega_2/jmeter
 ```
 ```
-USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=host.docker.internal ./run_test.sh ConfiguracionEscenario2.jmx
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=54.227.119.251 ./run_test.sh ConfiguracionEscenario2.jmx
 ```
 
 Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
@@ -305,3 +259,50 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
   <img alt="Imagen3" src="https://github.com/user-attachments/assets/4b820b81-e080-4187-a013-54d23c16a478" />
 </p>
 <br>
+
+### Resultados
+
+Se definen diferentes pruebas con un número creciente de usuarios concurrentes para observas el comportameinto del servidor. Para ello, se definen las pruebas con los siguientes parametros:
+
+```
+USER=10 -> 25 -> 50 -> 60 -> 75 -> 100 -> 125 -> 150 -> 175 -> 200 -> 250
+RAMP=5
+SERVER_NAME=54.227.119.251
+```
+
+Tenemos la siguiente tabla que contiene las métricas del Flujo Completo del escenario con diferentes usuarios concurrentes:
+
+| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
+|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
+| 10                    |                     |                              |         |   %     |     0%          |
+| 25                    |                     |                              |         |   %     |     0%          |
+| 50                    |                     |                              |         |   %     |     0%          |
+| 60                    |                     |                              |         |         |     0%          |
+| 75                    |                     |                              |         |   %     |     0%          |
+| 100                   |                     |                              |         |   %     |     0%          |
+| 125                   |                     |                              |         |   %     |     0%          |
+| 150                   |                     |                              |         |   %     |      %          |
+| 175                   |                     |                              |         |   %     |     %	         |
+| 200                   |                     |                              |         |         |                 |
+| 250                   |                     |                              |         |         |                 |
+
+> **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
+
+
+## Conclusiones
+
+Para el **escenario 1** tenemos las siguientes gráficas que ilustran el comportamiento del servidor durante las pruebas de carga:
+
+Primera gráfica:
+* Eje Y: Throughput (Rendimiento)
+* Eje X: Usuarios Concurrentes
+
+Segunda gráfica:
+* Eje Y: Tiempo de Respuesta Promedio (ms)
+* Eje X: Usuarios Concurrentes
+
+Tercera gráfica:
+* Eje Y: Uso de Recursos (Porcentaje %)
+* Eje X: Usuarios Concurrentes
+
+Para el **escenario 2** tenemos las siguientes gráficas que ilustran el comportamiento del servidor durante las pruebas de carga:
