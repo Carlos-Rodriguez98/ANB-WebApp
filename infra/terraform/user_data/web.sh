@@ -69,7 +69,7 @@ cd /opt/anbapp
 
 # Clone repository
 echo "Clonando repositorio..."
-git clone -b feature/carlos-entrega3 https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
+git clone -b dev https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
     echo "Error al clonar repositorio. Verifica la URL y permisos."
     exit 1
 }
