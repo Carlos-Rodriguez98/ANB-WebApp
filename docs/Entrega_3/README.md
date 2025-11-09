@@ -4,7 +4,7 @@
 
 La infraestructura definida en esta entrga implementa una arquitectura cloud moderna y segura sobre la cuenta sandbox de AWS, orientada a soportar una aplicación web compuesta por múltiples servicios (web, procesamiento, base de datos, almacenamiento, etc). Se utilizan recursos gestionados y buenas prácticas de segmentación, alta disponibilidad y seguridad, facilitando el despliegue, operación y escalabilidad de la solución.
 
-![Arquitectura AWS](./artifacts/aws_arch.jpg)
+![Arquitectura AWS](./artifacts/Proyecto 1 - ANB Rising Stars Showcase - Experimento (Entrega 3).png)
 
 ## 2. Recursos utilizados
 
