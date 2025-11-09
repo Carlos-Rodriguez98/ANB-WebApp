@@ -160,7 +160,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </td>
             <td class="px-4 py-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-2">
-                    <button class="text-blue-600 hover:text-blue-900" onclick="viewVideo('${video.id}')">
+                    ${video.status === 'processed' && !video.published 
+                        ? `<button class="text-green-600 hover:text-green-900" onclick="publishVideo('${video.video_id}', event)">
+                             <i class="fas fa-upload"></i>
+                           </button>` 
+                        : ''
+                    }
+                    <button class="text-blue-600 hover:text-blue-900" onclick="viewVideo('${video.video_id}')">
                         <i class="fas fa-eye"></i>
                     </button>
                     <button class="text-red-600 hover:text-red-900" onclick="confirmDeleteVideo('${video.id}')">
@@ -236,6 +242,36 @@ document.addEventListener('DOMContentLoaded', function() {
     window.confirmDeleteVideo = function(videoId) {
         videoToDelete = videoId;
         deleteModal.classList.add('show');
+    };
+
+    window.publishVideo = async function(videoId, evt) {
+        // Prevenir múltiples clics
+        if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
+        
+        const btn = evt ? evt.currentTarget : null;
+        if (!btn || btn.disabled) return;
+    
+        btn.disabled = true;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+        try {
+            await apiClient.post(`/videos/${videoId}/publish`, {});
+            showToast('Video publicado exitosamente', 'success');
+            
+            // Refresh the video list
+            await loadUserVideos();
+            
+        } catch (error) {
+            console.error('Error publishing video:', error);
+            showToast('Error al publicar', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
     };
 
     // Delete video

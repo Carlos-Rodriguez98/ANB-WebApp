@@ -26,7 +26,7 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidr
   availability_zone       = local.az_a
   map_public_ip_on_launch = true
-  tags = merge(local.tags, { Name = "${var.project_name}-public-${local.az_a}", Tier = "public" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-public-${local.az_a}", Tier = "public" })
 }
 
 resource "aws_route_table" "public" {
@@ -45,13 +45,27 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public.id
 }
 
+# Segunda subred pública en AZ diferente para uso de available
+resource "aws_subnet" "public_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_b_cidr
+  availability_zone       = local.az_b
+  map_public_ip_on_launch = true
+  tags                    = merge(local.tags, { Name = "${var.project_name}-public-${local.az_b}", Tier = "public" })
+}
+
+resource "aws_route_table_association" "public_assoc_b" {
+  subnet_id      = aws_subnet.public_b.id
+  route_table_id = aws_route_table.public.id
+}
+
 # Subredes PRIVADAS (Worker, NFS y luego RDS)
 resource "aws_subnet" "private_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.private_a_subnet_cidr
   availability_zone       = local.az_a
   map_public_ip_on_launch = false
-  tags = merge(local.tags, { Name = "${var.project_name}-private-a-${local.az_a}", Tier = "private" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-private-a-${local.az_a}", Tier = "private" })
 }
 
 resource "aws_subnet" "private_b" {
@@ -59,7 +73,7 @@ resource "aws_subnet" "private_b" {
   cidr_block              = var.private_b_subnet_cidr
   availability_zone       = local.az_b
   map_public_ip_on_launch = false
-  tags = merge(local.tags, { Name = "${var.project_name}-private-b-${local.az_b}", Tier = "private" })
+  tags                    = merge(local.tags, { Name = "${var.project_name}-private-b-${local.az_b}", Tier = "private" })
 }
 
 resource "aws_route_table" "private" {

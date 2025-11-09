@@ -28,10 +28,9 @@ DB_PASSWORD="${DB_PASSWORD}"
 DB_NAME="${DB_NAME}"
 DB_SSLMODE="${DB_SSLMODE}"
 JWT_SECRET="${JWT_SECRET}"
-STORAGE_BASE_PATH="${STORAGE_BASE_PATH}"
-REDIS_ADDR="${REDIS_ADDR}"
-REDIS_PORT="${REDIS_PORT}"
-NFS_SERVER="${NFS_SERVER}"
+S3_BUCKET_NAME="${S3_BUCKET_NAME}"
+AWS_REGION="${AWS_REGION}"
+SQS_QUEUE_URL="${SQS_QUEUE_URL}"
 
 cat > /opt/anbapp/.env <<EOF
 DB_HOST=$DB_HOST
@@ -41,9 +40,10 @@ DB_PASSWORD=$DB_PASSWORD
 DB_NAME=$DB_NAME
 DB_SSLMODE=$DB_SSLMODE
 JWT_SECRET=$JWT_SECRET
-STORAGE_BASE_PATH=$STORAGE_BASE_PATH
-REDIS_ADDR=$REDIS_ADDR
-REDIS_PORT=$REDIS_PORT
+S3_BUCKET_NAME=$S3_BUCKET_NAME
+AWS_REGION=$AWS_REGION
+STORAGE_MODE=s3
+SQS_QUEUE_URL=$SQS_QUEUE_URL
 AUTH_SERVER_PORT=8080
 VIDEO_SERVER_PORT=8081
 VOTING_SERVER_PORT=8082
@@ -53,76 +53,15 @@ EOF
 
 chown ec2-user:ec2-user /opt/anbapp/.env
 
-# Mount NFS for shared storage with retry
-mkdir -p "$STORAGE_BASE_PATH"
-yum install -y nfs-utils || true
+# Instalar AWS CLI si no está instalado
+yum install -y aws-cli || true
 
-# Habilitar e iniciar rpcbind (necesario para clientes NFS)
-systemctl enable rpcbind
-systemctl start rpcbind
+#Configurar región para AWS CLI
+aws configure set region ${AWS_REGION}
 
-# Verificar conectividad con el servidor NFS antes de intentar montar
-echo "Verificando conectividad con servidor NFS $NFS_SERVER..."
-for i in {1..15}; do
-    if ping -c 1 -W 2 "$NFS_SERVER" > /dev/null 2>&1; then
-        echo "Servidor NFS alcanzable"
-        break
-    else
-        echo "Intento $i/15: Servidor NFS no alcanzable, esperando 20 segundos..."
-        sleep 20
-    fi
-    if [ $i -eq 15 ]; then
-        echo "ERROR: No se puede alcanzar el servidor NFS"
-        exit 1
-    fi
-done
-
-# Verificar que el servidor NFS tenga el export disponible
-echo "Verificando exports disponibles en $NFS_SERVER..."
-for i in {1..10}; do
-    if showmount -e "$NFS_SERVER" > /dev/null 2>&1; then
-        echo "Exports NFS disponibles:"
-        showmount -e "$NFS_SERVER"
-        break
-    else
-        echo "Intento $i/10: Exports no disponibles aún, esperando 30 segundos..."
-        sleep 30
-    fi
-    if [ $i -eq 10 ]; then
-        echo "WARNING: No se pudieron verificar exports, intentando montar de todos modos..."
-    fi
-done
-
-# Retry NFS mount up to 10 times
-echo "Intentando montar NFS desde $NFS_SERVER..."
-for i in {1..10}; do
-    if mount -t nfs4 -o rw,hard,intr,rsize=8192,wsize=8192 "$NFS_SERVER:/srv/nfs/appfiles" "$STORAGE_BASE_PATH"; then
-        echo "NFS montado exitosamente"
-        break
-    else
-        echo "Intento $i/10 falló, esperando 30 segundos..."
-        sleep 30
-    fi
-    if [ $i -eq 10 ]; then
-        echo "ERROR: No se pudo montar NFS después de 10 intentos"
-        echo "Detalles de red:"
-        ip addr
-        echo "Rutas:"
-        ip route
-        echo "Logs del sistema:"
-        journalctl -u nfs-client.target -n 50 --no-pager
-        exit 1
-    fi
-done
-
-# Verificar que el montaje esté activo
-df -h | grep "$STORAGE_BASE_PATH"
-ls -la "$STORAGE_BASE_PATH"
-
-# Agregar a fstab para montaje persistente
-echo "$NFS_SERVER:/srv/nfs/appfiles $STORAGE_BASE_PATH nfs4 defaults,_netdev,hard,intr 0 0" >> /etc/fstab
-
-echo "NFS montado y configurado en $STORAGE_BASE_PATH"
+# Verificar acceso a S3
+echo "Verificando acceso a bucket S3..."
+aws s3 ls s3://${S3_BUCKET_NAME}/ || echo "Bucket vacío o primer acceso"
 
 # Clone repository and deploy services
 yum install -y git || true
@@ -130,7 +69,7 @@ cd /opt/anbapp
 
 # Clone repository
 echo "Clonando repositorio..."
-git clone -b dev https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
+git clone -b feature/carlos-entrega3 https://github.com/Carlos-Rodriguez98/ANB-WebApp.git repo || {
     echo "Error al clonar repositorio. Verifica la URL y permisos."
     exit 1
 }

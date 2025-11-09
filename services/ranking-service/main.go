@@ -53,6 +53,18 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// Health check endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "ranking"})
+	})
+
+	// Middleware para logging detallado
+	r.Use(func(c *gin.Context) {
+		log.Printf("📥 Recibida petición: %s %s", c.Request.Method, c.Request.URL.String())
+		c.Next()
+	})
+
 	r.GET("/api/public/rankings", getRanking)
 	r.Run(":" + serverPort)
 }

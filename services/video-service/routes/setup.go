@@ -21,7 +21,16 @@ func SetupRouter() *gin.Engine {
 	}
 
 	repo := repository.NewVideoRepository(db)
-	store := storage.NewLocalStorage()
+	var store storage.Storage
+	if config.AppConfig.StorageMode == "s3" {
+		s3Store, err := storage.NewS3Storage()
+		if err != nil {
+			log.Fatal("Error inicializando S3:", err)
+		}
+		store = s3Store
+	} else {
+		store = storage.NewLocalStorage()
+	}
 	svc := services.NewVideoService(repo, store)
 	vc := controllers.NewVideoController(svc)
 

@@ -1,4 +1,4 @@
-package services
+﻿package services
 
 import (
 	"ANB-WebApp/services/video-service/dto"
@@ -9,11 +9,15 @@ import (
 	"ANB-WebApp/services/video-service/utils"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"os"
-	"path/filepath"
-
 	"strings"
+)
+
+const (
+	minVideoSeconds = 20.0
+	maxVideoSeconds = 60.0
 )
 
 type VideoService struct {
@@ -30,17 +34,22 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		return dto.UploadResponse{}, errors.New("el archivo del video es requerido")
 	}
 	if fh.Size > 100*1024*1024 {
-		return dto.UploadResponse{}, errors.New("el video debe tener un máximo de 100mb de tamaño")
+		return dto.UploadResponse{}, errors.New("el video debe tener un m├íximo de 100mb de tama├▒o")
 	}
 	name := strings.ToLower(fh.Filename)
 	if !strings.HasSuffix(name, ".mp4") {
 		return dto.UploadResponse{}, errors.New("solo se permite un video en formato .mp4")
 	}
+
 	if fh.Header.Get("Content-Type") != "video/mp4" {
 		return dto.UploadResponse{}, errors.New("solo se permite un video en formato .mp4 (1)")
 	}
 
-	v := models.Video{UserID: userID, Title: title, Status: models.StatusUploaded}
+	v := models.Video{
+		UserID: userID,
+		Title:  title,
+		Status: models.StatusUploaded,
+	}
 	err := s.Repo.Create(&v)
 	if err != nil {
 		return dto.UploadResponse{}, err
@@ -48,23 +57,57 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 
 	videoID := fmt.Sprintf("%d", v.ID)
 
-	origPath, err := s.Storage.SaveOriginal(userID, videoID, fh) // original/user_id/video_id.mp4
+	tmpFile, err := os.CreateTemp("", "video-*.mp4")
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo crear archivo temporal: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	// Copiar contenido del upload al archivo temporal
+	src, err := fh.Open()
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo abrir archivo subido: %w", err)
+	}
+	defer src.Close()
+
+	_, err = io.Copy(tmpFile, src)
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo guardar archivo temporal: %w", err)
+	}
+	tmpFile.Close() // Cerrar para que ffprobe pueda leerlo
+
+	// Validar duraci├│n con ffprobe
+	dur, err := utils.ProbeDurationSeconds(tmpFile.Name())
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo leer la duraci├│n del video")
+	}
+	if dur < minVideoSeconds || dur > maxVideoSeconds {
+		return dto.UploadResponse{}, fmt.Errorf(
+			"la duraci├│n del video debe estar entre %.0fs y %.0fs (actual: %.1fs)",
+			minVideoSeconds, maxVideoSeconds, dur,
+		)
+	}
+
+	// subir a storage (S3 o local)
+	origPath, err := s.Storage.SaveOriginal(userID, videoID, fh)
 	if err != nil {
 		return dto.UploadResponse{}, err
 	}
 
-	// validar duración con ffprobe
-	dur, err := utils.ProbeDurationSeconds(filepath.Join(os.Getenv("STORAGE_BASE_PATH"), origPath))
+	// Actualizar BD con original_path
+	err = s.Repo.UpdateOriginalPath(videoID, origPath)
 	if err != nil {
-		_ = s.Storage.Delete(origPath)
-		return dto.UploadResponse{}, err
-	}
-	if dur < 20.0 || dur > 60.0 {
-		_ = s.Storage.Delete(origPath)
-		return dto.UploadResponse{}, fmt.Errorf("el video debe durar entre 20s y 60s (actual: %.1fs)", dur)
+		return dto.UploadResponse{}, fmt.Errorf("no se pudo actualizar original_path: %w", err)
 	}
 
-	err = tasks.EnqueueValidateAndProcess(tasks.ProcessVideoPayload{
+	// Crear cliente SQS y encolar procesamiento
+	sqsClient, err := tasks.NewSQSClient()
+	if err != nil {
+		return dto.UploadResponse{}, fmt.Errorf("error creando cliente SQS: %w", err)
+	}
+
+	err = sqsClient.EnqueueProcessVideo(tasks.ProcessVideoPayload{
 		VideoID:      videoID,
 		UserID:       userID,
 		OriginalPath: origPath,
@@ -74,7 +117,11 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 		return dto.UploadResponse{}, fmt.Errorf("no se pudo encolar la tarea: %w", err)
 	}
 
-	return dto.UploadResponse{Message: "Video subido correctamente. Procesamiento en curso.", TaskID: videoID}, nil
+	return dto.UploadResponse{
+		Message: "Video subido correctamente. Procesamiento en curso.",
+		TaskID:  videoID,
+	}, nil
+
 }
 
 func (s *VideoService) ListMine(userID uint) ([]dto.VideoItem, error) {
@@ -180,7 +227,7 @@ func (s *VideoService) Publish(userID uint, videoID string) error {
 		return err
 	}
 	if v.Published {
-		return errors.New("el video ya está publicado")
+		return errors.New("el video ya est├í publicado")
 	}
 	// Debe estar procesado y tener archivo procesado
 	if v.Status != models.StatusProcessed || v.ProcessedPath == nil {

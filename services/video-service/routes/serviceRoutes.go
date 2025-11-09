@@ -8,6 +8,11 @@ import (
 )
 
 func ServiceRoutes(r *gin.Engine, vc *controllers.VideoController) {
+	// Health check endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "video"})
+	})
+
 	api := r.Group("/api")
 	{
 		protected := api.Group("/videos")

@@ -54,10 +54,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const response = await api.signup({
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
+                    first_name: formData.firstName,
+                    last_name: formData.lastName,
                     email: formData.email,
-                    password: formData.password,
+                    password1: formData.password,
+                    password2: formData.confirmPassword,
                     city: formData.city,
                     country: formData.country
                 });
