@@ -5,8 +5,6 @@
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments"/>
       </elementProp>
-      <boolProp name="TestPlan.functional_mode">false</boolProp>
-      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
     </TestPlan>
     <hashTree>
       <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables_Entorno">
@@ -31,14 +29,9 @@
             <stringProp name="Argument.value">${__P(SERVER_NAME,host.docker.internal)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="AUTH_SERVICE_PORT" elementType="Argument">
-            <stringProp name="Argument.name">AUTH_SERVICE_PORT</stringProp>
-            <stringProp name="Argument.value">${__P(AUTH_SERVICE_PORT,8080)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="VIDEO_SERVICE_PORT" elementType="Argument">
-            <stringProp name="Argument.name">VIDEO_SERVICE_PORT</stringProp>
-            <stringProp name="Argument.value">${__P(VIDEO_SERVICE_PORT,8081)}</stringProp>
+          <elementProp name="ALB_PORT" elementType="Argument">
+            <stringProp name="Argument.name">ALB_PORT</stringProp>
+            <stringProp name="Argument.value">${__P(ALB_PORT,80)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="TEST_EMAIL" elementType="Argument">
@@ -61,7 +54,7 @@
         </collectionProp>
       </Arguments>
       <hashTree/>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Pruebas_Escenario_2" enabled="true">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Pruebas_Escenario_2">
         <stringProp name="ThreadGroup.num_threads">${USERS}</stringProp>
         <stringProp name="ThreadGroup.ramp_time">${RAMP}</stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -72,13 +65,13 @@
         </elementProp>
       </ThreadGroup>
       <hashTree>
-        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Escenario_2" enabled="true">
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Escenario_2">
           <boolProp name="TransactionController.includeTimers">false</boolProp>
         </TransactionController>
         <hashTree>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_1_Iniciar_Sesión ">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${AUTH_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${ALB_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
             <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
@@ -99,7 +92,7 @@
             </elementProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer ACCESS_TOKEN" enabled="true">
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer ACCESS_TOKEN">
               <stringProp name="JSONPostProcessor.referenceNames">ACCESS_TOKEN</stringProp>
               <stringProp name="JSONPostProcessor.jsonPathExprs">$.access_token</stringProp>
               <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
@@ -107,9 +100,9 @@
             </JSONPostProcessor>
             <hashTree/>
           </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_2_Consultar_Videos_Propios" enabled="true">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_2_Consultar_Videos_Propios">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${ALB_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
             <stringProp name="HTTPSampler.path">/api/videos</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
@@ -121,7 +114,7 @@
             </elementProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
               <collectionProp name="HeaderManager.headers">
                 <elementProp name="" elementType="Header">
                   <stringProp name="Header.name">Authorization</stringProp>
@@ -131,9 +124,9 @@
             </HeaderManager>
             <hashTree/>
           </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_3_Subir_Video" enabled="true">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_3_Subir_Video">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${ALB_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
             <stringProp name="HTTPSampler.path">/api/videos/upload</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
@@ -164,7 +157,7 @@
             </elementProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
               <collectionProp name="HeaderManager.headers">
                 <elementProp name="" elementType="Header">
                   <stringProp name="Header.name">Authorization</stringProp>
@@ -173,7 +166,7 @@
               </collectionProp>
             </HeaderManager>
             <hashTree/>
-            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer VIDEO_ID" enabled="true">
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="extraer VIDEO_ID">
               <stringProp name="JSONPostProcessor.referenceNames">VIDEO_ID</stringProp>
               <stringProp name="JSONPostProcessor.jsonPathExprs">$.task_id</stringProp>
               <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
@@ -181,9 +174,9 @@
             </JSONPostProcessor>
             <hashTree/>
           </hashTree>
-          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_4_Consultar_Detalle_Video" enabled="true">
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request_4_Consultar_Detalle_Video">
             <stringProp name="HTTPSampler.domain">${SERVER_NAME}</stringProp>
-            <stringProp name="HTTPSampler.port">${VIDEO_SERVICE_PORT}</stringProp>
+            <stringProp name="HTTPSampler.port">${ALB_PORT}</stringProp>
             <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
             <stringProp name="HTTPSampler.path">/api/videos/${VIDEO_ID}</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
@@ -195,7 +188,7 @@
             </elementProp>
           </HTTPSamplerProxy>
           <hashTree>
-            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
               <collectionProp name="HeaderManager.headers">
                 <elementProp name="" elementType="Header">
                   <stringProp name="Header.name">Authorization</stringProp>
