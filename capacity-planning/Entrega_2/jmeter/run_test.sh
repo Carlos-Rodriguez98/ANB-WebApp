@@ -11,7 +11,7 @@ if [ $# -eq 0 ]; then
 fi
 
 JMX_FILE=$1
-NUM_RUNS=${2:-5}
+NUM_RUNS=${NUM_RUNS:-5}
 JTL=${3:-output/resultados.jtl}
 REPORT_DIR=${4:-output/report}
 CONTAINER_NAME=jmeter-runner
