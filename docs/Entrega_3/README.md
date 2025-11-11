@@ -354,12 +354,12 @@ En AWS Console → EC2 → Auto Scaling Groups:
 
 Para validar el funcionamiento del Auto Scaling:
 
-1. **Ejecutar pruebas de carga** usando herramientas como Apache JMeter o Locust
-2. **Monitorear CloudWatch** para ver métricas de CPU y request count
+1. **Ejecutar pruebas de carga** usando la herramienta de Apache JMeter
+2. **Monitorear CloudWatch** para ver métricas de CPU y RAM
 3. **Verificar escalado automático** en la consola de Auto Scaling
 4. **Validar distribución de tráfico** en el ALB
 
-Revisar el documento de pruebas de carga en: `capacity-planning/Entrega_2/`
+Revisar el documento de pruebas de carga en: `capacity-planning/Entrega_3/`
 
 ## 10. Conclusiones
 
