@@ -95,6 +95,9 @@ La arquitectura se organiza en capas:
 * **Separación de responsabilidades**: infraestructura organizada en capas claras (frontend, lógica, datos).
 * **Cumplimiento con buenas prácticas de AWS**: aislamiento de datos sensibles y exposición mínima de servicios públicos.
 
+
+---
+
 ## 6. Comandos para desplegar la arquitectura en amazon
 
 Primero, en una terminal bash nos paramos en la carpeta que contiene los scripts del despliegue:
