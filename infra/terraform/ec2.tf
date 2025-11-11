@@ -49,36 +49,36 @@ data "aws_ami" "amazon_linux" {
 #   }
 # }
 
-# --- EC2 Worker ---
-resource "aws_instance" "worker" {
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.private_a.id
-  vpc_security_group_ids = [aws_security_group.worker.id]
-  key_name               = data.aws_key_pair.main.key_name
-  iam_instance_profile   = data.aws_iam_instance_profile.lab_instance_profile.name
+# --- EC2 Worker --- Se deshabilita para uso de autoscaling
+# resource "aws_instance" "worker" {
+#   ami                    = data.aws_ami.amazon_linux.id
+#   instance_type          = var.instance_type
+#   subnet_id              = aws_subnet.private_a.id
+#   vpc_security_group_ids = [aws_security_group.worker.id]
+#   key_name               = data.aws_key_pair.main.key_name
+#   iam_instance_profile   = data.aws_iam_instance_profile.lab_instance_profile.name
 
-  root_block_device {
-    volume_size = var.instance_disk_size
-    volume_type = "gp3"
-  }
+#   root_block_device {
+#     volume_size = var.instance_disk_size
+#     volume_type = "gp3"
+#   }
 
-  user_data = templatefile("${path.module}/user_data/worker.sh", {
-    DB_HOST        = aws_db_instance.main.address
-    DB_PORT        = var.db_port
-    DB_USER        = var.db_username
-    DB_PASSWORD    = var.db_password
-    DB_NAME        = var.db_name
-    DB_SSLMODE     = "require"
-    JWT_SECRET     = var.jwt_secret
-    S3_BUCKET_NAME = aws_s3_bucket.storage.id
-    AWS_REGION     = var.aws_region
-    SQS_QUEUE_URL  = aws_sqs_queue.video_processing.url
-    SSM_BASE_PATH  = var.ssm_path
-  })
+#   user_data = templatefile("${path.module}/user_data/worker.sh", {
+#     DB_HOST        = aws_db_instance.main.address
+#     DB_PORT        = var.db_port
+#     DB_USER        = var.db_username
+#     DB_PASSWORD    = var.db_password
+#     DB_NAME        = var.db_name
+#     DB_SSLMODE     = "require"
+#     JWT_SECRET     = var.jwt_secret
+#     S3_BUCKET_NAME = aws_s3_bucket.storage.id
+#     AWS_REGION     = var.aws_region
+#     SQS_QUEUE_URL  = aws_sqs_queue.video_processing.url
+#     SSM_BASE_PATH  = var.ssm_path
+#   })
 
-  tags = {
-    Name    = "${var.project_name}-worker"
-    Project = var.project_name
-  }
-}
+#   tags = {
+#     Name    = "${var.project_name}-worker"
+#     Project = var.project_name
+#   }
+# }

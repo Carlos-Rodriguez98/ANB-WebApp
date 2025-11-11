@@ -48,6 +48,56 @@ resource "aws_launch_template" "web" {
   }
 }
 
+# Launch Template para instancias Worker
+resource "aws_launch_template" "worker" {
+  name_prefix   = "${var.project_name}-worker-lt-"
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  key_name      = data.aws_key_pair.main.key_name
+
+  iam_instance_profile {
+    name = data.aws_iam_instance_profile.lab_instance_profile.name
+  }
+
+  vpc_security_group_ids = [aws_security_group.worker.id]
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      volume_size = var.instance_disk_size
+      volume_type = "gp3"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/user_data/worker.sh", {
+    DB_HOST        = aws_db_instance.main.address
+    DB_PORT        = var.db_port
+    DB_USER        = var.db_username
+    DB_PASSWORD    = var.db_password
+    DB_NAME        = var.db_name
+    DB_SSLMODE     = "require"
+    JWT_SECRET     = var.jwt_secret
+    S3_BUCKET_NAME = aws_s3_bucket.storage.id
+    AWS_REGION     = var.aws_region
+    SQS_QUEUE_URL  = aws_sqs_queue.video_processing.url
+    SSM_BASE_PATH  = var.ssm_path
+  }))
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name    = "${var.project_name}-worker-asg"
+      Project = var.project_name
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # Auto Scaling Group
 resource "aws_autoscaling_group" "web" {
   name                = "${var.project_name}-web-asg"
@@ -81,6 +131,53 @@ resource "aws_autoscaling_group" "web" {
   tag {
     key                 = "Name"
     value               = "${var.project_name}-web-asg"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = var.project_name
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [desired_capacity]
+  }
+}
+
+resource "aws_autoscaling_group" "worker" {
+  name                = "${var.project_name}-worker-asg"
+  vpc_zone_identifier = [aws_subnet.private_a.id]
+  target_group_arns = [
+    aws_lb_target_group.auth.arn,
+    aws_lb_target_group.video.arn,
+    aws_lb_target_group.voting.arn,
+    aws_lb_target_group.ranking.arn,
+    aws_lb_target_group.front.arn
+  ]
+  health_check_type         = "ELB"
+  health_check_grace_period = 900
+  min_size                  = 1
+  max_size                  = 3
+  desired_capacity          = 1
+
+  launch_template {
+    id      = aws_launch_template.worker.id
+    version = "$Latest"
+  }
+
+  enabled_metrics = [
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupTotalInstances"
+  ]
+
+  tag {
+    key                 = "Name"
+    value               = "${var.project_name}-worker-asg"
     propagate_at_launch = true
   }
 
