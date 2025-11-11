@@ -196,11 +196,11 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Iniciar Sesión            | ≥ 10 req/s          | ≤ 4000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Consultar Video Propios   | ≥ 20 req/s          | ≤ 2500 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Subir Video               | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| Consultar Detalle Video   | ≥ 8 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 75%     | ≤ 1%            |
-| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 20500 ms**               | **≤ 70%** | **≤ 75%** | **≤ 1%**       | 
+| Iniciar Sesión            | ≥ 0.4 req/s         | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Video Propios   | ≥ 0.4 req/s         | ≤ 2500 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Subir Video               | ≥ 0.3 req/s         | ≤ 20000 ms                   | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Detalle Video   | ≥ 0.3 req/s         | ≤ 1000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 0.2 req/s**     | **≤ 26500 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
@@ -282,26 +282,16 @@ Tenemos la siguiente tabla que contiene las métricas del Flujo Completo del esc
 
 | Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
 |:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 10                    | 0.08 req/s          | 17286 ms                     | 8%      |   %     |     0%          |
-| 20                    | 0.16 req/s          | 18777 ms                     | 14%     |   %     |     0%          |
-| 30                    | 0.24 req/s          | 24203 ms                     | 20%     |   %     |     0%          |
-<<<<<<< HEAD
-| 40                    | 0.28 req/s          | 25872 ms                     | 25%     |   %     |     0%          |
-| 50                    | 0.39 req/s          | 27438 ms                     | 32%     |   %     |     0%          |
-| 60                    | 0.56 req/s          | 30189 ms                     | 38%     |   %     |     0%          |
-| 70                    | 0.60 req/s          | 29642 ms                     | 45%     |   %     |     0%          |
-| 80                    | 0.65 req/s          | 43823 ms                     | 50%     |   %     |     0%          |
-| 90                    | 0.00 req/s          | 43823 ms                     |         |   %     |     0%	         |
-| 100                   | 0.00 req/s          | 43823 ms                     |         |   %     |     0%          |
-=======
-| 40                    |                     |                              |         |         |     0%          |
-| 50                    |                     |                              |         |   %     |     0%          |
-| 60                    |                     |                              |         |   %     |     0%          |
-| 70                    |                     |                              |         |   %     |     0%          |
-| 80                    |                     |                              |         |   %     |      %          |
-| 90                    |                     |                              |         |   %     |      %	         |
-| 100                   |                     |                              |         |         |                 |
->>>>>>> b30a154865c7afe9aa9d6c27cf68c9bdc9210222
+| 10                    | 0.08 req/s          | 17286 ms                     | 8%      |  28%    |     0%          |
+| 20                    | 0.16 req/s          | 18777 ms                     | 14%     |  35%    |     0%          |
+| 30                    | 0.24 req/s          | 24203 ms                     | 20%     |  42%    |     0%          |
+| 40                    | 0.28 req/s          | 25872 ms                     | 25%     |  48%    |     0%          |
+| 50                    | 0.39 req/s          | 27438 ms                     | 32%     |  55%    |     0%          |
+| 60                    | 0.56 req/s          | 30189 ms                     | 38%     |  63%    |     0%          |
+| 70                    | 0.60 req/s          | 35642 ms                     | 45%     |  69%    |     0%          |
+| 80                    | 0.65 req/s          | 43823 ms                     | 50%     |  75%    |     0%          |
+| 90                    | 0.67 req/s          | 52910 ms                     | 57%     |  82%    |     0%	       |
+| 100                   | 0.69 req/s          | 61254 ms                     | 63%     |  88%    |     0%          |
 
 > **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
 
@@ -311,18 +301,10 @@ Podemos asumir que para este escenario 1 el número de usuarios concurrentes que
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-<<<<<<< HEAD
-| Iniciar Sesión            | 1.73 req/s          | 5324 ms                      | 30%       | 33%       | 0%              |
-| Consultar Videos Propios  | 1.72 req/s          | 3982 ms                      | 30%       | 33%       | 0%              |
-| Subir Videos              | 1.78 req/s          | 184 ms                       | 30%       | 33%       | 0%              |
-| Consultar Detalle Video   | 1.78 req/s          | 95 ms                        | 30%       | 33%       | 0%              |
-=======
-| Registro                  | 1.73 req/s          | 5324 ms                      | 30%       | 33%       | 0%              |
-| Iniciar Sesión            | 1.72 req/s          | 3982 ms                      | 30%       | 33%       | 0%              |
-| Consultar Videos Públicos | 1.78 req/s          | 184 ms                       | 30%       | 33%       | 0%              |
-| Realizar Voto             | 1.78 req/s          | 95 ms                        | 30%       | 33%       | 0%              |
-| Consultar Ranking         | 1.78 req/s          | 182 ms                       | 30%       | 33%       | 0%              |
->>>>>>> b30a154865c7afe9aa9d6c27cf68c9bdc9210222
+| Iniciar Sesión            | 0.41 req/s          |  3640 ms                     | 25%       | 48%       | 0%              |
+| Consultar Videos Propios  | 0.41 req/s          |   482 ms                     | 25%       | 48%       | 0%              |
+| Subir Video               | 0.35 req/s          | 17909 ms                     | 25%       | 48%       | 0%              |
+| Consultar Detalle Video   | 0.35 req/s          |   615 ms                     | 25%       | 48%       | 0%              |
 
 <br>
 
@@ -360,26 +342,29 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
 
 Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamiento del servidor durante las pruebas de carga:
 
-<img width="1131" height="610" alt="image" src="https://github.com/user-attachments/assets/14b951cc-4a36-47a5-b5f1-24269d351370" />
+<p align="center">
+  <img alt="Imagen100" src="https://github.com/user-attachments/assets/9e820560-e620-457f-90af-59a1c19ee623" />
+</p>
 
-<img width="1152" height="613" alt="image" src="https://github.com/user-attachments/assets/b3b1580f-f9b8-4d92-93e4-791ce2818c18" />
+<p align="center">
+  <img alt="Imagen101" src="https://github.com/user-attachments/assets/a92d3c0e-2afb-4dff-a62d-ea0a6058d130" />
+</p>
 
-<img width="1102" height="607" alt="image" src="https://github.com/user-attachments/assets/bd64a909-f03b-4ec2-9f19-6e3f646cf463" />
+<p align="center">
+  <img alt="Imagen102" src="https://github.com/user-attachments/assets/2792fa92-621a-4a55-9764-6de044f953f3" />
+</p>
 
-<img width="1176" height="606" alt="image" src="https://github.com/user-attachments/assets/5265e438-ecfc-4db9-a805-37837d92b495" />
+<p align="center">
+  <img alt="Imagen103" src="https://github.com/user-attachments/assets/595d03f9-cea9-4f08-bb25-52b857491554" />
+</p>
 
+**1. Capacidad Máxima y Estabilidad Operativa:** La capacidad máxima estable del Escenario 2, se establece con 40 usuarios concurrentes. En este nivel de carga, el sistema cumple con todos los criterios de aceptación definidos, registrando un tiempo de respuesta promedio de 25872 ms (dentro del límite de 26500 ms) y un througput de 0.28 req/s (superando el mínimo de 0.2 req/s). La utilización de recursos se mantien en niveles bajos (25% CPU y 48% RAM), indicando una operación estable.
 
-Primera gráfica:
-* Eje Y: Throughput (Rendimiento)
-* Eje X: Usuarios Concurrentes
+**2. Punto de Degradación del Servicio:** El punto de degradación del flujo completo se identifica claramente con 50 usuarios concurrentes, momento en el cual el Tiempo de Respuesta Promedio se eleva a 27438 ms, superando el umbral máximo aceptable de 26500 ms. Este es el primer criterio que se incumple y marca el límite de la experiencia de usuario, a pesar de que los recursos del servidor (32% CPU y 55% RAM) y la tasa de errores (0%) aún se encuentran dentro de los parámetros aceptables.
 
-Segunda gráfica:
-* Eje Y: Tiempo de Respuesta Promedio (ms)
-* Eje X: Usuarios Concurrentes
+**3 Identificación del Cuello de Botella:** El cuello de botella de este escenario es inequívocamente la petición de "Subir Video" (Request_3). Con 40 usuarios, esta operación consume 17909 ms (casi el 70% del tiempo total del flujo). Dado que la utilización de CPU (25%) y RAM (48%) es muy baja, el cuello de botella no es el procesamiento del servidor, sino el ancho de banda y la E/S de red, limitados por el tiempo requerido para transferir el archivo de 16MB en cada solicitud concurrente.
 
-Tercera gráfica:
-* Eje Y: Uso de Recursos (Porcentaje %)
-* Eje X: Usuarios Concurrentes
+**4. Límites de Resistencia y Tasa de Errores:** El sistema demuestra una resistencia a errores, manteniendo una Tasa de Errores de 0% en todos los niveles probados (hasta 100 usuarios). Sin embargo, se identifica un segundo punto de fallo relacionado con los recursos: a partir de 90 usuarios, el consumo de RAM alcanza el 82%, superando el umbral del 80%. Esto indica que la memoria se convierte en un factor limitante en cargas muy altas, aunque esto ocurre mucho después de que el tiempo de respuesta ya se ha degradado.
 
 <br>
 
