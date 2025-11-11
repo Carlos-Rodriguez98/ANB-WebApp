@@ -8,6 +8,8 @@ set -e
 echo
 echo "=== Configuración de credenciales AWS ==="
 
+rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
+
 read -p "AWS_ACCESS_KEY_ID: " AWS_ACCESS_KEY_ID
 read -p "AWS_SECRET_ACCESS_KEY: " AWS_SECRET_ACCESS_KEY
 read -p "AWS_SESSION_TOKEN: " AWS_SESSION_TOKEN
