@@ -55,12 +55,12 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  | ≥ 1.5 req/s         | ≤ 6000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Iniciar Sesión            | ≥ 1.5 req/s         | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Videos Públicos | ≥ 1.7 req/s         | ≤  500 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Realizar Voto             | ≥ 1.7 req/s         | ≤  300 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Ranking         | ≥ 1.7 req/s         | ≤  500 ms                    | ≤ 70%     | ≤ 89%     | ≤ 1%            |
-| **Flujo Completo**        | **≥ 0.8 req/s**     | **≤ 11300 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
+| Registro                  | ≥ 7 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Iniciar Sesión            | ≥ 7 req/s           | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Videos Públicos | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Realizar Voto             | ≥ 10 req/s          | ≤  300 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Ranking         | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%     | ≤ 89%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 11300 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Registro → Inicio de Sesión → Consultar Videos Publicos → Realizar Voto → Consultar Ranking). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
@@ -79,10 +79,8 @@ USERS=1
 RAMP=5
 NUM_RUNS=5
 PROTOCOL=http
-SERVER_NAME=host.docker.internal
-AUTH_SERVICE_PORT=8080
-PUBLIC_VIDEO_SERVICE_PORT=8082
-RANKING_SERVICE_PORT=8083
+SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com
+ALB_PORT=80
 ```
 
 Luego, se define el Transaction Controller (Escenario_1) que ejecutará cada hilo para simular el flujo completo del escenario. Dentro de esta transacción se incluyen los siguientes elementos:
@@ -104,7 +102,7 @@ Luego, se define el Transaction Controller (Escenario_1) que ejecutará cada hil
 Para ejecutar la prueba de carga se ejecuta los siguientes comandos para levantar el contenedor con JMeter:
 
 ```
-cd capacity-planning/Entrega_2/jmeter
+cd capacity-planning/Entrega_3/jmeter
 ```
 ```
 docker build -t jmeter-cli:5.6.3 .
@@ -113,13 +111,10 @@ docker build -t jmeter-cli:5.6.3 .
 docker compose up -d
 ```
 
-Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script para correr la prueba:
+Una vez levantado el contenedor con Jmeter se ejecuta el siguiente script para correr la prueba:
 
 ```
-cd capacity-planning/Entrega_2/jmeter
-```
-```
-USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=3.236.136.31 ./run_test.sh ConfiguracionEscenario1.jmx
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com ./run_test.sh ConfiguracionEscenario1.jmx
 ```
 
 Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
@@ -137,38 +132,38 @@ Se definen diferentes pruebas con un número creciente de usuarios concurrentes 
 ```
 USERS=10
 RAMP=5
-SERVER_NAME=3.236.136.31
+NUM_RUNS=5
+SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com
 ```
 
 Tenemos la siguiente tabla que contiene las métricas del **Flujo Completo** del escenario con diferentes usuarios concurrentes:
 
 | Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
 |:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 10                    | 0.27 req/s          |  2217 ms                     | 12%     |  18%    |     0%          |
-| 25                    | 0.60 req/s          |  6116 ms                     | 20%     |  25%    |     0%          |
-| **40**                | **0.88 req/s**      |  **9988 ms**                 | **30%** | **33%** |     **0%**      |
-| 50                    | 1.02 req/s          | 12860 ms                     | 33%     |  38%    |     0%          |
-| 60                    | 1.14 req/s          | 15962 ms                     | 35%     |  42%    |     0%          |
-| 75                    | 1.25 req/s          | 20916 ms                     | 40%     |  49%    |     0%          |
-| 100                   | 1.45 req/s          | 27230 ms                     | 54%     |  57%    |     0%          |
-| 125                   | 1.67 req/s          | 35278 ms                     | 67%     |  64%    |     0%          |
-| 150                   | 1.82 req/s          | 41373 ms                     | 80%     |  71%    |  2.93%          |
-| 175                   | 2.06 req/s          | 43710 ms                     | 88%     |  79%    | 15.89%	         |
-| 200                   | 2.24 req/s          | 46477 ms                     | 92%     |  85%    | 28.10%          |
+| 10                    | 1.59 req/s          |  2746 ms                     |  4%     |   6%    |     0%          |
+| 25                    | 3.65 req/s          |  3015 ms                     |  8%     |  10%    |     0%          |
+| 50                    | 5.31 req/s          |  4941 ms                     | 14%     |  16%    |     0%          |
+| 75                    | 5.34 req/s          |  8464 ms                     | 20%     |  22%    |     0%          |
+| **85**                | **5.20 req/s**      | **9780 ms**                 | **24%** | **25%** |     **0%**      | 
+| 100                   | 5.71 req/s          | 12293 ms                     | 27%     |  30%    |     0%          |
+| 125                   | 6.01 req/s          | 15165 ms                     | 33%     |  36%    |     0%          |
+| 150                   | 5.83 req/s          | 19822 ms                     | 38%     |  38%    |     2%          |
+| 175                   | 4.63 req/s          | 22742 ms                     | 46%     |  45%    |     3%          |
+| 200                   | 4.42 req/s          | 23229 ms                     | 49%     |  52%    |    14%          |
 
 > **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
 
-Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **50 usuarios concurrentes**. Por otro lado, con **40 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación.
+Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **100 usuarios concurrentes**. Por otro lado, con **85 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación.
 
-Podemos asumir que para este escenario 1 el número de usuarios concurrentes que puede soportar el servidor web es de **40 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
+Podemos asumir que para este escenario 1 el número de usuarios concurrentes que puede soportar el servidor web es de **85 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  | 1.73 req/s          | 5324 ms                      | 30%       | 33%       | 0%              |
-| Iniciar Sesión            | 1.72 req/s          | 3982 ms                      | 30%       | 33%       | 0%              |
-| Consultar Videos Públicos | 1.78 req/s          | 184 ms                       | 30%       | 33%       | 0%              |
-| Realizar Voto             | 1.78 req/s          | 95 ms                        | 30%       | 33%       | 0%              |
-| Consultar Ranking         | 1.78 req/s          | 182 ms                       | 30%       | 33%       | 0%              |
+| Registro                  |  7.47 req/s         | 5331 ms                      |   24%     |  25%      | 0%              |
+| Iniciar Sesión            |  7.57 req/s         | 4077 ms                      |   24%     |  25%      | 0%              |
+| Consultar Videos Públicos | 14.72 req/s         |  117 ms                      |   24%     |  25%      | 0%              |
+| Realizar Voto             | 14.72 req/s         |   98 ms                      |   24%     |  25%      | 0%              |
+| Consultar Ranking         | 13.74 req/s         |   95 ms                      |   24%     |  25%      | 0%              |
 
 <br>
 
@@ -196,11 +191,11 @@ Así mismo, se definen los criterios de aceptación que establecen los umbrales 
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Iniciar Sesión            | ≥ 0.4 req/s         | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Video Propios   | ≥ 0.4 req/s         | ≤ 2500 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Subir Video               | ≥ 0.3 req/s         | ≤ 20000 ms                   | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Detalle Video   | ≥ 0.3 req/s         | ≤ 1000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| **Flujo Completo**        | **≥ 0.2 req/s**     | **≤ 26500 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
+| Iniciar Sesión            | ≥ 7 req/s           | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Video Propios   | ≥ 3 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Subir Video               | ≥ 1 req/s           | ≤ 20000 ms                   | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| Consultar Detalle Video   | ≥ 2 req/s           | ≤ 1000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
+| **Flujo Completo**        | **≥ 1 req/s**       | **≤ 31000 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Inicio de Sesión → Consultar Videos Propios → Subir Video → Consultar Detalle Video). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
@@ -219,9 +214,8 @@ USERS=1
 RAMP=5
 NUM_RUNS=5
 PROTOCOL=http
-SERVER_NAME=54.82.32.232
-AUTH_SERVICE_PORT=8080
-VIDEO_SERVICE_PORT=8081
+SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com
+ALB_PORT=80
 TEST_EMAIL=carlos.ramirez@example.com
 TEST_PASSWORD=password123
 VIDEO_FILE_PATH=../../../collections/mp4_16mb_test.mp4
@@ -251,13 +245,10 @@ docker build -t jmeter-cli:5.6.3 .
 docker compose up -d
 ```
 
-Ahora en otra terminal bash sobre la misma ruta se ejecuta el siguiente script para correr la prueba:
+Una vez levantado el contenedor con Jmeter se ejecuta el siguiente script para correr la prueba:
 
 ```
-cd capacity-planning/Entrega_2/jmeter
-```
-```
-USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=54.82.32.232 ./run_test.sh ConfiguracionEscenario2.jmx
+USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com ./run_test.sh ConfiguracionEscenario2.jmx
 ```
 
 Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
@@ -275,36 +266,37 @@ Se definen diferentes pruebas con un número creciente de usuarios concurrentes 
 ```
 USER=10
 RAMP=5
-SERVER_NAME=54.227.119.251
+NUM_RUNS=5
+SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com
 ```
 
 Tenemos la siguiente tabla que contiene las métricas del Flujo Completo del escenario con diferentes usuarios concurrentes:
 
 | Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
 |:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 10                    | 0.08 req/s          | 17286 ms                     | 8%      |  28%    |     0%          |
-| 20                    | 0.16 req/s          | 18777 ms                     | 14%     |  35%    |     0%          |
-| 30                    | 0.24 req/s          | 24203 ms                     | 20%     |  42%    |     0%          |
-| 40                    | 0.28 req/s          | 25872 ms                     | 25%     |  48%    |     0%          |
-| 50                    | 0.39 req/s          | 27438 ms                     | 32%     |  55%    |     0%          |
-| 60                    | 0.56 req/s          | 30189 ms                     | 38%     |  63%    |     0%          |
-| 70                    | 0.60 req/s          | 35642 ms                     | 45%     |  69%    |     0%          |
-| 80                    | 0.65 req/s          | 43823 ms                     | 50%     |  75%    |     0%          |
-| 90                    | 0.67 req/s          | 52910 ms                     | 57%     |  82%    |     0%	       |
-| 100                   | 0.69 req/s          | 61254 ms                     | 63%     |  88%    |     0%          |
+| 10                    | 0.87 req/s          |  7092 ms                     |  4%     |   6%    |     0%          |
+| 20                    | 1.41 req/s          |  9737 ms                     |  9%     |  11%    |     0%          |
+| 30                    | 1.52 req/s          | 14968 ms                     | 12%     |  15%    |     0%          |
+| 40                    | 1.64 req/s          | 16641 ms                     | 15%     |  19%    |     0%          |
+| 50                    | 1.69 req/s          | 20364 ms                     | 18%     |  22%    |     0%          | 
+| 60                    | 1.70 req/s          | 23211 ms                     | 21%     |  25%    |     0%          |
+| **70**                | **1.72 req/s**      | **25774 ms**                 | **24%** | **28%** |     **0%**      |
+| 80                    | 1.77 req/s          | 32573 ms                     | 30%     |  34%    |     0%          |
+| 90                    | 1.83 req/s          | 34582 ms                     | 35%     |  40%    |     0%	       |
+| 100                   | 1.85 req/s          | 37095 ms                     | 42%     |  47%    |     0%          |
 
 > **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
 
-Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **50 usuarios concurrentes**. Por otro lado, con **40 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación.
+Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el umbral de aceptación ocurre con **80 usuarios concurrentes**. Por otro lado, con **70 usuarios concurrentes** se mantiene sin sobrepasar el umbral de los criterios de aceptación.
 
-Podemos asumir que para este escenario 1 el número de usuarios concurrentes que puede soportar el servidor web es de **40 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
+Podemos asumir que para este escenario 1 el número de usuarios concurrentes que puede soportar el servidor web es de **70 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
 
 | Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
 |:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Iniciar Sesión            | 0.41 req/s          |  3640 ms                     | 25%       | 48%       | 0%              |
-| Consultar Videos Propios  | 0.41 req/s          |   482 ms                     | 25%       | 48%       | 0%              |
-| Subir Video               | 0.35 req/s          | 17909 ms                     | 25%       | 48%       | 0%              |
-| Consultar Detalle Video   | 0.35 req/s          |   615 ms                     | 25%       | 48%       | 0%              |
+| Iniciar Sesión            |  8.90 req/s         |  2151 ms                     |   24%     |  28%      | 0%              |
+| Consultar Videos Propios  |  3.36 req/s         |  5605 ms                     |   24%     |  28%      | 0%              |
+| Subir Video               |  1.96 req/s         | 17745 ms                     |   24%     |  28%      | 0%              |
+| Consultar Detalle Video   |  2.57 req/s         |   271 ms                     |   24%     |  28%      | 0%              |
 
 <br>
 
@@ -330,13 +322,7 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
   <img alt="Imagen103" src="https://github.com/user-attachments/assets/5265e438-ecfc-4db9-a805-37837d92b495" />
 </p>
 
-**1. Capacidad Máxima y Estabilidad Operativa:** El análisis de los resultados del Escenario 1 indica que la capacidad máxima estable del sistema, cumpliendo con todos los critierios de aceptación del flujo completo, es de **40 usuarios concurrentes**. A este nivel de carga, el sistema mantiene un tiempo de respuesta promedio aceptable de 9988 ms y una utilización de recursos de servidor baja (30% de CPU y 33% de RAM), demostrando un buen desempeño y estabilidad sin degradación de la experiencia del usuario ni sobrecarga de la infraestructura.
 
-**2. Punto de Degradación del Servicio:** Este punto se identifica con 50 usuarios concurrentes, momento en el cual el Tiempo de Respuesto Promedio del flujo completo supera el umbral de aceptación (se incrementa a 12860ms superando el límite de 11300ms). Este es el primer indicador de cuello de botella y marca la capacidad máxima que el sistema puede manejar antes de que la latencia impacte negativamente la experiencia del usuario, incluso antes de que los recursos de hardware se agoten.
-
-**3. Identificación del Cuello de Botella:** El cuello de botella primario no está directamente asociado al agotamiento de recursos físicos (CPU o RAM), dado que estos se mantienen en niveles bajos a moderados (<= 40% hasta 75 usuarios) en el punto de degradación. En su lugar, la limitación parece ser interna de la aplicación, especificamente del servicio de autenticación, posiblemente debido a la contención de threads o procesos ineficientes en las peticiones de Registro e Inicio de Sesión. La optimización debe enforcarse en estos componentes de la capa de aplicación para mejorar la gestión de la concurrencia.
-
-**4. Límites de Resistencia y Tasa de Errores:** El sistema exhibe un alto grado de resistencia en términos de errrores, manteniendo una Tasa de Errores del 0% hasta 125 usuarios concurrentes. La saturación y alta tasa de errores ocurre más tarde, a partir de 150 usuarios, donde el uso de CPU supera el umbral del 70% y la tasa de errores se dispara a 2.93% y luego a 28.10% con 200 usuarios. Esto sugiere que el servidor está bien configurado para no fallar en un punto de carga aceptable, pero la degradación del tiempo de respuesta es el problema más urgente a resolver.
 
 ### Escenario 2
 
@@ -358,36 +344,8 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
   <img alt="Imagen103" src="https://github.com/user-attachments/assets/595d03f9-cea9-4f08-bb25-52b857491554" />
 </p>
 
-**1. Capacidad Máxima y Estabilidad Operativa:** La capacidad máxima estable del Escenario 2, se establece con 40 usuarios concurrentes. En este nivel de carga, el sistema cumple con todos los criterios de aceptación definidos, registrando un tiempo de respuesta promedio de 25872 ms (dentro del límite de 26500 ms) y un througput de 0.28 req/s (superando el mínimo de 0.2 req/s). La utilización de recursos se mantien en niveles bajos (25% CPU y 48% RAM), indicando una operación estable.
 
-**2. Punto de Degradación del Servicio:** El punto de degradación del flujo completo se identifica claramente con 50 usuarios concurrentes, momento en el cual el Tiempo de Respuesta Promedio se eleva a 27438 ms, superando el umbral máximo aceptable de 26500 ms. Este es el primer criterio que se incumple y marca el límite de la experiencia de usuario, a pesar de que los recursos del servidor (32% CPU y 55% RAM) y la tasa de errores (0%) aún se encuentran dentro de los parámetros aceptables.
-
-**3 Identificación del Cuello de Botella:** El cuello de botella de este escenario es inequívocamente la petición de "Subir Video" (Request_3). Con 40 usuarios, esta operación consume 17909 ms (casi el 70% del tiempo total del flujo). Dado que la utilización de CPU (25%) y RAM (48%) es muy baja, el cuello de botella no es el procesamiento del servidor, sino el ancho de banda y la E/S de red, limitados por el tiempo requerido para transferir el archivo de 16MB en cada solicitud concurrente.
-
-**4. Límites de Resistencia y Tasa de Errores:** El sistema demuestra una resistencia a errores, manteniendo una Tasa de Errores de 0% en todos los niveles probados (hasta 100 usuarios). Sin embargo, se identifica un segundo punto de fallo relacionado con los recursos: a partir de 90 usuarios, el consumo de RAM alcanza el 82%, superando el umbral del 80%. Esto indica que la memoria se convierte en un factor limitante en cargas muy altas, aunque esto ocurre mucho después de que el tiempo de respuesta ya se ha degradado.
 
 <br>
 
 ## Consideraciones para escalar la aplicación
-
-Con el fin de mejorar la capacidad de respuesta y la disponibilidad del sistema frente a un aumento en el número de usuarios concurrentes, se identifican algunas estrategias de escalamiento que permitirían manejar una mayor carga de trabajo de forma más eficiente. Estas mejoras aplican tanto al escenario 1 como al escenario 2:
-
-**1. Migrar el almacenamiento de archivos desde EC2 hacia Amazon S3**
-
-Actualmente, el servidor web se encarga directamente de recibir y almacenar los archivos, lo que genera una carga adicional de red y procesamiento. Al trasladar el almacenamiento a un servicio especializado como S3, se logra que el servidor se enfoque únicamente en la lógica de negocio y no en el manejo de archivos pesados.
-
-Esto permite:
-
-* Reducir el consumo de recursos en el servidor web (CPU, RAM, ancho de banda).
-* Aumentar la velocidad y confiabilidad en la carga y descarga de archivos.
-* Mejorar la escalabilidad y durabilidad de los datos, ya que S3 está diseñado para manejar grandes volúmenes de información y crecer automáticamente según la demanda.
-
-**2. Incorporar un balanceador de carga (ALB) y un grupo de autoescalado para el servidor webr**
-
-Actualmente, el sistema depende de una única instancia de servidor web. Esto limita su capacidad de respuesta frente a picos de tráfico y representa un punto único de falla. Al incluir un balanceador de carga que distribuya las solicitudes entre múltiples instancias, se asegura que la carga se reparta de forma equilibrada, evitando saturaciones en un solo punto.
-
-Además, con un grupo de autoescalado se pueden añadir o eliminar instancias automáticamente según la demanda del sistema, lo que permite:
-
-* Responder dinámicamente al aumento o disminución del tráfico.
-* Mantener un rendimiento estable y tiempos de respuesta aceptables.
-* Optimizar costos, ya que solo se utilizan los recursos necesarios en cada momento.
