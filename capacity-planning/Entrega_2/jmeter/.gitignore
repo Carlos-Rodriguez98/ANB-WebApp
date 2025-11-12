@@ -1,0 +1,29 @@
+# Archivos de log de JMeter
+*.log
+
+# Resultados de pruebas JMeter
+*.jtl
+
+# Reportes HTML generados
+report/
+
+temp_runs/
+
+# Directorios de Java generados por JMeter
+.java/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.backup
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
