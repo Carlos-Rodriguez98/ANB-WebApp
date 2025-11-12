@@ -322,7 +322,13 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
   <img alt="Imagen103" src="https://github.com/user-attachments/assets/ca23a9b5-87bb-4683-bc73-22c5c4a14ad0" />
 </p>
 
+**1. Capacidad Máxima y Estabilidad Operativa:** La nueva arquitectura con balanceador de carga demuestra una mejora radical en el rendimiento, estableciendo la capacidad máxima estable en 85 usuarios concurrentes. En este punto, el sistema cumple con todos los criterios de aceptación del flujo completo: procesa 5.20 req/s (superando el objetivo de 5 req/s), mantiene un tiempo de respuesta promedio de 9780ms (por debajo del límite de 11300ms) y opera con una utilización de recursos mínima (24% CPU y 25% RAM) y un 0% de errores.
 
+**2.Punto de Degradación del Servicio:** El punto de degradación de la experiencia del usuario se identifica con 100 usuarios concurrentes, momento en el que el Tiempo de Respuesta Pormedio (12293ms) se convierte en la primera métrica en fallar al superar el umbral de 11300ms. Es notable que, incluso en este punto de fallo de latencia, la utilización de recursos del servidor sigue siendo extremadamente baja (27% CPU y 30% RAM) y la tasa de errores permanece en 0%, lo que demuestra la eficiencia del balanceo de carga.
+
+**3. Identificación del Cuello de Botella:** A pesar de la mejora en la escalablidad, el cuello de bottela fundamental sigue estando en la lógica de la aplicación, específicamente en los endpoints de autenticación. En la carga estable de 85 usuarios, las peticiones de "Registro" (5331ms) y "Iniciar Sesión (4077ms) consumen más de 9.4 segundos del tiempo total del flujo (9.7segundos). Esto prueba que, si bien la arquitectura ahora puede manejar más usuarios simultáneos, el rendimiento general sigue estando limitado por la latencia de este servicio de autenticación.
+
+**4. Límites de Resistencia y Saturación del Sistema:** El sistema exhibe una alta resistencia, manejando hasta 125 usuarios concurrentes sin generar un solo error (0%). El punto de saturación (fallo de servicio) se alcanza con 150 usuarios, donde la Tasa de Errores (2%) supera por primera vez el umbral del 1%. Más allá de este punto, con 175 usuarios, el sistema colapsa: el throughput cae drásticamente (de 6.01 req/s a 4.63 req/s) y los errores se disparan, indicando que el sistema ya no puede manejar la demanda.
 
 ### Escenario 2
 
@@ -344,8 +350,57 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
   <img alt="Imagen203" src="https://github.com/user-attachments/assets/44dad4d4-8193-4c06-80c2-6472dd363a77" />
 </p>
 
+**1. Capacidad Máxima y Estabilidad Operativa:**  La capacidad máxima estable para el Escenario 2 se alcanza con 70 usuarios concurrentes. En este punto, el sistema cumple con todos los criterios de aceptación: el throughput del flujo completo es de 1.72 req/s (superando el mínimo de 1 req/s), el tiempo de respuesta promedio es de 25774ms (dentro del límite de 31000ms), y la utilización de recursos es notablemente baja, con solo 24% de CPU y 28% RAM, todo con tasa de errores del 0%.
 
+**2. Punto de Degradación del Servicio:** El punto de degradación se identifica al escalar a 80 usuarios concurrentes, momento en el que el Tiempo de Respuesta Promedio (32573ms) se convierte en la primera métrica en fallar, superando el umbral de aceptación de 31000ms. Este fallo en la latencia ocurre a pesar de que los recursos del servidor (30% CPU, 34% RAM) y la tasa de errores (0%) todavía están muy por debajo de sus límites, indicando que la degradación es de rendimiento y no de estabilidad del servidor.
+
+**3. Identificación del Cuello de Botella:** El cuello de botella de este escenario es, de forma inequívoca, la operación de "Subir Video". En la carga estable de 70 usuarios, esta única petición consume un promedio de 17745ms, lo que representa aproximadamente el 69% del tiempo total del flujo (25774ms). Dado que la utilización de CPU y RAM es mínima, el factor limitante no es el poder de procesamiento del servidor, sino el anchon de banda y la E/S de red necesarios para gestionar 70 subidas de archivos de 16MB de forma simultánea.
+
+**4. Límites de Resistencia y Tasa de Errores:** El sistema demuestra una resistencia a errores en este escenario. Durante las pruebas el sistema nunca se acerca a un punto de saturación de recursos (CPU o RAM) ni de errores dentro del rango de pruebas. El único factor limitante es la degradación del tiempo de respuesta, impulsada casi en su totalidad por la naturaleza intensiva en red de la subida de archivos.
+
+<br>
+
+## Mejoras con respecto a la anterior entrega
+
+La implementación de la arquitectura de la Entrega 3, centrada en la alta disponibilidad y el desacoplamiento de servicios, ha transformado radicalmente el rendimiento del sistema en comparación con la arquitectura monolítica de servidor único de la entrega anterior. La introducción de un Application Load Balancer (ALB), un Auto Scaling Group (ASG), el almacenamiento de objetos en S3, el procesamiento asíncrono con Amazon SQS y el cacheo con Redis, ha eliminado los cuellos de botella de recursos de la instancia única y ha elevado la capacidad del sistema a un nuevo orden de magnitud.
+
+**Escenario 1 (Flujo Capa Web)**
+
+En el Escenario 1, la capacidad máxima de usuarios concurrentes estables aumentó en un 112.5%, pasando de 40 usuarios en la arquitectura anterior a 85 usuarios en la nueva. El impacto más significativo se observa en el throughput (capacidad de procesamiento), que en el punto máximo estable creció un 490%, saltando de 0.88 req/s a 5.20 req/s. Este éxito es atribuible directamente al ALB y al Auto Scaling Group, que distribuyen la carga entre múltiples instancias (2-3), y a Redis, que reduce la carga en endpoints de consulta frecuente. La nueva arquitectura maneja más del doble de usuarios utilizando menos recursos proporcionales (solo 24% de CPU).
+
+| Métrica | Arquitectura Entrega 2 | Arquitectura Entrega 3 | Mejora |
+|:-------:|:----------------------:|:----------------------:|:------:|
+|Usuarios Concurrentes | 40 | 85 | +112% |
+| Throughput Promedio | 0.88 req/s | 5.20 req/s | +490% |
+| Tiempo de Repuesta | 9988 ms | 9780 ms | Similar |
+| Uso de CPU (Máx) | 30% | 24% | Más eficiente |
+
+
+**Escenario 2 (Flujo Capa Procesamiento)**
+
+En el Escenario 2, los beneficios de la nueva arquitectura son aún más evidentes. Aunque el tiempo de respuesta por usuario sigue dominado por el cuello de botella físico de la subida del archivo de 16MB (aprox. 17 segundos en ambos tests), la capacidad del sistema para manejar cargas simultáneas ha explotado. La capacidad de usuarios aumentó en un 75% (de 40 a 70), y el throughput total se disparó en un 514% (de 0.28 a 1.72 req/s). Esto se debe a la migración del almacenamiento a S3 y, fundamentalmente, al desacoplamiento del procesamiento mediante SQS y un worker dedicado. Los servidores web (ASG) ya no gastan recursos en procesar o almacenar archivos; simplemente gestionan la subida a S3 y encolan el mensaje. Esta eficiencia se refleja en la drástica reducción del consumo de RAM, que bajó del 48% al 28%, a pesar de estar manejando 75% más usuarios.
+
+| Métrica | Arquitectura Entrega 2 | Arquitectura Entrega 3 | Mejora |
+|:-------:|:----------------------:|:----------------------:|:------:|
+| Usuarios Concurrentes | 40 | 70 | +75% |
+| Throughput Promedio | 0.28 req/s | 1.72 req/s | +514% |
+| Tiempo de Repuesta | 25872 ms | 25774 ms | Similar |
+| Uso de CPU (Máx) | 48% | 28% | Más eficiente |
 
 <br>
 
 ## Consideraciones para escalar la aplicación
+
+Aunque la arquitectura de la Entrega 3 implementa mejoras significativas en escalabilidad (ALB, ASG para web, S3), aún existen componentes que pueden optimizarse para manejar un crecimiento a gran escala. Las siguientes estrategias se centran en eliminar los cuellos de botella restantes y mejorar la resiliencia global.
+
+**1. Implementar Auto Scaling para la Capa de Workers (Basado en SQS)**
+
+La arquitectura actual utiliza una única instancia de worker, lo cual representa un cuello de botella para el procesamiento asíncrono. Si 100 usuarios suben videos (Escenario 2), todos los trabajos de procesamiento se encolarán en SQS y serán procesados secuencialmente por ese único worker.
+
+Por ello se propone reemplazar la instancia EC2 privada única por un Grupo de Autoescalado (ASG) para los workers. La capacidad de procesamiento de videos se ajustará dinámicamente a la demanda de subidas, reduciendo drásticamente el tiempo total desde que el usuario sube el video hasta que está procesado y disponible.
+
+**2. Habilitar Multi-AZ en RDS para Alta Disponibilidad**
+
+La configuración actual de RDS (mencionada en el reporte) no está en modo Multi-AZ. Esto significa que cualquier fallo de hardware en la instancia de RDS o mantenimiento de AWS provocará una interrupción total del servicio, ya que toda la aplicación depende de ella.
+
+Se propone habilitar la opción Multi-AZ para la instancia de RDS. Es un simple cambio de configuración en RDS. AWS mantendrá automáticamente una réplica síncrona de la base de datos en una Zona de Disponibilidad diferente. En caso de fallo, RDS conmutará automáticamente (failover) a la réplica en la otra AZ, garantizando la continuidad del negocio y la alta disponibilidad de la base de datos con un tiempo de inactividad mínimo.
