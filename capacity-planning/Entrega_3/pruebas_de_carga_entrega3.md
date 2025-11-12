@@ -121,7 +121,7 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 <br>
 <p align="center">
-  <img alt="Imagen3" src="https://github.com/user-attachments/assets/d57684e9-9c3f-4c5a-bde0-e3aa3276c5c1" />
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/f40e55aa-9992-4249-95df-29666ade9519" />
 </p>
 <br>
 
@@ -236,7 +236,7 @@ Luego, se define el Transaction Controller (Escenario_2) que ejecutará cada hil
 Para ejecutar la prueba de carga se ejecuta los siguientes comandos para levantar el contenedor con JMeter:
 
 ```
-cd capacity-planning/Entrega_2/jmeter
+cd capacity-planning/Entrega_3/jmeter
 ```
 ```
 docker build -t jmeter-cli:5.6.3 .
@@ -255,7 +255,7 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 <br>
 <p align="center">
-  <img alt="Imagen3" src="https://github.com/user-attachments/assets/4b820b81-e080-4187-a013-54d23c16a478" />
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/e0dcf463-a757-4f37-a8cd-8ec08487b00a" />
 </p>
 <br>
 
@@ -307,19 +307,19 @@ Podemos asumir que para este escenario 1 el número de usuarios concurrentes que
 Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamiento del servidor durante las pruebas de carga:
 
 <p align="center">
-  <img alt="Imagen100" src="https://github.com/user-attachments/assets/14b951cc-4a36-47a5-b5f1-24269d351370" />
+  <img alt="Imagen100" src="https://github.com/user-attachments/assets/fb402e64-c7c2-4cc5-978a-5a0a0e0a5505" />
 </p>
 
 <p align="center">
-  <img alt="Imagen101" src="https://github.com/user-attachments/assets/b3b1580f-f9b8-4d92-93e4-791ce2818c18" />
+  <img alt="Imagen101" src="https://github.com/user-attachments/assets/c1875ff0-fa1b-4017-850f-b5e401b9be2d" />
 </p>
 
 <p align="center">
-  <img alt="Imagen102" src="https://github.com/user-attachments/assets/bd64a909-f03b-4ec2-9f19-6e3f646cf463" />
+  <img alt="Imagen102" src="https://github.com/user-attachments/assets/9008f3e3-4bae-4120-bcd5-c08c005db070" />
 </p>
 
 <p align="center">
-  <img alt="Imagen103" src="https://github.com/user-attachments/assets/5265e438-ecfc-4db9-a805-37837d92b495" />
+  <img alt="Imagen103" src="https://github.com/user-attachments/assets/ca23a9b5-87bb-4683-bc73-22c5c4a14ad0" />
 </p>
 
 
@@ -329,19 +329,19 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
 Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamiento del servidor durante las pruebas de carga:
 
 <p align="center">
-  <img alt="Imagen100" src="https://github.com/user-attachments/assets/9e820560-e620-457f-90af-59a1c19ee623" />
+  <img alt="Imagen200" src="https://github.com/user-attachments/assets/f8c3388f-830f-46e4-80f7-4a68bf587d55" />
 </p>
 
 <p align="center">
-  <img alt="Imagen101" src="https://github.com/user-attachments/assets/a92d3c0e-2afb-4dff-a62d-ea0a6058d130" />
+  <img alt="Imagen201" src="https://github.com/user-attachments/assets/15eef8cc-734d-4691-b2ac-d4c150621727" />
 </p>
 
 <p align="center">
-  <img alt="Imagen102" src="https://github.com/user-attachments/assets/2792fa92-621a-4a55-9764-6de044f953f3" />
+  <img alt="Imagen202" src="https://github.com/user-attachments/assets/39a5f236-8f4c-4a93-979b-f9a5194eaff3" />
 </p>
 
 <p align="center">
-  <img alt="Imagen103" src="https://github.com/user-attachments/assets/595d03f9-cea9-4f08-bb25-52b857491554" />
+  <img alt="Imagen203" src="https://github.com/user-attachments/assets/44dad4d4-8193-4c06-80c2-6472dd363a77" />
 </p>
 
 
