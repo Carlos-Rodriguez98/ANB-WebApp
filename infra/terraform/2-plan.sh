@@ -26,6 +26,7 @@ if ! command -v terraform >/dev/null 2>&1; then
 fi
 
 # Ejecutar plan (NO crea recursos)
+terraform init
 terraform plan
 PLAN_RC=$?
 

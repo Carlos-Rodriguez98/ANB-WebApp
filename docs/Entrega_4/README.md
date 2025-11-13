@@ -78,3 +78,111 @@ La arquitectura se organiza en capas y zonas de disponibilidad para maximizar la
 5. **Acceso y administración**: 
    - El acceso a la aplicación se realiza a través del ALB en la capa pública.
    - La administración de instancias se realiza de forma segura mediante SSM, sin necesidad de exponer puertos de administración.
+
+
+## 5. Comandos para Desplegar la Arquitectura
+
+### Prerequisitos:
+
+- AWS Academy Learner Lab activo
+- Terraform instalado (versión 1.0+)
+- Git bash o terminal con soporte bash
+
+### Paso 1: Preparar credenciales de AWS
+
+Navega al directorio de Terraform:
+
+```bash
+cd infra/terraform/
+```
+
+Obtén las credenciales de AWS Academy (Learner Lab → AWS Details → AWS CLI: Show):
+
+- `aws_access_key_id`
+- `aws_secret_access_key`
+- `aws_session_token`
+
+Ejecuta el script de configuración:
+
+**En Linux/Mac:**
+```bash
+./1-set-credentials.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\1-set-credentials.ps1
+```
+
+El script te pedirá las credenciales y las guardará en variables de entorno.
+
+### Paso 2: Inicializar Terraform
+
+```bash
+terraform init
+```
+
+### Paso 3: Planificar el despliegue
+
+Visualiza lo que Terraform va a crear:
+
+**En Linux/Mac:**
+```bash
+./2-plan.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\2-plan.ps1
+```
+
+### Paso 4: Aplicar el despliegue
+
+Despliega la infraestructura:
+
+**En Linux/Mac:**
+```bash
+./3-apply.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\3-apply.ps1
+```
+
+El proceso toma aproximadamente **15-20 minutos**. Al finalizar, verás outputs con:
+- URL del ALB para acceder a la aplicación
+- Endpoint de RDS
+- URL de la cola SQS
+- IDs de recursos creados
+
+### Paso 5: Verificar el despliegue
+
+Accede a la aplicación usando el ALB DNS name mostrado en los outputs:
+
+```
+http://<alb-dns-name>
+```
+
+Puedes verificar el estado de los servicios conectándote a las instancias vía SSM:
+
+1. Ve a AWS Console → EC2 → Instances
+2. Selecciona una instancia web
+3. Click en "Connect" → "Session Manager" → "Connect"
+4. Verifica servicios: `docker ps`
+
+### Paso 6: Destruir la infraestructura
+
+**IMPORTANTE**: Para evitar consumir créditos de AWS Academy, elimina todos los recursos cuando termines:
+
+**En Linux/Mac:**
+```bash
+./4-destroy.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\4-destroy.ps1
+```
+
+**Nota**: La eliminación toma ~10 minutos. Verifica en la consola de AWS que todos los recursos se eliminaron correctamente.
