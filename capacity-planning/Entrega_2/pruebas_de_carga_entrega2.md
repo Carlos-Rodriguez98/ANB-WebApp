@@ -258,7 +258,7 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 <br>
 <p align="center">
-  <img alt="Imagen3" src="https://github.com/user-attachments/assets/4b820b81-e080-4187-a013-54d23c16a478" />
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/93f0f990-1b2a-496d-b01a-9d5fc93dd484" />
 </p>
 <br>
 
@@ -317,7 +317,7 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
 </p>
 
 <p align="center">
-  <img alt="Imagen102" src="https://github.com/user-attachments/assets/bd64a909-f03b-4ec2-9f19-6e3f646cf463" />
+  <img alt="Imagen102" src="https://github.com/user-attachments/assets/7c2dc8a5-ca24-4f3e-8fa4-b26514d55b71" />
 </p>
 
 <p align="center">
@@ -345,7 +345,7 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
 </p>
 
 <p align="center">
-  <img alt="Imagen102" src="https://github.com/user-attachments/assets/2792fa92-621a-4a55-9764-6de044f953f3" />
+  <img alt="Imagen102" src="https://github.com/user-attachments/assets/29b4ddc3-85c3-4357-aa8a-57ab2b4b0a47" />
 </p>
 
 <p align="center">
