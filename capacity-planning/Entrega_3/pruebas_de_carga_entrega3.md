@@ -121,16 +121,17 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 <br>
 <p align="center">
-  <img alt="Imagen3" src="https://github.com/user-attachments/assets/f40e55aa-9992-4249-95df-29666ade9519" />
+  <img alt="imagenjmeter1" src="https://github.com/user-attachments/assets/3f9fc11e-19fe-4f78-bb95-c8e8c2e11652" />
 </p>
 <br>
 
 Para visualizar la métrica de uso de CPU promedio del auto scaling group de los servidores web se abre el dashboard configurado en Amazon CloudWatch:
 
-
-
-
-
+<br>
+<p align="center">
+  <img alt="cloudwatch1" src="https://github.com/user-attachments/assets/a4f74a7c-897d-48fe-9881-562cb75d1f6d" />
+</p>
+<br>
 
 ### Resultados
 
@@ -268,8 +269,11 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 
 Para visualizar la métrica de uso de CPU promedio del auto scaling group de los servidores web se abre el dashboard configurado en Amazon CloudWatch:
 
-
-
+<br>
+<p align="center">
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/a7153f2a-bfd0-47e5-9710-7d7fbdfb24f9" />
+</p>
+<br>
 
 ### Resultados
 
@@ -327,7 +331,7 @@ Para el escenario 1 tenemos las siguientes gráficas que ilustran el comportamie
 </p>
 
 <p align="center">
-  <img alt="Imagen102" src="https://github.com/user-attachments/assets/9008f3e3-4bae-4120-bcd5-c08c005db070" />
+  <img alt="Imagen102" src="https://github.com/user-attachments/assets/88bca00a-ec4e-46f0-b50e-9aaee166dd35" />
 </p>
 
 <p align="center">
@@ -355,7 +359,7 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
 </p>
 
 <p align="center">
-  <img alt="Imagen202" src="https://github.com/user-attachments/assets/39a5f236-8f4c-4a93-979b-f9a5194eaff3" />
+  <img alt="Imagen202" src="https://github.com/user-attachments/assets/d7fcb306-edd5-4c44-aa2f-6addd8bb7032" />
 </p>
 
 <p align="center">
