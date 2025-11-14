@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const uploadForm = document.getElementById('upload-form');
     const dropZone = document.getElementById('drop-zone');
+    const selectVideoBtn = document.getElementById('select-video-btn');
     const fileInput = document.getElementById('video-file');
     const filePreview = document.getElementById('file-preview');
     const fileName = document.getElementById('file-name');
@@ -20,56 +21,168 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form elements
     const titleInput = document.getElementById('title');
-    const categorySelect = document.getElementById('category');
-    const positionSelect = document.getElementById('position');
-    const visibilitySelect = document.getElementById('visibility');
-    const descriptionTextarea = document.getElementById('description');
-    const tagsInput = document.getElementById('tags');
-    const termsCheckbox = document.getElementById('terms');
+    // Removed unnecessary form fields - video service only needs title
 
     // Initialize
     function init() {
         // Check authentication
-        const user = getCurrentUser();
+        const user = Auth.getCurrentUser();
         if (!user) {
             window.location.href = 'login.html';
             return;
         }
 
         // Display username
-        usernameDisplay.textContent = user.firstName || user.email;
+        if (usernameDisplay) {
+            usernameDisplay.textContent = user.firstName || user.email;
+        }
 
-        // Setup event listeners
-        setupEventListeners();
+        // Wait a bit for DOM to be fully ready
+        setTimeout(() => {
+            // Debug: Log elements to check if they exist
+            console.log('Upload form elements found:', {
+                dropZone: !!dropZone,
+                selectVideoBtn: !!selectVideoBtn,
+                fileInput: !!fileInput,
+                uploadForm: !!uploadForm,
+                titleInput: !!titleInput
+            });
+
+            // Log the actual elements for debugging
+            console.log('Elements:', {
+                dropZone,
+                selectVideoBtn,
+                fileInput,
+                uploadForm
+            });
+
+            // Verify file input is properly configured
+            if (fileInput) {
+                console.log('File input configured successfully');
+            }
+
+            // Setup event listeners
+            setupEventListeners();
+        }, 100);
     }
 
     // Setup all event listeners
     function setupEventListeners() {
         // File drop and selection
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', handleDragOver);
-        dropZone.addEventListener('dragleave', handleDragLeave);
-        dropZone.addEventListener('drop', handleDrop);
-        fileInput.addEventListener('change', handleFileSelect);
-        removeFileBtn.addEventListener('click', removeFile);
+        if (dropZone) {
+            console.log('Setting up dropZone listeners');
+            dropZone.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Drop zone clicked, triggering file input');
+                if (fileInput) {
+                    try {
+                        fileInput.click();
+                    } catch (error) {
+                        console.error('Error triggering file input click:', error);
+                        triggerFileInputAlternative();
+                    }
+                } else {
+                    console.error('File input not found when drop zone clicked');
+                }
+            });
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+        } else {
+            console.error('Drop zone element not found');
+        }
+        
+        if (selectVideoBtn) {
+            selectVideoBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (fileInput) {
+                    try {
+                        fileInput.click();
+                    } catch (error) {
+                        console.error('Error with fileInput.click():', error);
+                        triggerFileInputAlternative();
+                    }
+                } else {
+                    console.error('File input not found when button clicked');
+                }
+            });
+        } else {
+            console.error('Select video button not found');
+        }
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', handleFileSelect);
+        } else {
+            console.error('File input element not found');
+        }
+        
+        if (removeFileBtn) {
+            removeFileBtn.addEventListener('click', removeFile);
+        }
 
         // Form submission
-        uploadForm.addEventListener('submit', handleSubmit);
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', handleSubmit);
+        }
 
         // Logout
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            logout();
-            window.location.href = 'login.html';
-        });
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                Auth.logout();
+                window.location.href = 'login.html';
+            });
+        }
 
         // Auto-generate title from filename
-        fileInput.addEventListener('change', () => {
-            if (selectedFile && !titleInput.value) {
-                const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
-                titleInput.value = baseName;
+        if (fileInput && titleInput) {
+            fileInput.addEventListener('change', () => {
+                if (selectedFile && !titleInput.value) {
+                    const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+                    titleInput.value = baseName;
+                }
+            });
+        }
+    }
+
+    // Alternative method to trigger file input
+    function triggerFileInputAlternative() {
+        console.log('Using alternative method to trigger file input');
+        
+        // Method 1: Dispatch mouse event
+        try {
+            const event = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+            fileInput.dispatchEvent(event);
+            console.log('Alternative method 1 (MouseEvent) executed');
+        } catch (error) {
+            console.error('Alternative method 1 failed:', error);
+            
+            // Method 2: Focus and programmatic trigger
+            try {
+                fileInput.style.position = 'static';
+                fileInput.style.opacity = '1';
+                fileInput.style.width = '1px';
+                fileInput.style.height = '1px';
+                fileInput.focus();
+                setTimeout(() => {
+                    fileInput.click();
+                    fileInput.style.position = 'absolute';
+                    fileInput.style.left = '-9999px';
+                    fileInput.style.opacity = '0';
+                    fileInput.style.width = 'auto';
+                    fileInput.style.height = 'auto';
+                }, 100);
+                console.log('Alternative method 2 (focus) executed');
+            } catch (error2) {
+                console.error('Alternative method 2 failed:', error2);
             }
-        });
+        }
     }
 
     // Drag and drop handlers
@@ -101,14 +214,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validate file type
         if (!file.type.startsWith('video/')) {
-            showToast('Por favor selecciona un archivo de video válido', 'error');
+            Toast.show('Por favor selecciona un archivo de video válido', 'error');
             return;
         }
 
         // Validate file size (100MB max)
         const maxSize = 100 * 1024 * 1024; // 100MB
         if (file.size > maxSize) {
-            showToast('El archivo es demasiado grande. Tamaño máximo: 100MB', 'error');
+            Toast.show('El archivo es demasiado grande. Tamaño máximo: 100MB', 'error');
             return;
         }
 
@@ -129,14 +242,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Remove selected file
     function removeFile() {
+        const oldSelectedFile = selectedFile;
         selectedFile = null;
         fileInput.value = '';
         filePreview.classList.add('hidden');
         dropZone.style.display = 'block';
         
         // Clear auto-generated title if it matches filename
-        if (titleInput.value && selectedFile) {
-            const baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+        if (titleInput.value && oldSelectedFile) {
+            const baseName = oldSelectedFile.name.replace(/\.[^/.]+$/, "");
             if (titleInput.value === baseName) {
                 titleInput.value = '';
             }
@@ -165,23 +279,25 @@ document.addEventListener('DOMContentLoaded', function() {
         showUploadProgress();
 
         try {
-            // Create FormData
+            // Create FormData - Only send what the video service expects
             const formData = new FormData();
-            formData.append('video', selectedFile);
+            formData.append('video_file', selectedFile);  // video service expects 'video_file'
             formData.append('title', titleInput.value.trim());
-            formData.append('category', categorySelect.value);
-            formData.append('position', positionSelect.value);
-            formData.append('visibility', visibilitySelect.value);
-            formData.append('description', descriptionTextarea.value.trim());
-            formData.append('tags', tagsInput.value.trim());
 
             // Simulate upload progress
             await simulateUploadProgress();
 
-            // Make API call
-            const response = await apiClient.postFormData('/api/videos/upload', formData);
+            // Make API call to video service
+            const response = await apiClient.postFormData('/videos/upload', formData);
             
-            showToast('¡Video subido exitosamente!', 'success');
+            console.log('Upload response:', response);
+            
+            // Le service vidéo retourne { message, task_id }
+            if (response.message) {
+                Toast.show(response.message, 'success');
+            } else {
+                Toast.show('¡Video subido exitosamente!', 'success');
+            }
             
             // Redirect to dashboard after short delay
             setTimeout(() => {
@@ -190,7 +306,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Upload error:', error);
-            showToast('Error al subir el video', 'error');
+            let errorMessage = 'Error al subir el video';
+            
+            // Try to extract error message from response
+            if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Toast.show(errorMessage, 'error');
             hideUploadProgress();
             uploadInProgress = false;
         }
@@ -200,38 +323,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function validateForm() {
         // Check file
         if (!selectedFile) {
-            showToast('Veuillez sélectionner un fichier vidéo', 'error');
+            Toast.show('Veuillez sélectionner un fichier vidéo', 'error');
             return false;
         }
 
-        // Check required fields
+        // Check required fields - only title is required by video service
         if (!titleInput.value.trim()) {
-            showToast('Le titre est requis', 'error');
+            Toast.show('El título es requerido', 'error');
             titleInput.focus();
-            return false;
-        }
-
-        if (!categorySelect.value) {
-            showToast('Veuillez sélectionner une catégorie', 'error');
-            categorySelect.focus();
-            return false;
-        }
-
-        if (!positionSelect.value) {
-            showToast('Veuillez sélectionner votre poste', 'error');
-            positionSelect.focus();
-            return false;
-        }
-
-        if (!visibilitySelect.value) {
-            showToast('Veuillez sélectionner la visibilité', 'error');
-            visibilitySelect.focus();
-            return false;
-        }
-
-        if (!termsCheckbox.checked) {
-            showToast('Vous devez accepter les conditions d\'utilisation', 'error');
-            termsCheckbox.focus();
             return false;
         }
 
@@ -242,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showUploadProgress() {
         uploadProgress.classList.remove('hidden');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Upload en cours...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Subida en curso...';
         
         // Disable form fields
         const formElements = uploadForm.querySelectorAll('input, select, textarea, button');

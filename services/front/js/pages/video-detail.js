@@ -173,8 +173,15 @@ document.addEventListener('DOMContentLoaded', function() {
         errorStateElement.classList.remove('hidden');
     }
 
-    // Publish video
+   // Publish video
     async function publishVideo() {
+        // Prevenir múltiples clics
+        if (publishBtn.disabled) return;
+
+        publishBtn.disabled = true;
+        const originalText = publishBtn.innerHTML;
+        publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Publicando...';
+
         try {
             await apiClient.post(`/videos/${currentVideo.video_id}/publish`, {});
             Toast.show('Video publicado exitosamente', 'success');
@@ -182,9 +189,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reload video details from API to get updated data
             await loadVideoDetails(currentVideo.video_id);
             
+            // No necesitamos rehabilitar el botón aquí porque loadVideoDetails
+            // llamará a updateActionButtons() que ocultará el botón si ya está publicado
+            
         } catch (error) {
             console.error('Error publishing video:', error);
             Toast.show('Error durante la publicación', 'error');
+            
+            // Solo rehabilitar si hubo error
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = originalText;
         }
     }
 

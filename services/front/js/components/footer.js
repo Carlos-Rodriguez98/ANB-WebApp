@@ -10,11 +10,11 @@ function renderFooter() {
           <span class="font-semibold text-primary-400">ANB Rising Stars Showcase</span>
         </div>
         <div class="text-sm">
-          <a href="mailto:contact@anb.com" class="hover:text-primary-400 underline">Contact</a>
+          <a href="mailto:contact@anb.com" class="hover:text-primary-400 underline">Contacto</a>
           <span class="mx-2">|</span>
-          <a href="#" class="hover:text-primary-400 underline">Mentions légales</a>
+          <a href="#" class="hover:text-primary-400 underline">Aviso legal</a>
         </div>
-        <div class="text-xs mt-2 md:mt-0">&copy; 2025 ANB. Tous droits réservés.</div>
+        <div class="text-xs mt-2 md:mt-0">&copy; 2025 ANB. Todos los derechos reservados.</div>
       </div>
     </footer>
     `;
