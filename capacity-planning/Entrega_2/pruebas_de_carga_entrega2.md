@@ -119,11 +119,19 @@ Una vez levantado el contenedor con Jmeter se puede ejecutar el siguiente script
 USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=3.236.136.31 ./run_test.sh ConfiguracionEscenario1.jmx
 ```
 
-Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
+Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**:
 
 <br>
 <p align="center">
-  <img alt="Imagen3" src="https://github.com/user-attachments/assets/d57684e9-9c3f-4c5a-bde0-e3aa3276c5c1" />
+  <img alt="Imagen3" src="https://github.com/user-attachments/assets/ff7d519c-05e0-40bd-a73d-23c539bc993c" />
+</p>
+<br>
+
+Para visualizar la métrica de uso de CPU de la instancia web se abre el dashboard configurado en Amazon CloudWatch:
+
+<br>
+<p align="center">
+  <img alt="imagencloudwatch1" src="https://github.com/user-attachments/assets/bb7904b1-501b-4563-8e65-a3388c2333f2" />
 </p>
 <br>
 
@@ -254,7 +262,7 @@ Una vez levantado el contenedor con Jmeter se puede ejecutar el siguiente script
 USERS=1 RAMP=5 NUM_RUNS=5 SERVER_NAME=54.82.32.232 ./run_test.sh ConfiguracionEscenario2.jmx
 ```
 
-Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**.
+Una vez terminada la prueba se obtienen los resultados en el archivo **resultados.jtl** y para visualizarlo en el navegador se abre el **report/index.html**:
 
 <br>
 <p align="center">
