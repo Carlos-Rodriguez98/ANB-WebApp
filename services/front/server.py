@@ -190,11 +190,11 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         # Transformer les données du front vers le format attendu par le service auth
         auth_data = {
-            "first_name": data.get('firstName', ''),
-            "last_name": data.get('lastName', ''),
+            "first_name": data.get('first_name', ''),
+            "last_name": data.get('last_name', ''),
             "email": data.get('email', ''),
-            "password1": data.get('password', ''),
-            "password2": data.get('password', ''),  # Même mot de passe pour confirmation
+            "password1": data.get('password1', ''),
+            "password2": data.get('password2', ''),  # Même mot de passe pour confirmation
             "city": data.get('city', ''),
             "country": data.get('country', '')
         }
