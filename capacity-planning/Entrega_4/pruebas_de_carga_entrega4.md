@@ -1,10 +1,10 @@
-# **Pruebas de Carga Entrega 3**
+# **Pruebas de Carga - Entrega 4**
 
 ## **Herramientas**
 
 Para las pruebas de carga se utilizará **Apache JMeter**, una herramienta de código abierto diseñada para realizar pruebas de rendimiento y medir el comportamiento de aplicaciones web y otros servicios. JMeter permite simular múltiples usuarios concurrentes que acceden a una aplicación, con el fin de evaluar su capacidad de respuesta y estabilidad bajo diferentes niveles de carga.
 
-Además, se utilizará **Amazon CloudWatch** para el monitoreo de recursos en la infraestructura de AWS. CloudWatch recopila métricas como el uso de CPU, memoria, disco y red en tiempo real, lo que permite analizar el rendimiento del sistema durante las pruebas de carga y detectar posibles cuellos de botella o degradaciones en el servicio.
+Además, se utilizará **Amazon CloudWatch** para el monitoreo de recursos en la infraestructura de AWS. CloudWatch recopila métricas como el uso de CPU, disco y red en tiempo real, lo que permite analizar el rendimiento del sistema durante las pruebas de carga y detectar posibles cuellos de botella o degradaciones en el servicio.
 
 <br>
 
@@ -12,7 +12,7 @@ Además, se utilizará **Amazon CloudWatch** para el monitoreo de recursos en la
 
 La arquitectura del entorno de pruebas se basa en un enfoque totalmente contenedorizado para garantizar portabilidad y consistencia en la ejecución.
 
-Se definió un Dockerfile y un docker-compose.yml que permiten levantar un contenedor local con una versión ligera de Apache JMeter en modo CLI (sin interfaz gráfica), junto con Java 17, necesario para su ejecución. Este contenedor se utiliza exclusivamente para ejecutar los scripts de pruebas de carga de forma automatizada. Por otro lado, CloudWatch ya es un servicio integrado de AWS por lo que sus métricas se consiguen directamente desde la consola de amazon.
+Se definió un Dockerfile y un docker-compose.yml que permiten levantar un contenedor local con una versión ligera de Apache JMeter en modo CLI (sin interfaz gráfica), junto con Java 17, necesario para su ejecución. Este contenedor se utiliza exclusivamente para ejecutar los scripts de pruebas de carga de forma automatizada. Por otro lado, CloudWatch ya es un servicio integrado de AWS por lo que sus métricas se consiguen directamente desde la consola de amazon desde un dashboard definido en terraform.
 
 <br>
 
@@ -24,7 +24,7 @@ Las pruebas de carga evaluarán el desempeño del sistema en función de cuatro 
 |----------|--------------|----------------------|
 | **Throughput (req/s)** | Número de peticiones procesadas por segundo. Mide la capacidad de procesamiento del sistema. | JMeter Summary Report |
 | **Tiempo de Respuesta Promedio (s)** | Tiempo transcurrido desde que el usuario envía una solicitud hasta recibir la respuesta completa. | JMeter Summary Report |
-| **Utilización de Recursos (%)** | Porcentaje de uso de CPU y memoria RAM del servidor durante la carga. | Amazon CloudWatch |
+| **Utilización de Recursos (%)** | Porcentaje de uso de CPU del ASG web y ASG worker durante la carga. | Amazon CloudWatch |
 | **Tasa de errores (%)** | Porcentaje de respuestas HTTP con errores (4xx, 5xx) respecto al total de peticiones. | JMeter Summary Report |
 
 <br>
@@ -53,14 +53,14 @@ Para este escenario se define el siguiente flujo de peticiones relacionado con l
 
 Así mismo, se definen los criterios de aceptación que establecen los umbrales mínimos de desempeño que el sistema debe cumplir para considerarse estable y operativo durante las pruebas de carga. Estos umbrales permiten determinar cuánta carga concurrente puede soportar el servidor sin degradar la experiencia del usuario ni comprometer los recursos del sistema.
 
-| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
-|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  | ≥ 7 req/s           | ≤ 6000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Iniciar Sesión            | ≥ 7 req/s           | ≤ 4000 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Videos Públicos | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Realizar Voto             | ≥ 10 req/s          | ≤  300 ms                    | ≤ 70%     | ≤ 80%     | ≤ 1%            |
-| Consultar Ranking         | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%     | ≤ 89%     | ≤ 1%            |
-| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 11300 ms**               | **≤ 70%** | **≤ 80%** | **≤ 1%**       | 
+| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU ASG (web) | Máx CPU ASG (worker) | Tasa de Errores |
+|:-------------------------:|:-------------------:|:----------------------------:|:-----------:|:--:|:---------------:|
+| Registro                  | ≥ 7 req/s           | ≤ 6000 ms                    | ≤ 70%       | ≤ 80% | ≤ 1%           |
+| Iniciar Sesión            | ≥ 7 req/s           | ≤ 4000 ms                    | ≤ 70%       | ≤ 80% | ≤ 1%           |
+| Consultar Videos Públicos | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%       | ≤ 80% |≤ 1%            |
+| Realizar Voto             | ≥ 10 req/s          | ≤  300 ms                    | ≤ 70%       | ≤ 80% |≤ 1%            |
+| Consultar Ranking         | ≥ 10 req/s          | ≤  500 ms                    | ≤ 70%       | ≤ 80% |≤ 1%            |
+| **Flujo Completo**        | **≥ 5 req/s**       | **≤ 11300 ms**               | **≤ 70%**   | **≤ 80%** | **≤ 1%**   | 
 
 > **Nota:** El *Flujo Completo* agrupa todo el recorrido del usuario (Registro → Inicio de Sesión → Consultar Videos Publicos → Realizar Voto → Consultar Ranking). Las métricas de esta fila se calculan sobre la ejecución completa del flujo, y su objetivo es validar la estabilidad del sistema durante un escenario de uso real de extremo a extremo.
 
@@ -125,6 +125,8 @@ Una vez terminada la prueba se obtienen los resultados en el archivo **resultado
 </p>
 <br>
 
+Para visualizar la métrica de uso de CPU promedio del ASG de los servidores web y el uso de CPU promedio del ASG de los servidores worker se abre el dashboard configurado en Amazon CloudWatch:
+
 ### Resultados
 
 Se definen diferentes pruebas con un número creciente de usuarios concurrentes para observar el comportamiento del servidor. Para ello, se definen las pruebas con los siguientes parametros:
@@ -138,18 +140,18 @@ SERVER_NAME=anbapp-alb-543666967.us-east-1.elb.amazonaws.com
 
 Tenemos la siguiente tabla que contiene las métricas del **Flujo Completo** del escenario con diferentes usuarios concurrentes:
 
-| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU | Máx RAM | Tasa de Errores |
-|:---------------------:|:-------------------:|:----------------------------:|:-------:|:-------:|:---------------:|
-| 10                    | 1.59 req/s          |  2746 ms                     |  4%     |   6%    |     0%          |
-| 25                    | 3.65 req/s          |  3015 ms                     |  8%     |  10%    |     0%          |
-| 50                    | 5.31 req/s          |  4941 ms                     | 14%     |  16%    |     0%          |
-| 75                    | 5.34 req/s          |  8464 ms                     | 20%     |  22%    |     0%          |
-| **85**                | **5.20 req/s**      | **9780 ms**                 | **24%** | **25%** |     **0%**      | 
-| 100                   | 5.71 req/s          | 12293 ms                     | 27%     |  30%    |     0%          |
-| 125                   | 6.01 req/s          | 15165 ms                     | 33%     |  36%    |     0%          |
-| 150                   | 5.83 req/s          | 19822 ms                     | 38%     |  38%    |     2%          |
-| 175                   | 4.63 req/s          | 22742 ms                     | 46%     |  45%    |     3%          |
-| 200                   | 4.42 req/s          | 23229 ms                     | 49%     |  52%    |    14%          |
+| Usuarios Concurrentes | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU ASG (web) | Máx CPU ASG (worker) | Tasa de Errores |
+|:---------------------:|:-------------------:|:----------------------------:|:--------:|:-------:|:---------------:|
+| 10                    | 1.59 req/s          |  2746 ms                     |  4%      |   0%    |  0%          |
+| 25                    | 3.65 req/s          |  3015 ms                     |  8%      |   0%    |  0%          |
+| 50                    | 5.31 req/s          |  4941 ms                     | 14%      |   0%    |  0%          |
+| 75                    | 5.34 req/s          |  8464 ms                     | 20%      |   0%    |  0%          |
+| **85**                | **5.20 req/s**      | **9780 ms**                  | **24%**  |   0%    | **0%**       | 
+| 100                   | 5.71 req/s          | 12293 ms                     | 27%      |   0%    |  0%          |
+| 125                   | 6.01 req/s          | 15165 ms                     | 33%      |   0%    |  0%          |
+| 150                   | 5.83 req/s          | 19822 ms                     | 38%      |   0%    |  2%          |
+| 175                   | 4.63 req/s          | 22742 ms                     | 46%      |   0%    |  3%          |
+| 200                   | 4.42 req/s          | 23229 ms                     | 49%      |   0%    | 14%          |
 
 > **Nota:** Los valores presentados en la tabla son el resultado de promediar las métricas obtenidas de la herramienta de pruebas JMeter tras ejecutar el mismo escenario cinco (5) veces para cada nivel de usuarios concurrentes. Este proceso de promediado asegura la consistencia y mitiga la variabilidad inherente a las pruebas de rendimiento.
 
@@ -157,13 +159,13 @@ Vemos que el limite donde el tiempo de respuesta promedio empieza a superar el u
 
 Podemos asumir que para este escenario 1 el número de usuarios concurrentes que puede soportar el servidor web es de **85 usuarios concurrentes** antes de que se degrade. Podemos observar los siguientes resultados especificos por endpoint:
 
-| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU   | Máx RAM   | Tasa de Errores |
-|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---------:|:---------------:|
-| Registro                  |  7.47 req/s         | 5331 ms                      |   24%     |  25%      | 0%              |
-| Iniciar Sesión            |  7.57 req/s         | 4077 ms                      |   24%     |  25%      | 0%              |
-| Consultar Videos Públicos | 14.72 req/s         |  117 ms                      |   24%     |  25%      | 0%              |
-| Realizar Voto             | 14.72 req/s         |   98 ms                      |   24%     |  25%      | 0%              |
-| Consultar Ranking         | 13.74 req/s         |   95 ms                      |   24%     |  25%      | 0%              |
+| Endpoint                  | Throughput Promedio | Tiempo de Respuesta Promedio | Máx CPU ASG (web) | Máx CPU ASG (worker) | Tasa de Errores |
+|:-------------------------:|:-------------------:|:----------------------------:|:---------:|:---:|:---------------:|
+| Registro                  |  7.47 req/s         | 5331 ms                      |   24%     | 0%  | 0%              |
+| Iniciar Sesión            |  7.57 req/s         | 4077 ms                      |   24%     | 0%  | 0%              |
+| Consultar Videos Públicos | 14.72 req/s         |  117 ms                      |   24%     | 0%  | 0%              |
+| Realizar Voto             | 14.72 req/s         |   98 ms                      |   24%     | 0%  | 0%              |
+| Consultar Ranking         | 13.74 req/s         |   95 ms                      |   24%     | 0%  | 0%              |
 
 <br>
 

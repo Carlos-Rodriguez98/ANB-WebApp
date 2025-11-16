@@ -21,7 +21,7 @@ TEMP_DIR=output/temp_runs
 # Validar que el archivo JMX exista en el directorio padre
 if [ ! -f "../$JMX_FILE" ]; then
     echo "Error: El archivo '../$JMX_FILE' no existe"
-    echo "Asegúrate de que el archivo esté en Entrega_3/"
+    echo "Asegúrate de que el archivo esté en Entrega_4/"
     exit 1
 fi
 
@@ -141,9 +141,22 @@ echo "📊 Generando reporte HTML consolidado (promedio de todas las ejecuciones
 docker exec -i "$CONTAINER_NAME" sh -c \
     "rm -rf /home/jmeter/${REPORT_DIR} && /opt/jmeter/bin/jmeter -g /home/jmeter/${JTL} -o /home/jmeter/${REPORT_DIR}"
 
-# Crear página índice HTML personalizada
+# Extraer VIDEO_IDs desde el JTL (host extrae desde el contenedor)
+echo "🔎 Extrayendo VIDEO_IDs desde ${JTL} dentro del contenedor..."
+FIRST_ID=$(docker exec "$CONTAINER_NAME" sh -c "grep -oE '/api/videos/[0-9]+' /home/jmeter/${JTL} 2>/dev/null | grep -oE '[0-9]+' | head -n1 || true" | tr -d '\r' || true)
+LAST_ID=$(docker exec "$CONTAINER_NAME" sh -c "grep -oE '/api/videos/[0-9]+' /home/jmeter/${JTL} 2>/dev/null | grep -oE '[0-9]+' | tail -n1 || true" | tr -d '\r' || true)
+
+# Default a N/A si no se encontraron
+if [ -z "${FIRST_ID}" ]; then FIRST_ID="N/A"; fi
+if [ -z "${LAST_ID}" ]; then LAST_ID="N/A"; fi
+
+echo "Primer VIDEO_ID detectado: ${FIRST_ID}"
+echo "Último VIDEO_ID detectado:  ${LAST_ID}"
+echo ""
+
+# Crear página índice HTML personalizada (inyectamos FIRST_ID / LAST_ID)
 echo "📄 Creando página de navegación..."
-docker exec -i "$CONTAINER_NAME" sh -c "cat > /home/jmeter/${REPORT_DIR}/index_custom.html << 'EOF'
+docker exec -i "$CONTAINER_NAME" sh -c "cat > /home/jmeter/${REPORT_DIR}/index_custom.html << EOF
 <!DOCTYPE html>
 <html lang=\"es\">
 <head>
@@ -169,6 +182,15 @@ docker exec -i "$CONTAINER_NAME" sh -c "cat > /home/jmeter/${REPORT_DIR}/index_c
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
+        .info {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .info h2 { color: #333; margin-bottom: 10px; }
+        .info p { color: #555; margin-bottom: 6px; font-size: 1.05em; }
         .reports-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -192,23 +214,6 @@ docker exec -i "$CONTAINER_NAME" sh -c "cat > /home/jmeter/${REPORT_DIR}/index_c
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
-        .report-card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .report-card.consolidated h2 {
-            color: white;
-            font-size: 2em;
-        }
-        .report-card p {
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-        .report-card.consolidated p {
-            color: rgba(255,255,255,0.9);
-        }
         .btn {
             display: inline-block;
             padding: 12px 30px;
@@ -220,41 +225,21 @@ docker exec -i "$CONTAINER_NAME" sh -c "cat > /home/jmeter/${REPORT_DIR}/index_c
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        .report-card.consolidated .btn {
-            background: white;
-            color: #f5576c;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .report-card.consolidated .btn:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-        .badge {
-            display: inline-block;
-            padding: 5px 15px;
-            background: #e0e7ff;
-            color: #667eea;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        .report-card.consolidated .badge {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
     </style>
 </head>
 <body>
     <div class=\"container\">
         <h1>📊 Reportes de Pruebas JMeter</h1>
-        
+
+        <div class=\"info\">
+            <h2>📌 Información de Procesamiento de Videos</h2>
+            <p><strong>Primer VIDEO_ID procesado:</strong> ${FIRST_ID}</p>
+            <p><strong>Último VIDEO_ID procesado:</strong> ${LAST_ID}</p>
+            <p>Reporte consolidado de ${SUCCESS_COUNT} ejecuciones.</p>
+        </div>
+
         <div class=\"reports-grid\">
             <div class=\"report-card consolidated\">
-                <span class=\"badge\">⭐ REPORTE PRINCIPAL</span>
                 <h2>Reporte Consolidado (Promedio)</h2>
                 <p>Este reporte muestra el promedio y estadísticas consolidadas de todas las ejecuciones realizadas.</p>
                 <a href=\"index.html\" class=\"btn\">Ver Reporte Consolidado</a>
@@ -268,7 +253,7 @@ for i in $(seq 1 $SUCCESS_COUNT); do
                 <span class=\"badge\">Ejecución ${i}</span>
                 <h2>Reporte Ejecución ${i}</h2>
                 <p>Resultados detallados de la ejecución número ${i}.</p>
-                <a href=\"/capacity-planning/Entrega_3/jmeter/temp_runs/report_run${i}/index.html\" class=\"btn\">Ver Reporte</a>
+                <a href=\"/capacity-planning/Entrega_4/jmeter/temp_runs/report_run${i}/index.html\" class=\"btn\">Ver Reporte</a>
             </div>
 EOF"
 done
