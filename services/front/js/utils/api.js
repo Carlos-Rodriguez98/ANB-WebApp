@@ -1,4 +1,3 @@
-// API utility functions
 class API {
     constructor() {
         this.baseURL = '/api';
@@ -7,15 +6,14 @@ class API {
         };
     }
 
-    // Get authorization header with JWT token
     getAuthHeaders() {
         const token = localStorage.getItem('jwt_token');
-        return token 
+        return token
             ? { ...this.defaultHeaders, 'Authorization': `Bearer ${token}` }
-            : this.defaultHeaders;
+            : { ...this.defaultHeaders };
     }
 
-    // Generic request method
+    // Generic request method (simplificada)
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const config = {
@@ -25,57 +23,68 @@ class API {
 
         try {
             const response = await fetch(url, config);
-            
-            // Handle different response status codes
-            if (response.status === 401) {
-                // Unauthorized - redirect to login
-                Auth.logout();
-                Router.navigate('/login');
-                throw new Error('Session expired. Please login again.');
-            }
-            
-            if (response.status === 403) {
-                throw new Error('Access forbidden. You don\'t have permission to perform this action.');
-            }
-            
-            if (response.status === 404) {
-                throw new Error('Resource not found.');
-            }
-            
-            if (!response.ok) {
-                const errorData = await response.text();
-                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                
+
+            // Intentar parsear JSON (si hay)
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
                 try {
-                    const parsedError = JSON.parse(errorData);
-                    errorMessage = parsedError.message || parsedError.error || errorMessage;
+                    data = await response.json();
                 } catch (e) {
-                    if (errorData) errorMessage = errorData;
+                    data = null;
                 }
-                
-                throw new Error(errorMessage);
+            } else {
+                // si no es JSON, intentar leer texto (por si el backend responde texto)
+                try {
+                    const text = await response.text();
+                    data = text ? { error: text } : null;
+                } catch {
+                    data = null;
+                }
             }
 
-            // Handle empty responses
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                return await response.text();
+            // Mensaje preferente del backend (primero error, luego message)
+            const backendMessage = data?.error || data?.message || null;
+
+            // 401: autenticación
+            if (response.status === 401) {
+                const message = backendMessage || 'Credenciales inválidas';
+
+                const isLoginRequest = url.includes('/auth/login');
+
+                if (!isLoginRequest) {
+                    Auth.logout();
+                    // usar window.Router solo si existe y tiene navigate
+                    if (window.Router && typeof window.Router.navigate === 'function') {
+                        window.Router.navigate('/login');
+                    } else {
+                        // fallback a redirect tradicional
+                        window.location.href = '/login.html';
+                    }
+                }
+
+                throw new Error(message);
             }
-            
+
+            // Otros errores HTTP (usar el mensaje backend si existe)
+            if (!response.ok) {
+                const message = backendMessage || `HTTP ${response.status} ${response.statusText}`;
+                throw new Error(message);
+            }
+
+            // Éxito: retornamos el objeto JSON original (o texto envuelto en { result: text })
+            return data;
         } catch (error) {
             console.error('API Error:', error);
             throw error;
         }
     }
 
-    // GET request
+    // Convenience wrappers (sin cambios importantes)
     async get(endpoint) {
         return this.request(endpoint, { method: 'GET' });
     }
 
-    // POST request
     async post(endpoint, data) {
         return this.request(endpoint, {
             method: 'POST',
@@ -83,11 +92,10 @@ class API {
         });
     }
 
-    // POST request with file upload (FormData)
     async postFormData(endpoint, formData) {
+        // Para FormData NO establezcas Content-Type: el navegador lo hace automáticamente.
         const token = localStorage.getItem('jwt_token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        
         return this.request(endpoint, {
             method: 'POST',
             headers,
@@ -95,7 +103,6 @@ class API {
         });
     }
 
-    // PUT request
     async put(endpoint, data) {
         return this.request(endpoint, {
             method: 'PUT',
@@ -103,50 +110,20 @@ class API {
         });
     }
 
-    // DELETE request
     async delete(endpoint) {
         return this.request(endpoint, { method: 'DELETE' });
     }
 
-    // Auth endpoints
-    async signup(userData) {
-        return this.post('/auth/signup', userData);
-    }
-
-    async login(credentials) {
-        return this.post('/auth/login', credentials);
-    }
-
-    // Video endpoints
-    async uploadVideo(formData) {
-        return this.postFormData('/videos/upload', formData);
-    }
-
-    async getMyVideos() {
-        return this.get('/videos');
-    }
-
-    async getVideoById(id) {
-        return this.get(`/videos/${id}`);
-    }
-
-    async deleteVideo(id) {
-        return this.delete(`/videos/${id}`);
-    }
-
-    // Public endpoints
-    async getPublicVideos(page = 1, limit = 12) {
-        return this.get(`/public/videos?page=${page}&limit=${limit}`);
-    }
-
-    async getPublicVideoById(id) {
-        return this.get(`/public/videos/${id}`);
-    }
-
-    async voteForVideo(id) {
-        return this.post(`/public/videos/${id}/vote`, {});
-    }
-
+    // endpoints (igual que antes)
+    async signup(userData) { return this.post('/auth/signup', userData); }
+    async login(credentials) { return this.post('/auth/login', credentials); }
+    async uploadVideo(formData) { return this.postFormData('/videos/upload', formData); }
+    async getMyVideos() { return this.get('/videos'); }
+    async getVideoById(id) { return this.get(`/videos/${id}`); }
+    async deleteVideo(id) { return this.delete(`/videos/${id}`); }
+    async getPublicVideos(page = 1, limit = 12) { return this.get(`/public/videos?page=${page}&limit=${limit}`); }
+    async getPublicVideoById(id) { return this.get(`/public/videos/${id}`); }
+    async voteForVideo(id) { return this.post(`/public/videos/${id}/vote`, {}); }
     async getRankings(city = '', page = 1, limit = 20) {
         const params = new URLSearchParams({ page, limit });
         if (city) params.append('city', city);
@@ -154,8 +131,6 @@ class API {
     }
 }
 
-// Create global API instance
+// Export global instance
 window.api = new API();
-
-// Alias for compatibility with new pages
 window.apiClient = window.api;
