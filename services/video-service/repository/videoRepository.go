@@ -92,3 +92,33 @@ func (r *VideoRepository) GetPublishedVideoByID(videoID string) (*models.Video, 
 	}
 	return &video, nil
 }
+
+// ProcessingStatsRow sirve para mapear los resultados de la consulta SQL
+type ProcessingStatsRow struct {
+	Count      int64    `gorm:"column:count"`
+	AvgSeconds *float64 `gorm:"column:avg_seconds"`
+	MinSeconds *float64 `gorm:"column:min_seconds"`
+	MaxSeconds *float64 `gorm:"column:max_seconds"`
+	P95Seconds *float64 `gorm:"column:p95_seconds"`
+}
+
+// ProcessingStatsByIDRange calcula estadísticas de tiempo de procesamiento para videos procesados
+// cuyo video_id está entre fromID y toID (inclusive).
+func (r *VideoRepository) ProcessingStatsByIDRange(fromID, toID int) (*ProcessingStatsRow, error) {
+	var res ProcessingStatsRow
+	q := `
+    SELECT
+		COUNT(*) AS count,
+		EXTRACT(EPOCH FROM AVG(processed_at - uploaded_at)) AS avg_seconds,
+		EXTRACT(EPOCH FROM MIN(processed_at - uploaded_at)) AS min_seconds,
+		EXTRACT(EPOCH FROM MAX(processed_at - uploaded_at)) AS max_seconds,
+		EXTRACT(EPOCH FROM PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY processed_at - uploaded_at)) AS p95_seconds
+    FROM app.videos
+    WHERE status = ? AND video_id BETWEEN ? AND ?;
+    `
+	// Usamos string(models.StatusProcessed) para pasar el valor textual
+	if err := r.DB.Raw(q, string(models.StatusProcessed), fromID, toID).Scan(&res).Error; err != nil {
+		return nil, err
+	}
+	return &res, nil
+}

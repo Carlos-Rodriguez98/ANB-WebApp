@@ -27,3 +27,11 @@ type VideoDetail struct {
 	PublishedAt  *string `json:"published_at,omitempty"`
 	Votes        int     `json:"votes"`
 }
+
+type ProcessingStats struct {
+	Count      int64    `json:"count"`
+	AvgSeconds *float64 `json:"avg_processing_seconds,omitempty"`
+	MinSeconds *float64 `json:"min_processing_seconds,omitempty"`
+	MaxSeconds *float64 `json:"max_processing_seconds,omitempty"`
+	P95Seconds *float64 `json:"p95_processing_seconds,omitempty"`
+}
