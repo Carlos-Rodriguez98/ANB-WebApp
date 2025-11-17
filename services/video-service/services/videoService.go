@@ -235,3 +235,30 @@ func (s *VideoService) Publish(userID uint, videoID string) error {
 	}
 	return s.Repo.Publish(userID, videoID)
 }
+
+// GetProcessingStatsByRange obtiene estadísticas de procesamiento para un rango de video_id.
+func (s *VideoService) GetProcessingStatsByRange(fromID, toID int) (dto.ProcessingStats, error) {
+	row, err := s.Repo.ProcessingStatsByIDRange(fromID, toID)
+	if err != nil {
+		return dto.ProcessingStats{}, err
+	}
+
+	out := dto.ProcessingStats{
+		Count: row.Count,
+	}
+
+	if row.AvgSeconds != nil {
+		out.AvgSeconds = row.AvgSeconds
+	}
+	if row.MinSeconds != nil {
+		out.MinSeconds = row.MinSeconds
+	}
+	if row.MaxSeconds != nil {
+		out.MaxSeconds = row.MaxSeconds
+	}
+	if row.P95Seconds != nil {
+		out.P95Seconds = row.P95Seconds
+	}
+
+	return out, nil
+}

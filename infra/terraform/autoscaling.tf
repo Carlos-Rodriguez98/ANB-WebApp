@@ -158,9 +158,9 @@ resource "aws_autoscaling_group" "worker" {
   ]
   health_check_type         = "ELB"
   health_check_grace_period = 900
-  min_size                  = 1
+  min_size                  = 2
   max_size                  = 3
-  desired_capacity          = 1
+  desired_capacity          = 2
 
   launch_template {
     id      = aws_launch_template.worker.id
@@ -189,7 +189,6 @@ resource "aws_autoscaling_group" "worker" {
 
   lifecycle {
     create_before_destroy = true
-    ignore_changes        = [desired_capacity]
   }
 }
 
@@ -219,5 +218,20 @@ resource "aws_autoscaling_policy" "alb_request_count" {
       resource_label         = "${aws_lb.main.arn_suffix}/${aws_lb_target_group.video.arn_suffix}"
     }
     target_value = 1000.0
+  }
+}
+
+resource "aws_autoscaling_policy" "worker_cpu_high" {
+  name                   = "${var.project_name}-worker-cpu-high"
+  autoscaling_group_name = aws_autoscaling_group.worker.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    # CPU promedio objetivo
+    target_value = 70.0
   }
 }
