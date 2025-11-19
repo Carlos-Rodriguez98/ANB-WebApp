@@ -18,6 +18,7 @@ func ServiceRoutes(r *gin.Engine, vc *controllers.VideoController) {
 			protected.GET("/:video_id", vc.GetDetail) // (5)
 			protected.DELETE("/:video_id", vc.Delete) // (6)
 			protected.POST("/:video_id/publish", vc.Publish)
+			protected.GET("/processing-stats", vc.ProcessingStats) // -> /api/videos/processing-stats
 		}
 	}
 }

@@ -3,6 +3,7 @@ package controllers
 import (
 	"ANB-WebApp/services/video-service/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -109,4 +110,37 @@ func (ctl *VideoController) Publish(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "video publicado", "video_id": id})
+}
+
+// GET /api/videos/processing-stats?from_id=&to_id=
+func (ctl *VideoController) ProcessingStats(c *gin.Context) {
+	// parámetros obligatorios
+	fromStr := c.Query("from_id")
+	toStr := c.Query("to_id")
+	if fromStr == "" || toStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "from_id y to_id son requeridos"})
+		return
+	}
+
+	fromID, err := strconv.Atoi(fromStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "from_id debe ser un entero"})
+		return
+	}
+	toID, err := strconv.Atoi(toStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "to_id debe ser un entero"})
+		return
+	}
+	if fromID > toID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "from_id debe ser menor o igual a to_id"})
+		return
+	}
+
+	stats, err := ctl.Svc.GetProcessingStatsByRange(fromID, toID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
 }
