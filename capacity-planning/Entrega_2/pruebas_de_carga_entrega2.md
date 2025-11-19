@@ -310,6 +310,45 @@ Podemos asumir que para este escenario 1 el número de usuarios concurrentes que
 
 <br>
 
+## **Prueba de Carga Capa Worker (Videos Procesados)**
+
+Dado que en el Escenario 2 el componente crítico es el procesamiento de videos por parte del worker, se incorpora una nueva métrica de calidad que permite evaluar su capacidad real bajo distintos niveles de carga.
+
+**Definición de la Métrica Videos Procesados por Minuto (VPM):** Es básicamente la cantidad de videos que el sistema es capaz de procesar por minuto bajo una carga determinada.
+
+| Métrica | Criterio Propuesto | Descripción |
+|:-------:|:------------------:|:-----------:|
+| **Videos Procesados por Minuto (VPM)** | **≥ 0.07 VPM**     | El sistema debe ser capaz de procesar al menos un video cada 14 minutos bajo carga estable. Este valor corresponde al máximo nivel de usuarios concurrentes donde el tiempo de procesamiento aún no muestra degradación significativa. |
+
+Para esta prueba, se definió un nuevo endpoint ```/api/videos/processing-stats?from\_id=\&to\_id=```, para calcular el **tiempo promedio de procesamiento de los videos**. Este endpoint determina la métrica basándose en el rango de IDs de video proporcionado como parámetros. El resultado devuelto incluye la siguiente información:
+
+```
+{
+  "count": 40,
+  "avg_processing_seconds": 859.335446,
+  "min_processing_seconds": 193.484464,
+  "max_processing_seconds": 1531.642574
+}
+```
+
+Haciendo las pruebas con diferente número de usuarios concurrentes. Se obtuvieron los siguientes resultados:
+
+| Videos Simultáneos | Tiempo Promedio | Tiempo Mínimo | Tiempo Máximo | Uso de CPU | VPM (Videos/min) |
+|:----:|:------:|:------:|:-------:|:----:|:------:|
+| 10   | 280 sg | 179 sg | 374 sg  | 85%  | 0.21 |
+| 20   | 469 sg | 185 sg | 754 sg  | 100% | 0.13 |
+| 30   | 663 sg | 190 sg | 1146 sg | 100% | 0.09 |
+| **40** | **859 sg** | **193 sg** | **1531 sg** | **100%** | **0.07** |
+| 50   | 1112 sg | 195 sg | 1984 sg | 100% | 0.05 |
+| 60   | 1338 sg | 197 sg | 2417 sg | 100% | 0.04 |
+| 70   | 1498 sg | 189 sg | 2805 sg | 100% | 0.04 |
+| 80   | 1621 sg | 189 sg | 3059 sg | 100% | 0.04 |
+| 90   | 1784 sg | 192 sg | 3386 sg | 100% | 0.03 |
+| 100  | 1919 sg | 194 sg | 3652 sg | 100% | 0.03 |
+
+
+<br>
+
 ## Conclusiones
 
 ### Escenario 1
@@ -370,6 +409,22 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
 
 <br>
 
+### Prueba de Carga Capa Worker (Videos Procesados)
+
+<p align="center">
+  <img alt="tiempopromediovideosprocesados" src="https://github.com/user-attachments/assets/fbbddc91-1ff4-4f4a-b871-329ac8419cf5" />
+</p>
+
+<p align="center">
+  <img alt="vpmgrafica" src="https://github.com/user-attachments/assets/45b58484-564e-47dd-ad18-958a4363070c" />
+</p>
+
+El análisis del tiempo de procesamiento del pipeline de videos demuestra que el sistema mantiene un rendimiento estable hasta aproximadamente 40 videos procesados simultáneamente, con un tiempo promedio de 859 segundos por video. Esto equivale a un rendimiento de 0.07 videos procesados por minuto, que se establece como el umbral mínimo aceptable de calidad para el worker en condiciones normales de operación.
+
+Sin embargo, también se puede apreciar que el sistema experimenta saturación de CPU muy rápidamente: desde 20 videos simultáneos, el uso de CPU llega al 100%, y permanece así hasta los 100 videos concurrentes. Esta saturación constante indica que la CPU sí es el cuello de botella principal del worker, y no el I/O ni la lógica interna del pipeline.
+
+<br>
+
 ## Consideraciones para escalar la aplicación
 
 Con el fin de mejorar la capacidad de respuesta y la disponibilidad del sistema frente a un aumento en el número de usuarios concurrentes, se identifican algunas estrategias de escalamiento que permitirían manejar una mayor carga de trabajo de forma más eficiente. Estas mejoras aplican tanto al escenario 1 como al escenario 2:
@@ -383,7 +438,7 @@ Esto permite:
 * Aumentar la velocidad y confiabilidad en la carga y descarga de archivos.
 * Mejorar la escalabilidad y durabilidad de los datos, ya que S3 está diseñado para manejar grandes volúmenes de información y crecer automáticamente según la demanda.
 
-**2. Incorporar un balanceador de carga (ALB) y un grupo de autoescalado para el servidor webr**
+**2. Incorporar un balanceador de carga (ALB) y un grupo de autoescalado para el servidor web**
 
 Actualmente, el sistema depende de una única instancia de servidor web. Esto limita su capacidad de respuesta frente a picos de tráfico y representa un punto único de falla. Al incluir un balanceador de carga que distribuya las solicitudes entre múltiples instancias, se asegura que la carga se reparta de forma equilibrada, evitando saturaciones en un solo punto.
 
@@ -392,3 +447,23 @@ Además, con un grupo de autoescalado se pueden añadir o eliminar instancias au
 * Responder dinámicamente al aumento o disminución del tráfico.
 * Mantener un rendimiento estable y tiempos de respuesta aceptables.
 * Optimizar costos, ya que solo se utilizan los recursos necesarios en cada momento.
+
+**3. Implementar un Auto Scaling Group (ASG) para la capa de procesamiento (Workers)**
+
+En el escenario actual, todo el procesamiento de videos recae sobre una única instancia EC2 que ejecuta el worker encargado de manejar la cola de tareas. Esto genera varias limitaciones:
+
+* La capacidad de procesamiento queda restringida por los recursos de un único servidor.
+* El tiempo promedio de procesamiento se degrada al alcanzar saturación de CPU.
+* Existe un punto único de falla: si la instancia del worker se detiene, todo el flujo de procesamiento de videos queda inoperativo.
+
+Para solucionar esto, se recomienda crear un Auto Scaling Group dedicado a la capa de workers, con la capacidad de lanzar múltiples instancias idénticas que extraen tareas desde la misma cola de trabajo (por ejemplo, Amazon SQS).
+
+Esto permite:
+
+* Escalamiento horizontal: incrementar dinámicamente la cantidad de workers durante los picos de carga, procesando más videos en paralelo.
+* Balanceo natural por cola: al utilizar SQS (o una cola equivalente), las tareas se distribuyen automáticamente entre los workers disponibles, sin necesidad de un balanceador adicional.
+* Alta disponibilidad: si una instancia falla, el ASG la reemplaza automáticamente por otra nueva.
+* Reducción de tiempos de procesamiento: con múltiples workers procesando videos simultáneamente, el tiempo total para vaciar la cola disminuye significativamente.
+* Optimización de costos: se pueden definir políticas de escalamiento basadas en métricas como número de mensajes en la cola, CPU o duración promedio de tareas, asegurando que solo haya workers activos cuando realmente se necesitan.
+
+En conjunto, esta estrategia elimina el cuello de botella que supone una única instancia de procesamiento y permite que el sistema soporte mayor demanda de forma eficiente y resiliente.
