@@ -407,8 +407,6 @@ Para el escenario 2 tenemos las siguientes gráficas que ilustran el comportamie
 
 **4. Límites de Resistencia y Tasa de Errores:** El sistema demuestra una resistencia a errores, manteniendo una Tasa de Errores de 0% en todos los niveles probados (hasta 100 usuarios).
 
-<br>
-
 ### Prueba de Carga Capa Worker (Videos Procesados)
 
 <p align="center">
