@@ -128,14 +128,14 @@ resource "aws_vpc_security_group_ingress_rule" "web_front" {
   description                  = "Allow access to frontend application from ALB"
 }
 
-# --- WORKER SG (privada): SSH opcional; egress abierto ---
-resource "aws_security_group" "worker" {
-  name        = "${var.project_name}-worker-sg"
-  description = "Worker in private subnet; SSH from admin IP (optional)"
+# --- Lambda SG (private): Open Egress ---
+resource "aws_security_group" "lambda" {
+  name        = "${var.project_name}-lambda-sg"
+  description = "Lambda security group"
   vpc_id      = aws_vpc.main.id
-  tags        = merge(local.sg_tags, { Name = "${var.project_name}-worker-sg" })
+  tags        = merge(local.sg_tags, { Name = "${var.project_name}-lambda-sg" })
 
-  # Egress abierto (para hablar con RDS)
+  # Open egress to allow the Lambda to access S3, SQS, RDS, etc.
   egress {
     from_port   = 0
     to_port     = 0
@@ -144,15 +144,41 @@ resource "aws_security_group" "worker" {
   }
 }
 
-# SSH desde tu IP para administración directa
-resource "aws_vpc_security_group_ingress_rule" "worker_ssh" {
-  security_group_id = aws_security_group.worker.id
-  cidr_ipv4         = var.allowed_ssh_cidr
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
-  description       = "Allow SSH from admin IP"
+# DB from Lambda
+resource "aws_vpc_security_group_ingress_rule" "rds_from_lambda" {
+  security_group_id            = aws_security_group.rds.id
+  referenced_security_group_id = aws_security_group.lambda.id
+  from_port                    = var.db_port
+  to_port                      = var.db_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow DB access from Lambda function"
 }
+
+# --- WORKER SG (privada): SSH opcional; egress abierto ---
+# resource "aws_security_group" "worker" {
+#   name        = "${var.project_name}-worker-sg"
+#   description = "Worker in private subnet; SSH from admin IP (optional)"
+#   vpc_id      = aws_vpc.main.id
+#   tags        = merge(local.sg_tags, { Name = "${var.project_name}-worker-sg" })
+
+#   # Egress abierto (para hablar con RDS)
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }
+
+# SSH desde tu IP para administración directa
+# resource "aws_vpc_security_group_ingress_rule" "worker_ssh" {
+#   security_group_id = aws_security_group.worker.id
+#   cidr_ipv4         = var.allowed_ssh_cidr
+#   from_port         = 22
+#   to_port           = 22
+#   ip_protocol       = "tcp"
+#   description       = "Allow SSH from admin IP"
+# }
 
 # --- RDS SG (privada): DB_PORT desde WEB y WORKER ---
 resource "aws_security_group" "rds" {
@@ -181,11 +207,11 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_web" {
 }
 
 # DB desde WORKER
-resource "aws_vpc_security_group_ingress_rule" "rds_from_worker" {
-  security_group_id            = aws_security_group.rds.id
-  referenced_security_group_id = aws_security_group.worker.id
-  from_port                    = var.db_port
-  to_port                      = var.db_port
-  ip_protocol                  = "tcp"
-  description                  = "Allow DB from WORKER"
-}
+# resource "aws_vpc_security_group_ingress_rule" "rds_from_worker" {
+#   security_group_id            = aws_security_group.rds.id
+#   referenced_security_group_id = aws_security_group.worker.id
+#   from_port                    = var.db_port
+#   to_port                      = var.db_port
+#   ip_protocol                  = "tcp"
+#   description                  = "Allow DB from WORKER"
+# }
