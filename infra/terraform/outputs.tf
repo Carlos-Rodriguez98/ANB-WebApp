@@ -8,7 +8,7 @@ output "private_route_table_id" { value = aws_route_table.private.id }
 
 output "web_sg_id" { value = aws_security_group.web.id }
 output "alb_sg_id" { value = aws_security_group.alb.id }
-output "worker_sg_id" { value = aws_security_group.worker.id }
+# output "worker_sg_id" { value = aws_security_group.worker.id }
 output "rds_sg_id" { value = aws_security_group.rds.id }
 
 #output "web_public_ip" { value = aws_instance.web.public_ip }
