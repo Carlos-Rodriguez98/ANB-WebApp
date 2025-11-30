@@ -12,7 +12,7 @@ data "archive_file" "lambda_zip" {
 resource "aws_lambda_function" "worker_lambda" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "${var.project_name}-worker-lambda"
-  role             = "arn:aws:iam::637423308545:role/LabRole" # data.aws_iam_instance_profile.lab_instance_profile.name
+  role             = "arn:aws:iam::562172447402:role/LabRole" # data.aws_iam_instance_profile.lab_instance_profile.name
  
   handler          = "bootstrap"
   runtime          = "provided.al2023"
