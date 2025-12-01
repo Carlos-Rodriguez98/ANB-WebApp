@@ -43,3 +43,8 @@ Este proyecto será llevado a cabo en diferentes fases, por lo cual, se define u
 
    - [Documentación entregable 4](./docs/Entrega_4/README.md)
    - [Video entregable 4](./sustentacion/Entrega_4/Enlace.md)
+
+**Entrega 5:**
+
+   - [Documentación entregable 5](./docs/Entrega_5/README.md)
+   - [Video entregable 5](./sustentacion/Entrega_5/Enlace.md)

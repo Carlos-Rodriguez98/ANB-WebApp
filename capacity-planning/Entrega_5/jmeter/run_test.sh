@@ -21,7 +21,7 @@ TEMP_DIR=output/temp_runs
 # Validar que el archivo JMX exista en el directorio padre
 if [ ! -f "../$JMX_FILE" ]; then
     echo "Error: El archivo '../$JMX_FILE' no existe"
-    echo "Asegúrate de que el archivo esté en Entrega_4/"
+    echo "Asegúrate de que el archivo esté en Entrega_5/"
     exit 1
 fi
 
@@ -253,7 +253,7 @@ for i in $(seq 1 $SUCCESS_COUNT); do
                 <span class=\"badge\">Ejecución ${i}</span>
                 <h2>Reporte Ejecución ${i}</h2>
                 <p>Resultados detallados de la ejecución número ${i}.</p>
-                <a href=\"/capacity-planning/Entrega_4/jmeter/temp_runs/report_run${i}/index.html\" class=\"btn\">Ver Reporte</a>
+                <a href=\"/capacity-planning/Entrega_5/jmeter/temp_runs/report_run${i}/index.html\" class=\"btn\">Ver Reporte</a>
             </div>
 EOF"
 done
