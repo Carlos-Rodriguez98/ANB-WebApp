@@ -1,148 +1,188 @@
-# **Pruebas de Carga - Entrega 5**
+# Reporte de arquitectura desplegada en AWS – Entrega 5
 
-## **Herramientas**
+## 1. Descripción general
 
-Para las pruebas de carga se utilizará **Apache JMeter**, una herramienta de código abierto diseñada para realizar pruebas de rendimiento y medir el comportamiento de aplicaciones web y otros servicios. JMeter permite simular múltiples usuarios concurrentes que acceden a una aplicación, con el fin de evaluar su capacidad de respuesta y estabilidad bajo diferentes niveles de carga.
+La infraestructura definida en esta entrga implementa una arquitectura cloud moderna y segura sobre la cuenta sandbox de AWS, combinando elementos serverless y en servidor, orientada a soportar una aplicación web compuesta por múltiples servicios (web, procesamiento, base de datos, almacenamiento, etc). Se utilizan recursos gestionados y buenas prácticas de segmentación, alta disponibilidad y seguridad, facilitando el despliegue, operación y escalabilidad de la solución.
 
-Además, se utilizará **Amazon CloudWatch** para el monitoreo de recursos en la infraestructura de AWS. CloudWatch recopila métricas como el uso de CPU, disco y red en tiempo real, lo que permite analizar el rendimiento del sistema durante las pruebas de carga y detectar posibles cuellos de botella o degradaciones en el servicio.
+![Arquitectura AWS](./artifacts/aws_arch.jpg)
 
-<br>
+## 2. Recursos utilizados
 
-## **Arquitectura del Entorno de Pruebas**
+### 2.1. Red y conectividad
 
-La arquitectura del entorno de pruebas se basa en un enfoque totalmente contenedorizado para garantizar portabilidad y consistencia en la ejecución.
+- **VPC dedicada**: Se crea una Virtual Private Cloud (VPC) con un bloque CIDR configurable (`10.0.0.0/16` por defecto), habilitando DNS interno.
+- **Subredes públicas y privadas**: 
+  - Dos subredes públicas (en distintas zonas de disponibilidad) para exponer servicios web y balanceadores.
+  - Dos subredes privadas (en distintas zonas de disponibilidad) para recursos internos como la base de datos y almacenamiento.
+- **Internet Gateway**: Permite la salida a Internet de las instancias en subredes públicas.
+- **Tablas de rutas**: Configuración de rutas para acceso a Internet desde subredes públicas.
+- **VPC Endpoints**: Se crean endpoints privados para servicios críticos de AWS (SSM, KMS), permitiendo la administración y cifrado sin exponer tráfico a Internet.
 
-Se definió un Dockerfile y un docker-compose.yml que permiten levantar un contenedor local con una versión ligera de Apache JMeter en modo CLI (sin interfaz gráfica), junto con Java 17, necesario para su ejecución. Este contenedor se utiliza exclusivamente para ejecutar los scripts de pruebas de carga de forma automatizada. Por otro lado, CloudWatch ya es un servicio integrado de AWS por lo que sus métricas se consiguen directamente desde la consola de amazon desde un dashboard definido en terraform.
+### 2.2. Seguridad
 
-<br>
+- **Grupos de seguridad**: 
+  - Reglas estrictas para acceso HTTP/HTTPS desde Internet solo a los servicios web.
+  - Acceso SSH restringido únicamente a una IP administrativa.
+  - Comunicación interna entre servicios controlada por reglas de grupo de seguridad.
+- **Roles e Instance Profiles**: Uso de roles gestionados para acceso seguro a recursos AWS desde la instancia EC2 y desde la la función Lambda worker.
 
-## **Escenario 1**
+### 2.3. Cómputo
 
-### **Flujo del Escenario**
+- **EC2 Launch Template y Auto Scaling Group**: 
+  - Plantilla de lanzamiento para instancias web basada en Amazon Linux 2023.
+  - Configuración de escalabilidad automática (ASG) para alta disponibilidad (deseado=1, mínimo=1, máximo=3).
+  - Instalación automatizada de Docker y docker-compose para orquestar los servicios de la aplicación.
 
-Para este escenario se define el siguiente flujo de peticiones relacionado con la capa web:
+### 2.4. Almacenamiento y Base de Datos
 
-**1. Registro:** /api/auth/signup
+- **Amazon S3**: 
+  - Un bucket para almacenamiento de videos originales subidos por los usuarios y para los videos procesados.
+- **Amazon RDS (PostgreSQL)**: 
+  - Instancia de base de datos en subredes privadas, no expuesta a Internet.
+  - Grupo de parámetros personalizado para logging y performance.
+  - Subnet group para alta disponibilidad (aunque en modo dev, sin Multi-AZ).
 
-**2. Iniciar Sesión:** /api/auth/login
+### 2.5. Mensajería
 
-**3. Consultar Videos Públicos:** /api/public/videos
+- **Amazon SQS**: 
+  - Cola tipo standard que permite recibir peticiones de procesamiento de videos desde el servidor web para ser atendidas por el servidor worker.
 
-**4. Realizar Voto:** /api/public/videos/{id_video}/vote
 
-**5. Consultar Ranking:** /api/public/rankings
+## 3. Estructura de la Arquitectura
 
-<p align="center">
-  <img alt="Imagen1" src="https://github.com/user-attachments/assets/8f9cbaa2-5025-4b6d-91e9-ae20a8cb1499" />
-</p>
+La arquitectura se organiza en capas y zonas de disponibilidad para maximizar la seguridad y disponibilidad:
 
-En esta entrega no se considera necesario volver a ejecutar las pruebas de carga correspondientes al Escenario 1, ya que la capa web no recibió ningún cambio respecto a la arquitectura implementada en la entrega número 3. El Auto Scaling Group (ASG) que atiende las solicitudes HTTP, junto con el Application Load Balancer y la configuración general de la infraestructura, se mantiene exactamente igual, sin modificaciones en número de instancias, tipo, políticas de escalado, seguridad, ni lógica de enrutamiento. Dado que no hubo ajustes en el código, la estructura de red, ni en los componentes que intervienen en este flujo, el comportamiento del sistema frente a carga sería idéntico al observado previamente. Por lo tanto, los resultados de las pruebas realizadas del escenario 1 en la Entrega 3 se consideran completamente válidos para esta entrega, ya que repetirlas produciría métricas y conclusiones equivalentes.
+- **Capa pública**: 
+  - Balanceador de carga (ALB) y servicios web expuestos a Internet.
+  - Acceso restringido por grupos de seguridad.
+- **Capa privada**: 
+  - Servicios de backend, procesamiento, base de datos y almacenamiento.
+  - Comunicación interna segura, sin exposición directa a Internet.
+- **Almacenamiento**: 
+  - Bucket S3 para archivos y almacenamiento compartido entre instancias.
+- **Administración y monitoreo**: 
+  - VPC Endpoints para administración segura vía SSM/KMS.
+  - Roles y políticas para acceso controlado a recursos.
 
-<br>
+## 4. Flujo de ejecución de la aplicación
 
-## **Escenario 2**
+1. **Despliegue de infraestructura**: Terraform crea la VPC, subredes, instancias, bucket, RDS y configura la seguridad.
+2. **Inicialización de instancias**: La instancia EC2 se configuran automáticamente (user-data) para instalar Docker y levantar los servicios web de la aplicación.
+3. **Carga y procesamiento de archivos**: 
+   - Los usuarios suben videos a través del frontend.
+   - Los archivos se almacenan en S3 según el flujo.
+   - Servicios de procesamiento operan sobre los archivos y almacenan resultados en S3.
+4. **Persistencia y comunicación**: 
+   - Los servicios acceden a la base de datos RDS en la capa privada.
+   - La comunicación entre servicios se realiza dentro de la VPC, protegida por grupos de seguridad. Entre el servidor web y el servidor worker se manejan peticiones por medio de la cola en SQS.
+5. **Acceso y administración**: 
+   - El acceso a la aplicación se realiza a través del ALB en la capa pública.
+   - La administración de instancias se realiza de forma segura mediante SSM, sin necesidad de exponer puertos de administración.
 
-Para este escenario se define el siguiente flujo de peticiones relacionado con la capa de procesamiento de videos (worker):
 
-**1. Iniciar Sesión:** /api/auth/login
+## 5. Comandos para Desplegar la Arquitectura
 
-**2. Consultar Videos Propios:** /api/videos
+### Prerequisitos:
 
-**3. Subir Video:** /api/videos/upload
+- AWS Academy Learner Lab activo
+- Terraform instalado (versión 1.0+)
+- Git bash o terminal con soporte bash
 
-**4. Consultar Detalle Video:** /api/videos/{id_video}
+### Paso 1: Preparar credenciales de AWS
 
-<br>
-<p align="center">
-  <img alt="imagen4" src="https://github.com/user-attachments/assets/3651611b-1071-47bc-83e0-d21f7ec3d927" />
-</p>
-<br>
+Navega al directorio de Terraform:
 
-En el caso del Escenario 2, tampoco resulta necesario repetir la prueba de carga orientada a medir la capacidad del servidor web para manejar el flujo de subida de videos, ya que esta etapa depende principalmente del encolamiento de tareas en SQS y del manejo de solicitudes HTTP por parte del ASG web. Dado que esta porción de la arquitectura no sufrió ningún cambio respecto a la entrega anterior (manteniendo el mismo ASG web, la misma lógica de encolamiento y las mismas rutas de subida hacia S3) los resultados obtenidos en la Entrega 3 seguirían siendo equivalentes.
+```bash
+cd infra/terraform/
+```
 
-Sin embargo, lo que sí se vuelve relevante evaluar en esta entrega es la **capacidad del nuevo sistema basado en funciones AWS Lambda**, que reemplaza al ASG de workers utilizado previamente. Este cambio en la arquitectura introduce un modelo de escalado automático aún más flexible, permitiendo procesar videos de manera altamente paralela sin necesidad de administrar servidores. Por lo tanto, las pruebas de rendimiento deben centrarse ahora en validar cómo escala el procesamiento asíncrono bajo diferentes volúmenes de carga y cuán efectivamente el uso de Lambda reduce los tiempos de procesamiento totales en comparación con la entrega anterior.
+Obtén las credenciales de AWS Academy (Learner Lab → AWS Details → AWS CLI: Show):
 
-<br>
+- `aws_access_key_id`
+- `aws_secret_access_key`
+- `aws_session_token`
 
-## **Prueba de Carga del ASG Worker**
+Ejecuta el script de configuración:
 
-El objetivo principal de esta prueba es evaluar el desempeño de la nueva arquitectura de procesamiento asíncrono basada en AWS Lambda, que reemplaza al Auto Scaling Group (ASG) de workers utilizado en la entrega anterior. A diferencia del modelo previo, donde existía un conjunto limitado de instancias capaces de escalar únicamente hasta cierto punto, la nueva solución aprovecha la capacidad de escalado prácticamente ilimitado de Lambda, permitiendo procesar múltiples videos en paralelo sin necesidad de administrar servidores.
+**En Linux/Mac:**
+```bash
+./1-set-credentials.sh
+```
 
-La prueba se diseña en términos de usuarios concurrentes que suben videos simultáneamente. Cada subida genera un mensaje en SQS y desencadena una ejecución independiente de Lambda. Para cada nivel de concurrencia se mide:
+**En Windows (PowerShell):**
+```powershell
+.\1-set-credentials.ps1
+```
 
-* El tiempo promedio de procesamiento por video, desde que el mensaje llega a la cola hasta que el video queda completamente procesado.
+El script te pedirá las credenciales y las guardará en variables de entorno.
 
-* El número de ejecuciones concurrentes de Lambda registradas en CloudWatch, observando si la función escala adecuadamente frente a aumentos de carga.
+### Paso 2: Inicializar Terraform
 
-* La duración promedio de cada invocación, para identificar posibles cuellos de botella en la lógica interna.
+```bash
+terraform init
+```
 
-El experimento busca validar si Lambda es capaz de absorber incrementos en la cantidad de videos a procesar sin provocar acumulación significativa en la cola y sin degradar el tiempo total de procesamiento. Dado su modelo serverless, se espera que la arquitectura escale automáticamente en función de la demanda, mejorando el throughput y eliminando las limitaciones impuestas por un grupo fijo de instancias. Esta prueba permitirá cuantificar el impacto del escalado automático de Lambda y confirmar que la nueva versión del sistema ofrece un procesamiento más eficiente y robusto bajo condiciones de estrés controlado.
+### Paso 3: Planificar el despliegue
 
-### Tabla de Resultados
+Visualiza lo que Terraform va a crear:
 
-Se ha implementado un nuevo endpoint, ```/api/videos/processing-stats?from\_id=\&to\_id=```, para calcular el **tiempo promedio de procesamiento de los videos**. Este endpoint determina la métrica basándose en el rango de IDs de video proporcionado como parámetros. El resultado devuelto incluye la siguiente información:
+**En Linux/Mac:**
+```bash
+./2-plan.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\2-plan.ps1
+```
+
+### Paso 4: Aplicar el despliegue
+
+Despliega la infraestructura:
+
+**En Linux/Mac:**
+```bash
+./3-apply.sh
+```
+
+**En Windows (PowerShell):**
+```powershell
+.\3-apply.ps1
+```
+
+El proceso toma aproximadamente **15-20 minutos**. Al finalizar, verás outputs con:
+- URL del ALB para acceder a la aplicación
+- Endpoint de RDS
+- URL de la cola SQS
+- IDs de recursos creados
+
+### Paso 5: Verificar el despliegue
+
+Accede a la aplicación usando el ALB DNS name mostrado en los outputs:
 
 ```
-{
-  "count": 70,
-  "avg_processing_seconds": 248.335446,
-  "min_processing_seconds": 226.484464,
-  "max_processing_seconds": 287.642574
-}
+http://<alb-dns-name>
 ```
 
-Por otro lado, tal como se mencionó anteriormente, para obtener métricas como la concurrencia utilizada de la función Lambda y la cantidad de invocaciones activas durante las pruebas, se emplea un dashboard en Amazon CloudWatch.
+Puedes verificar el estado de los servicios conectándote a las instancias vía SSM:
 
-<p align="center">
-  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/1ecee621-77e0-4bfb-b157-7851eb32a519" />
-</p>
+1. Ve a AWS Console → EC2 → Instances
+2. Selecciona una instancia web
+3. Click en "Connect" → "Session Manager" → "Connect"
+4. Verifica servicios: `docker ps`
 
-Se realizaron pruebas de carga usando [ConfiguracionEscenario2.jmx](ConfiguracionEscenario2.jmx) con distintos número de usuarios concurrentes subiendo videos a la vez, obteniendo los siguientes resultados:
+### Paso 6: Destruir la infraestructura
 
-| Videos Simultáneos | Tiempo Promedio de Procesamiento | Tiempo Mínimo de Procesamiento | Tiempo Máximo de Procesamiento | Concurrencia Máxima de Lambda | Errores | Videos procesados por minuto |
-|:------:|:----------:|:----------:|:-----------:|:--------:|:-----:|:-----:|
-| 10     | 244 sg     | 229 sg     | 286 sg      | 10       | 0     | 2.46  |
-| 20     | 241 sg     | 228 sg     | 285 sg      | 20       | 0     | 4.98  |
-| 30     | 243 sg     | 227 sg     | 286 sg      | 30       | 0     | 7.41  |
-| 40     | 247 sg     | 226 sg     | 287 sg      | 40       | 0     | 9.72  |
-| 50     | 245 sg     | 229 sg     | 287 sg      | 50       | 0     | 12.24 |
-| 60     | 239 sg     | 231 sg     | 289 sg      | 60       | 0     | 15.06 |
-| 70     | 248 sg     | 226 sg     | 287 sg      | 70       | 0     | 16.94 |
-| 80     | 246 sg     | 228 sg     | 289 sg      | 75       | 0     | 19.51 |
-| 90     | 247 sg     | 225 sg     | 291 sg      | 85       | 0     | 21.86 |
-| 100    | 249 sg     | 223 sg     | 292 sg      | 287 sg   | 0     | 24.10 |
+**IMPORTANTE**: Para evitar consumir créditos de AWS Academy, elimina todos los recursos cuando termines:
 
-También se probó la arquitectura de la entrega 4 para comprobar cuánto tiempo tarda en procesar los videos y poder así hacer una comparativa entre ambas entregas. Se obtuvieron los siguientes resultados:
+**En Linux/Mac:**
+```bash
+./4-destroy.sh
+```
 
-| Videos Simultáneos | Tiempo Promedio de Procesamiento | Tiempo Mínimo de Procesamiento | Tiempo Máximo de Procesamiento | CPU Máxima del ASG | Máximo de Instancias Activas | Videos procesados por minuto |
-|:------:|:----------:|:----------:|:-----------:|:--------:|:-----:|:-------:|
-| 10     | 151 sg     | 93 sg      | 219 sg      | 53%      | 2     | 3.97 |
-| 20     | 248 sg     | 118 sg     | 463 sg      | 71%      | 2     | 4.84 |
-| 30     | 337 sg     | 129 sg     | 672 sg      | 83%      | 3     | 5.34 | 
-| 40     | 428 sg     | 141 sg     | 981 sg      | 88%      | 3     | 5.61 |
-| 50     | 561 sg     | 167 sg     | 1395 sg     | 95%      | 3     | 5.35 |
-| 60     | 612 sg     | 173 sg     | 1582 sg     | 100%     | 3     | 5.88 |
-| 70     | 689 sg     | 181 sg     | 1764 sg     | 100%     | 3     | 6.09 |
-| 80     | 742 sg     | 189 sg     | 1931 sg     | 100%     | 3     | 6.47 |
-| 90     | 791 sg     | 196 sg     | 2084 sg     | 100%     | 3     | 6.83 |
-| 100    | 819 sg     | 141 sg     | 2259 sg     | 100%     | 3     | 7.33 |
+**En Windows (PowerShell):**
+```powershell
+.\4-destroy.ps1
+```
 
-<br>
-
-## Conclusiones
-
-<p align="center">
-  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/1a82eca9-fe9a-4605-97be-ae876c2130f3" />
-</p>
-
-Los resultados muestran una diferencia clara entre ambas arquitecturas: AWS Lambda procesa videos a una velocidad muy superior al ASG, especialmente a partir de cargas medias y altas. Mientras que el ASG incrementa su capacidad solo hasta 3 instancias, Lambda escala prácticamente sin fricción, ajustando su concurrencia en función del número de videos en la cola.
-
-En términos de rendimiento, Lambda mantiene un crecimiento lineal en la métrica videos procesados por minuto (VPM), pasando de 2.46 VPM a 24.10 VPM a medida que aumenta la carga. Por el contrario, el ASG presenta un crecimiento marginal, moviéndose solo de 3.97 VPM a 7.33 VPM, y estabilizándose rápidamente debido a los límites de sus instancias y al 100% de CPU sostenido en cargas altas.
-
-Esto demuestra que el cuello de botella en la arquitectura del ASG sigue siendo el cómputo disponible en sus instancias, que alcanzan el 100% de utilización de CPU a partir de 60 videos simultáneos. Aunque el ASG mejora respecto a un worker único, su capacidad de escalar horizontalmente es limitada comparada con Lambda.
-
-En contraste, la arquitectura basada en Lambda escala de manera mucho más eficiente, distribuyendo la carga entre múltiples ejecuciones en paralelo y evitando saturación incluso en los escenarios más altos de concurrencia probados. Esto explica por qué Lambda obtiene un throughput varias veces mayor que el ASG, manteniéndose consistente pese al incremento de carga.
-
-En conjunto, los resultados validan que Lambda es más adecuada para cargas variables, altas y distribuidas, mientras que el ASG comienza a presentar limitaciones claras cuando el procesamiento crece más allá de lo que sus tres instancias pueden sostener.
-
-<br>
+**Nota**: La eliminación toma ~10 minutos. Verifica en la consola de AWS que todos los recursos se eliminaron correctamente.
