@@ -94,7 +94,7 @@ Se ha implementado un nuevo endpoint, ```/api/videos/processing-stats?from\_id=\
 Por otro lado, tal como se mencionó anteriormente, para obtener métricas como la concurrencia utilizada de la función Lambda y la cantidad de invocaciones activas durante las pruebas, se emplea un dashboard en Amazon CloudWatch.
 
 <p align="center">
-  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/1ecee621-77e0-4bfb-b157-7851eb32a519" />
+  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/bc7b3baf-e749-4f1f-a145-29e8b69c57ed" />
 </p>
 
 Se realizaron pruebas de carga usando [ConfiguracionEscenario2.jmx](ConfiguracionEscenario2.jmx) con distintos número de usuarios concurrentes subiendo videos a la vez, obteniendo los siguientes resultados:
@@ -132,7 +132,11 @@ También se probó la arquitectura de la entrega 4 para comprobar cuánto tiempo
 ## Conclusiones
 
 <p align="center">
-  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/1a82eca9-fe9a-4605-97be-ae876c2130f3" />
+  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/c239c988-5865-4ade-a73e-2a4de86d6f98" />
+</p>
+
+<p align="center">
+  <img alt="cloudwatch50" src="https://github.com/user-attachments/assets/233b9272-2e08-4141-8d5e-4a6bbe87a718" />
 </p>
 
 Los resultados muestran una diferencia clara entre ambas arquitecturas: AWS Lambda procesa videos a una velocidad muy superior al ASG, especialmente a partir de cargas medias y altas. Mientras que el ASG incrementa su capacidad solo hasta 3 instancias, Lambda escala prácticamente sin fricción, ajustando su concurrencia en función del número de videos en la cola.
