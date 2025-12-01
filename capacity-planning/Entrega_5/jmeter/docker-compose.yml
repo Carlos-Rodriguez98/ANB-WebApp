@@ -1,0 +1,13 @@
+services:
+  jmeter:
+    image: jmeter-cli:5.6.3
+    container_name: jmeter-runner
+    entrypoint: []
+    command: tail -f /dev/null
+    volumes:
+      # Montar el archivo JMX desde el directorio padre (solo lectura)
+      #- ../ConfiguracionEscenario1.jmx:/home/jmeter/ConfiguracionEscenario1.jmx:ro
+      - ../ConfiguracionEscenario2.jmx:/home/jmeter/ConfiguracionEscenario2.jmx:ro
+      # Montar carpeta jmeter para resultados y reportes
+      - .:/home/jmeter/output
+    working_dir: /home/jmeter
