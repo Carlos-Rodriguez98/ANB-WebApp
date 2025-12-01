@@ -109,7 +109,7 @@ func (s *VideoService) Upload(userID uint, title string, fh *multipart.FileHeade
 
 	err = sqsClient.EnqueueProcessVideo(tasks.ProcessVideoPayload{
 		VideoID:      videoID,
-		UserID:       userID,
+		UserID:       fmt.Sprintf("%d", userID),
 		OriginalPath: origPath,
 		Title:        title,
 	})
