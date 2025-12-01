@@ -55,7 +55,7 @@ func (c *SQSClient) EnqueueProcessVideo(p ProcessVideoPayload) error {
 				StringValue: stringPtr(p.VideoID),
 			},
 			"UserID": {
-				DataType:    stringPtr("Number"),
+				DataType:    stringPtr("String"),
 				StringValue: stringPtr(fmt.Sprintf("%d", p.UserID)),
 			},
 		},
