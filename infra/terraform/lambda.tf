@@ -12,8 +12,8 @@ data "external" "build_lambda" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../services/processing-service-lambda/bootstrap"
-  output_path = "${path.module}/../../services/processing-service-lambda/lambda.zip"
+  source_dir = "${path.module}/../../services/processing-service-lambda/"
+  output_path = "${path.module}/lambda.zip"
   depends_on  = [data.external.build_lambda]
 }
 
