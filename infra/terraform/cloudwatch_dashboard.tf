@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_dashboard" "instances_cpu_dashboard" {
-    dashboard_name = "anbapp-instances-cpu"
+    dashboard_name = "anbapp-metrics"
 
     dashboard_body = jsonencode({
         widgets = [
