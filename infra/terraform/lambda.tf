@@ -30,6 +30,8 @@ resource "aws_lambda_function" "worker_lambda" {
   runtime = "provided.al2"
   handler = "bootstrap"
   architectures    = ["arm64"]
+  timeout = 300
+  memory_size = 2048
 
   vpc_config {
     subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
