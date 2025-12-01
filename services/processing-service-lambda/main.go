@@ -68,30 +68,45 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 // processVideo contains the core logic for processing a single video.
 func processVideo(payload tasks.ProcessVideoPayload) error {
-	// Define local file paths
-	localPath := filepath.Join("/tmp", filepath.Base(payload.S3Key))
+	// Use the S3 key directly from the payload, as confirmed from the AWS console.
+	s3Key := payload.S3Key
+
+	// Create a temporary directory structure inspired by the python snippet
+	objectName := filepath.Base(s3Key)
+	fileExtension := filepath.Ext(objectName)
+	fileName := strings.TrimSuffix(objectName, fileExtension)
+	tmpDir := filepath.Join("/tmp", fileName)
+
+	// Create the directory if it doesn't exist
+	if err := os.MkdirAll(tmpDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create temp directory %s: %w", tmpDir, err)
+	}
+	// Defer cleanup of the entire directory and its contents
+	defer os.RemoveAll(tmpDir)
+
+	// Define local file paths within the new temp directory
+	localPath := filepath.Join(tmpDir, objectName)
 	processedPath := strings.Replace(localPath, ".mp4", "_processed.mp4", 1)
 
 	// 1. Download the file from S3
-	log.Printf("Downloading %s to %s...", payload.S3Key, localPath)
-	inputFile, err := s3Storage.DownloadFile(payload.S3Key, localPath)
+	log.Printf("Downloading %s to %s...", s3Key, localPath)
+	inputFile, err := s3Storage.DownloadFile(s3Key, localPath)
 	if err != nil {
 		return fmt.Errorf("failed to download from S3: %w", err)
 	}
-	inputFile.Close() // Ensure file is closed after download
-	defer os.Remove(localPath) // Clean up original file
+	// Close the file handle so that other processes (like ffmpeg) can use it.
+	inputFile.Close()
 
 	// 2. Process the video with ffmpeg
 	log.Printf("Processing %s with ffmpeg...", localPath)
-	cmd := exec.Command("ffmpeg", "-i", localPath, "-vf", "scale=1280:-1", processedPath)
+	cmd := exec.Command("/var/task/ffmpeg-7.0.2-arm64-static/ffmpeg", "-i", localPath, "-vf", "scale=1280:-1", processedPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ffmpeg error: %s - %w", string(output), err)
 	}
-	defer os.Remove(processedPath) // Clean up processed file
 
 	// 3. Upload the processed file to S3
-	processedS3Key := strings.Replace(payload.S3Key, "original/", "processed/", 1)
+	processedS3Key := strings.Replace(s3Key, "original/", "processed/", 1)
 	log.Printf("Uploading %s to S3 key %s...", processedPath, processedS3Key)
 	finalURL, err := s3Storage.UploadFile(processedS3Key, processedPath)
 	if err != nil {
