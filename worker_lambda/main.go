@@ -68,8 +68,8 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 // processVideo contains the core logic for processing a single video.
 func processVideo(payload tasks.ProcessVideoPayload) error {
-	// Clean up the S3 key by removing the "static/" prefix
-	s3Key := strings.TrimPrefix(payload.S3Key, "static/")
+	// Use the S3 key directly from the payload, as confirmed from the AWS console.
+	s3Key := payload.S3Key
 
 	// Create a temporary directory structure inspired by the python snippet
 	objectName := filepath.Base(s3Key)
@@ -99,7 +99,7 @@ func processVideo(payload tasks.ProcessVideoPayload) error {
 
 	// 2. Process the video with ffmpeg
 	log.Printf("Processing %s with ffmpeg...", localPath)
-	cmd := exec.Command("ffmpeg", "-i", localPath, "-vf", "scale=1280:-1", processedPath)
+	cmd := exec.Command("/var/task/ffmpeg-7.0.2-arm64-static/ffmpeg", "-i", localPath, "-vf", "scale=1280:-1", processedPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("ffmpeg error: %s - %w", string(output), err)

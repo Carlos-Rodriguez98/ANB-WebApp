@@ -4,7 +4,7 @@ data "external" "build_lambda" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../worker_lambda/bootstrap"
+  source_dir = "${path.module}/../../worker_lambda"
   output_path = "${path.module}/lambda_function.zip"
   depends_on  = [data.external.build_lambda]
 }
@@ -17,6 +17,8 @@ resource "aws_lambda_function" "worker_lambda" {
   handler          = "bootstrap"
   runtime          = "provided.al2023"
   architectures    = ["arm64"]
+  timeout          = 300
+  memory_size      = 2048
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   vpc_config {

@@ -21,7 +21,7 @@ func NewSQLVideoRepository(db *sqlx.DB) VideoRepository {
 
 // UpdateVideoStatus updates the status and URL of a video.
 func (r *sqlVideoRepository) UpdateVideoStatus(videoID, status, url string) error {
-	query := `UPDATE videos SET status = $1, url = $2, updated_at = NOW() WHERE id = $3`
+	query := `UPDATE app.videos SET status = $1, processed_path = $2, processed_at = NOW() WHERE video_id = $3`
 	_, err := r.db.Exec(query, status, url, videoID)
 	return err
 }
